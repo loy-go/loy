@@ -1,7 +1,7 @@
 # Phase 2: Project & Workspace System Implementation Plan
 
 **Phase:** 2 of 10  
-**Status:** Ready for Implementation  
+**Status:** Completed  
 **Estimated Scope:** Discovery engine, `loy.yaml` parser, Go workspace resolver, preset initializer  
 **Primary Specifications:** [10-Configuration-Manifest.md](../10-Configuration-Manifest.md), [11-Project-Workspace.md](../11-Project-Workspace.md), [09-CLI-Developer-Experience.md](../09-CLI-Developer-Experience.md)
 
@@ -113,9 +113,9 @@ internal/
 ---
 
 ## 5. Definition of Done
-- [ ] Manifest loading, validation, and normalization fully tested.
-- [ ] Multi-module workspace discovery functioning on test fixtures.
-- [ ] `loy new` and `loy init` working smoothly via CLI.
+- [x] Manifest loading, validation, and normalization fully tested.
+- [x] Multi-module workspace discovery functioning on test fixtures.
+- [x] `loy new` and `loy init` working smoothly via CLI.
 
 ---
 

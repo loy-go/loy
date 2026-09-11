@@ -1,7 +1,7 @@
 # Phase 1: Foundation Implementation Plan
 
 **Phase:** 1 of 10  
-**Status:** Ready for Implementation  
+**Status:** Completed  
 **Estimated Scope:** Core CLI plumbing, OS abstractions, structured error reporting  
 **Primary Specifications:** [02-TDS.md](../02-TDS.md), [09-CLI-Developer-Experience.md](../09-CLI-Developer-Experience.md), [14-Error-Diagnostics.md](../14-Error-Diagnostics.md), [16-Security.md](../16-Security.md)
 
@@ -120,9 +120,9 @@ cmd/
 ---
 
 ## 5. Definition of Done
-- [ ] `go vet ./...` and `golangci-lint` pass with zero warnings.
-- [ ] Test coverage for `internal/filesystem`, `internal/process`, and `internal/diagnostics` >= 90%.
-- [ ] `cmd/loy` builds cleanly into a single self-contained binary.
+- [x] `go vet ./...` and `golangci-lint` pass with zero warnings.
+- [x] Test coverage for `internal/filesystem`, `internal/process`, and `internal/diagnostics` >= 90%.
+- [x] `cmd/loy` builds cleanly into a single self-contained binary.
 
 ---
 
