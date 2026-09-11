@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/uloydev/loy/internal/filesystem"
+	"github.com/uloydev/loy/internal/process"
 	"github.com/uloydev/loy/internal/version"
 )
 
@@ -66,7 +68,12 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().BoolVar(&opts.NoColor, "no-color", false, "Disable colored ANSI output")
 	rootCmd.PersistentFlags().StringVarP(&opts.Directory, "directory", "C", "", "Change execution directory")
 
+	osFS := filesystem.NewOSFileSystem()
+	execRunner := process.NewExecRunner()
+
 	rootCmd.AddCommand(newVersionCmd())
+	rootCmd.AddCommand(newInitCmd(osFS, execRunner))
+	rootCmd.AddCommand(newNewCmd(osFS, execRunner))
 
 	return rootCmd
 }

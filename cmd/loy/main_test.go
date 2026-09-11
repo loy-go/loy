@@ -43,6 +43,21 @@ func TestCLI_ExitCodes(t *testing.T) {
 		}
 	})
 
+	t.Run("flag missing argument exit code 2", func(t *testing.T) {
+		cmd := exec.Command(bin, "init", "--preset")
+		err := cmd.Run()
+		if err == nil {
+			t.Fatal("expected non-zero exit code for missing flag argument")
+		}
+		exitErr, ok := err.(*exec.ExitError)
+		if !ok {
+			t.Fatalf("expected exec.ExitError, got %T", err)
+		}
+		if exitErr.ExitCode() != 2 {
+			t.Fatalf("expected exit code 2 for flag syntax error, got %d", exitErr.ExitCode())
+		}
+	})
+
 	t.Run("usage error with json output", func(t *testing.T) {
 		cmd := exec.Command(bin, "invalid-cmd", "--json")
 		out, err := cmd.CombinedOutput()

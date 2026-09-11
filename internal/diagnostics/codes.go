@@ -15,6 +15,17 @@ const (
 	CodeProcessTimeout   = "LOY-PROC-001"
 	CodeProcessExecution = "LOY-PROC-002"
 
+	// Configuration & Manifest codes
+	CodeConfigSyntaxError     = "LOY-CFG-001"
+	CodeConfigValidationError = "LOY-CFG-002"
+	CodeConfigPresetNotFound  = "LOY-CFG-003"
+
+	// Project & Workspace codes
+	CodeProjectRootNotFound  = "LOY-PRJ-001"
+	CodeProjectAlreadyExists = "LOY-PRJ-002"
+	CodeWorkspaceConflict    = "LOY-WRK-001"
+	CodeWorkspaceTargetError = "LOY-WRK-002"
+
 	// Internal system error
 	CodeInternalError = "LOY-SYS-999"
 )
