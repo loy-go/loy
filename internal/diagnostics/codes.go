@@ -32,6 +32,23 @@ const (
 	CodeGenTemplateError  = "LOY-GEN-003"
 	CodeGenExecutionError = "LOY-GEN-004"
 
+	// Architecture & Rule codes
+	CodeArchCycleDependency     = "LOY-ARCH-001"
+	CodeArchDomainInfra         = "LOY-ARCH-002"
+	CodeArchDomainTransport     = "LOY-ARCH-003"
+	CodeArchAppTransport        = "LOY-ARCH-004"
+	CodeArchAppConcreteInfra    = "LOY-ARCH-005"
+	CodeArchInfraTransport      = "LOY-ARCH-006"
+	CodeArchTransportLogic      = "LOY-ARCH-007"
+	CodeArchForbiddenImport     = "LOY-ARCH-008"
+	CodeArchForbiddenCategory   = "LOY-ARCH-009"
+	CodeArchLayerDirection      = "LOY-ARCH-010"
+	CodeArchServiceLocator      = "LOY-ARCH-011"
+	CodeArchGlobalMutableState  = "LOY-ARCH-012"
+	CodeArchWorkspaceBoundary   = "LOY-ARCH-013"
+	CodeArchArtifactOwnership   = "LOY-ARCH-014"
+	CodeArchSuppressionError    = "LOY-ARCH-099"
+
 	// Internal system error
 	CodeInternalError = "LOY-SYS-999"
 )

@@ -1,7 +1,7 @@
 # Phase 4: Architecture Engine Implementation Plan
 
 **Phase:** 4 of 10  
-**Status:** Ready for Implementation  
+**Status:** Completed  
 **Estimated Scope:** Static analysis engine, two-phase analyzer, 14 architecture rules, suppression engine  
 **Primary Specifications:** [05-Architecture-Rule-Specification.md](../05-Architecture-Rule-Specification.md), [13-Architecture-Design-Patterns.md](../13-Architecture-Design-Patterns.md), [ADR-011](../adrs/ADR-011-architecture-validation.md), [ADR-016](../adrs/ADR-016-two-phase-architecture-enforcement-engine.md)
 
@@ -110,10 +110,10 @@ Create `testdata/fixtures/` containing known architectural scenarios:
 ---
 
 ## 5. Definition of Done
-- [ ] Tarjan cycle detector verified.
-- [ ] All 14 architecture rules implemented or assigned clear stubs.
-- [ ] `loy check` surfaces file, line, and remediation hint for every violation.
-- [ ] Suppression engine validated with strict reason checks.
+- [x] Tarjan cycle detector verified.
+- [x] All 14 architecture rules implemented or assigned clear stubs.
+- [x] `loy check` surfaces file, line, and remediation hint for every violation.
+- [x] Suppression engine validated with strict reason checks.
 
 ---
 
