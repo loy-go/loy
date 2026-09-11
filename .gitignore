@@ -1,0 +1,34 @@
+# Binaries
+bin/
+dist/
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary and test artifacts
+tmp/
+coverage.out
+coverage.html
+*.test
+
+# Node / Vite (for fullstack assets)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
