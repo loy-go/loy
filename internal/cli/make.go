@@ -19,6 +19,7 @@ import (
 	"github.com/uloydev/loy/internal/generator/plan"
 	"github.com/uloydev/loy/internal/process"
 	"github.com/uloydev/loy/internal/workspace"
+	"golang.org/x/mod/modfile"
 )
 
 type makeOptions struct {
@@ -179,9 +180,21 @@ func resolveProjectTarget(ctx context.Context, fs filesystem.FileSystem, runner 
 
 	targetDir = discovered.RootDir
 
-	// Infer module name
-	if inferred, infErr := disc.InferProjectName(targetDir); infErr == nil && inferred != "" {
-		modulePath = inferred
+	// Read full module path from go.mod if present
+	if discovered.GoModPath != "" {
+		if data, err := fs.ReadFile(discovered.GoModPath); err == nil {
+			f, err := modfile.Parse(discovered.GoModPath, data, nil)
+			if err == nil && f.Module != nil {
+				modulePath = f.Module.Mod.Path
+			}
+		}
+	}
+
+	// Fallback to inferred project name
+	if modulePath == "" {
+		if inferred, infErr := disc.InferProjectName(targetDir); infErr == nil && inferred != "" {
+			modulePath = inferred
+		}
 	}
 
 	// If workspace present, resolve target

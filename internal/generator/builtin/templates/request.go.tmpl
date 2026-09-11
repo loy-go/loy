@@ -17,7 +17,7 @@ func (r *{{.Pascal}}Request) Validate() error {
 	var errs []string
 {{- range .Fields}}
 {{- if .IsRequired}}
-	if r.{{.PascalName}} == "" {
+	if {{.ZeroValueCondition}} {
 		errs = append(errs, "{{.SnakeName}} is required")
 	}
 {{- end}}

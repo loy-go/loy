@@ -25,6 +25,27 @@ type Field struct {
 	DBTag        string   // DB struct tag
 }
 
+// ZeroValueCondition returns Go syntax for checking if field is at its zero-value.
+func (f Field) ZeroValueCondition() string {
+	if f.IsPointer {
+		return fmt.Sprintf("r.%s == nil", f.PascalName)
+	}
+	switch f.Type {
+	case "string":
+		return fmt.Sprintf("r.%s == \"\"", f.PascalName)
+	case "int", "int64", "float64":
+		return fmt.Sprintf("r.%s == 0", f.PascalName)
+	case "bool":
+		return fmt.Sprintf("!r.%s", f.PascalName)
+	case "time.Time":
+		return fmt.Sprintf("r.%s.IsZero()", f.PascalName)
+	case "[]byte":
+		return fmt.Sprintf("len(r.%s) == 0", f.PascalName)
+	default:
+		return fmt.Sprintf("r.%s == \"\"", f.PascalName)
+	}
+}
+
 // ParseFields parses CLI arguments in format: name:type[:modifier1:modifier2...]
 // Example: ["name:string", "email:string:unique", "age:int:optional", "status:enum(draft,published)"]
 func ParseFields(raw []string) ([]Field, error) {
