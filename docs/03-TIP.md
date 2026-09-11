@@ -6,6 +6,22 @@
 
 ---
 
+## Detailed Phase Plans
+
+Detailed step-by-step implementation guides, package diagrams, testing matrices, and definitions of done are cataloged in [plans/](./plans/README.md):
+- [Phase 1: Foundation](./plans/01-Phase-Foundation.md)
+- [Phase 2: Project System](./plans/02-Phase-Project-System.md)
+- [Phase 3: Generator Engine](./plans/03-Phase-Generator-Engine.md)
+- [Phase 4: Architecture Engine](./plans/04-Phase-Architecture-Engine.md)
+- [Phase 5: Core Generators](./plans/05-Phase-Core-Generators.md)
+- [Phase 6: Runtime](./plans/06-Phase-Runtime.md)
+- [Phase 7: Integrations](./plans/07-Phase-Integrations.md)
+- [Phase 8: Developer Experience](./plans/08-Phase-Developer-Experience.md)
+- [Phase 9: Fullstack](./plans/09-Phase-Fullstack.md)
+- [Phase 10: Deployment](./plans/10-Phase-Deployment.md)
+
+---
+
 ## 1. Implementation Sequence
 
 ### Phase 1 — Foundation
