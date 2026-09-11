@@ -12,12 +12,20 @@ import (
 type RuntimeData struct {
 	ModulePath    string
 	HTTPFramework string // "fiber" or "nethttp"
+	WithDatabase  bool
+	WithCache     bool
+	WithQueue     bool
+	WithTelemetry bool
 }
 
 // RuntimeGenerator scaffolds standard composition root, lifecycle coordinator, config and platform tools.
 type RuntimeGenerator struct {
 	modulePath    string
 	httpFramework string
+	withDatabase  bool
+	withCache     bool
+	withQueue     bool
+	withTelemetry bool
 }
 
 // NewRuntimeGenerator creates a RuntimeGenerator.
@@ -28,7 +36,20 @@ func NewRuntimeGenerator(modulePath, httpFramework string) *RuntimeGenerator {
 	return &RuntimeGenerator{
 		modulePath:    modulePath,
 		httpFramework: httpFramework,
+		withDatabase:  true,
+		withCache:     true,
+		withQueue:     true,
+		withTelemetry: true,
 	}
+}
+
+// WithCapabilities configures optional capability toggles.
+func (g *RuntimeGenerator) WithCapabilities(db, cache, queue, telemetry bool) *RuntimeGenerator {
+	g.withDatabase = db
+	g.withCache = cache
+	g.withQueue = queue
+	g.withTelemetry = telemetry
+	return g
 }
 
 func (g *RuntimeGenerator) Name() string {
@@ -43,6 +64,10 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	data := RuntimeData{
 		ModulePath:    g.modulePath,
 		HTTPFramework: g.httpFramework,
+		WithDatabase:  g.withDatabase,
+		WithCache:     g.withCache,
+		WithQueue:     g.withQueue,
+		WithTelemetry: g.withTelemetry,
 	}
 
 	renderer := GetRenderer()
@@ -117,7 +142,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 		return nil, fmt.Errorf("rendering wiring.go: %w", err)
 	}
 
-	return []model.Artifact{
+	artifacts := []model.Artifact{
 		{
 			Path:        "cmd/api/main.go",
 			Ownership:   model.DeveloperOwned,
@@ -160,5 +185,93 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 			Permissions: 0644,
 			Content:     wiringContent,
 		},
-	}, nil
+	}
+
+	// 8. Conditionally add platform integration templates
+	if g.withDatabase {
+		pgTmpl, err := ReadTemplate("platform_postgres.go.tmpl")
+		if err != nil {
+			return nil, fmt.Errorf("reading platform_postgres template: %w", err)
+		}
+		pgContent, err := renderer.RenderGo(ctx, "platform_postgres", pgTmpl, data)
+		if err != nil {
+			return nil, fmt.Errorf("rendering platform_postgres: %w", err)
+		}
+		artifacts = append(artifacts, model.Artifact{
+			Path:        "internal/platform/database/postgres.go",
+			Ownership:   model.DeveloperOwned,
+			Permissions: 0644,
+			Content:     pgContent,
+		})
+	}
+
+	if g.withCache {
+		valkeyTmpl, err := ReadTemplate("platform_valkey.go.tmpl")
+		if err != nil {
+			return nil, fmt.Errorf("reading platform_valkey template: %w", err)
+		}
+		valkeyContent, err := renderer.RenderGo(ctx, "platform_valkey", valkeyTmpl, data)
+		if err != nil {
+			return nil, fmt.Errorf("rendering platform_valkey: %w", err)
+		}
+		artifacts = append(artifacts, model.Artifact{
+			Path:        "internal/platform/cache/valkey.go",
+			Ownership:   model.DeveloperOwned,
+			Permissions: 0644,
+			Content:     valkeyContent,
+		})
+	}
+
+	if g.withQueue {
+		asynqTmpl, err := ReadTemplate("platform_asynq.go.tmpl")
+		if err != nil {
+			return nil, fmt.Errorf("reading platform_asynq template: %w", err)
+		}
+		asynqContent, err := renderer.RenderGo(ctx, "platform_asynq", asynqTmpl, data)
+		if err != nil {
+			return nil, fmt.Errorf("rendering platform_asynq: %w", err)
+		}
+		artifacts = append(artifacts, model.Artifact{
+			Path:        "internal/platform/queue/asynq.go",
+			Ownership:   model.DeveloperOwned,
+			Permissions: 0644,
+			Content:     asynqContent,
+		})
+	}
+
+	if g.withTelemetry {
+		otelTmpl, err := ReadTemplate("platform_otel.go.tmpl")
+		if err != nil {
+			return nil, fmt.Errorf("reading platform_otel template: %w", err)
+		}
+		otelContent, err := renderer.RenderGo(ctx, "platform_otel", otelTmpl, data)
+		if err != nil {
+			return nil, fmt.Errorf("rendering platform_otel: %w", err)
+		}
+		artifacts = append(artifacts, model.Artifact{
+			Path:        "internal/platform/telemetry/otel.go",
+			Ownership:   model.DeveloperOwned,
+			Permissions: 0644,
+			Content:     otelContent,
+		})
+	}
+
+	if g.httpFramework == "fiber" {
+		fiberTmpl, err := ReadTemplate("transport_fiber.go.tmpl")
+		if err != nil {
+			return nil, fmt.Errorf("reading transport_fiber template: %w", err)
+		}
+		fiberContent, err := renderer.RenderGo(ctx, "transport_fiber", fiberTmpl, data)
+		if err != nil {
+			return nil, fmt.Errorf("rendering transport_fiber: %w", err)
+		}
+		artifacts = append(artifacts, model.Artifact{
+			Path:        "internal/transport/http/server.go",
+			Ownership:   model.DeveloperOwned,
+			Permissions: 0644,
+			Content:     fiberContent,
+		})
+	}
+
+	return artifacts, nil
 }

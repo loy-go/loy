@@ -47,6 +47,14 @@ Every contributor and AI agent must uphold standard Go senior engineering practi
 - **Robust multi-line pattern matching**: Block search and code splicing must match multi-line subsequences rather than single-line exact equality to preserve idempotency on multi-line statements.
 - **Explicit target directory execution**: Subprocess runners (e.g. `sqlc generate`, `go mod`) must execute explicitly within the resolved target application module directory (`targetDir`), never defaulting blindly to `.` (the CLI invocation directory).
 
+### 2.5 Security, Input Validation & Boundary Hygiene
+- **Strict identifier & DDL validation**: Any user input interpolated into database identifiers, table names, or raw SQL must pass strict alphanumeric regex validation (`^[a-zA-Z_][a-zA-Z0-9_]*$`). Never trust CLI flags or configs directly in DDL.
+- **Path jail on all target creations**: Every file or directory path derived from user input or arguments must verify `filepath.Base(name) == name` and pass `filesystem.CleanAndValidatePath` before filesystem access.
+- **Flag semantics & zero-value distinction**: When evaluating optional numerical CLI flags, always check `cmd.Flags().Changed("flag")`. Never assume `> 0` because zero (`0`) is often a valid semantic argument (e.g. `--to 0` for base migration rollback).
+- **Resolution cascade hygiene**: Keep intermediate configuration structures zero-valued during cascade resolution (CLI flags > Env > Config file). Apply hardcoded defaults only at the final resolution step to avoid shadowing lower-precedence config files.
+- **Template compile & dead code audit**: All Go code templates must be verified for unused imports (`gofmt`/`go/parser`) and zero unreferenced dead artifacts. Never silence template rendering errors with `if err == nil`.
+
+
 ---
 
 ## 3. Standard 6-Step Implementation Pipeline

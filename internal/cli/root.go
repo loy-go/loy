@@ -80,6 +80,7 @@ func NewRootCmdWithFS(fs filesystem.FileSystem, runner process.Runner) *cobra.Co
 	rootCmd.AddCommand(newNewCmd(fs, runner))
 	rootCmd.AddCommand(newCheckCmd(fs, runner))
 	rootCmd.AddCommand(newMakeCmd(fs, runner))
+	rootCmd.AddCommand(newMigrateCmd(fs, runner))
 
 	return rootCmd
 }

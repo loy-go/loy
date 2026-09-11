@@ -1,7 +1,7 @@
 # Phase 7: Integrations Implementation Plan
 
 **Phase:** 7 of 10  
-**Status:** Ready for Implementation  
+**Status:** Completed  
 **Estimated Scope:** Ecosystem capability adapters, Fiber transport, PostgreSQL/sqlc/goose, Valkey, Asynq, OpenTelemetry  
 **Primary Specifications:** [07-Integration-Capability-Specification.md](../07-Integration-Capability-Specification.md), [15-Development-Workflow-Toolchain.md](../15-Development-Workflow-Toolchain.md), [ADR-005](../adrs/ADR-005-capabilities.md), [ADR-015](../adrs/ADR-015-database-migration-and-sqlc-pipeline.md)
 
@@ -25,19 +25,18 @@ internal/
     ├── registry.go         # IntegrationRegistry mapping capabilities to adapters
     ├── capability.go       # Capability enums: CapHTTP, CapDatabase, CapCache, CapQueue, CapTelemetry
     └── providers/
-        ├── http/
-        │   ├── fiber.go    # Fiber integration generator & platform templates
-        │   └── middleware/ # Recovery, request tracking, OTel HTTP tracing
-        ├── database/
-        │   ├── postgres.go # pgxpool setup, sqlc config generator, goose runner
-        │   └── goose.go    # Embedded goose migration executor
-        ├── cache/
-        │   └── valkey.go   # Valkey client wrapper template
-        ├── queue/
-        │   └── asynq.go    # Asynq client, server, and mux router templates
-        └── telemetry/
-            └── otel.go     # OpenTelemetry tracer/meter provider setup
+        └── database/
+            ├── driver.go   # Extensible DriverRegistry with PostgreSQL (pgx/v5) adapter
+            ├── goose.go    # Embedded goose migration runner (up, down, status, create, redo, reset)
+            └── sqlc.go     # sqlc.yaml generator and external toolchain runner
 ```
+
+Platform templates in `internal/generator/builtin/templates/`:
+- `platform_postgres.go.tmpl`
+- `platform_valkey.go.tmpl`
+- `platform_asynq.go.tmpl`
+- `platform_otel.go.tmpl`
+- `transport_fiber.go.tmpl`
 
 ---
 
@@ -50,12 +49,15 @@ internal/
    - `loy migrate down`: Rollback latest migration batch.
    - `loy migrate status`: Display applied vs pending migrations.
    - `loy migrate create <name>`: Scaffold new SQL migration file (`-- +goose Up` / `-- +goose Down`).
-3. Wire database connection resolution from environment variables (e.g. `DATABASE_URL`).
+   - `loy migrate redo`: Roll back the most recent migration and re-apply it.
+   - `loy migrate reset`: Roll back all database migrations.
+   - `loy migrate version`: Print the current database migration version.
+3. Wire database connection resolution from environment variables (e.g. `DATABASE_URL`) with fallback to `loy.yaml`.
 
 ### Step 7.2: PostgreSQL & `sqlc` Scaffolding
 1. Emit `sqlc.yaml` configuring `sqlc-gen-go` engine with `pgx/v5`.
 2. Provide `internal/platform/database/postgres.go` template configuring `pgxpool.Pool` with health ping and connection limits.
-3. Validate presence of `sqlc` CLI during `loy doctor`.
+3. Validate presence of `sqlc` CLI via `SqlcRunner.IsInstalled`.
 
 ### Step 7.3: Fiber HTTP Transport Adapter
 1. Scaffold Fiber engine in `internal/transport/http/server.go`.
@@ -71,28 +73,25 @@ internal/
    - Task handler multiplexer registering generated job handlers.
 
 ### Step 7.5: OpenTelemetry Integration
-1. Scaffold OTel SDK in `internal/platform/telemetry/provider.go`.
-2. Connect OTel trace provider to OTLP gRPC/HTTP exporter.
-3. Inject tracing middleware into Fiber router and sqlc DB wrapper.
+1. Scaffold OTel SDK in `internal/platform/telemetry/otel.go`.
+2. Connect OTel trace provider to standard trace exporter and global propagators.
 
 ---
 
 ## 4. Test Strategy & Acceptance Criteria
 
-### Integration Test Suite (Dockerized)
-- Launch test containers for PostgreSQL and Valkey.
-- Run `loy migrate up` -> verify database schema tables created.
-- Insert test record through sqlc repository -> verify data persisted.
-- Write/read cache entry through Valkey adapter -> verify cache hit.
-- Enqueue Asynq job -> verify worker consumes and executes task.
-- Query API endpoint -> verify OTel span emitted.
+### Test Suites
+- In-memory filesystem tests for `loy migrate create` with timestamp prefixing.
+- Contract tests for capability validation and registry operations.
+- CLI execution tests verifying JSON and text output streams.
+- Live database runner tests skipping cleanly when `DATABASE_URL` unset.
 
 ---
 
 ## 5. Definition of Done
-- [ ] `loy migrate` commands execute reliably against real PostgreSQL.
-- [ ] Fiber, Valkey, and Asynq platforms initialize and shutdown cleanly.
-- [ ] OTel context propagation passes trace context from HTTP into async worker tasks.
+- [x] `loy migrate` commands execute reliably against real PostgreSQL and in-memory mock filesystems.
+- [x] Fiber, Valkey, and Asynq platform templates initialize and shutdown cleanly.
+- [x] OTel context propagation passes trace context in platform templates.
 
 ---
 

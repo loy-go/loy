@@ -16,7 +16,7 @@ This directory contains the standard engineering pipeline and detailed implement
 | **04** | [04-Phase-Architecture-Engine.md](./04-Phase-Architecture-Engine.md) | Two-phase analysis, dependency graphs, cycle detection, 14 rules, suppressions | Completed |
 | **05** | [05-Phase-Core-Generators.md](./05-Phase-Core-Generators.md) | `make model`, `repo`, `svc`, `handler`, `feature`, `crud`, managed wiring | Completed |
 | **06** | [06-Phase-Runtime.md](./06-Phase-Runtime.md) | Composition root, lifecycle states, signal handling, graceful shutdown, health | Completed |
-| **07** | [07-Phase-Integrations.md](./07-Phase-Integrations.md) | Fiber, embedded `goose` migrations, `sqlc`, Valkey, Asynq, OpenTelemetry | Ready |
+| **07** | [07-Phase-Integrations.md](./07-Phase-Integrations.md) | Fiber, embedded `goose` migrations, `sqlc`, Valkey, Asynq, OpenTelemetry | Completed |
 | **08** | [08-Phase-Developer-Experience.md](./08-Phase-Developer-Experience.md) | Native `loy dev` supervisor, `loy doctor`, `loy graph`, shell completion | Ready |
 | **09** | [09-Phase-Fullstack.md](./09-Phase-Fullstack.md) | Templ SSR, HTMX patterns, Vite asset pipeline integration | Ready |
 | **10** | [10-Phase-Deployment.md](./10-Phase-Deployment.md) | Multi-stage Dockerfiles, Kubernetes manifests, Helm charts, CI pipelines | Ready |
