@@ -8,7 +8,7 @@
 ---
 
 ## 1. Goal & Objectives
-Enable seamless production readiness and artifact distribution:
+Provide production readiness and artifact distribution tooling:
 - Multi-stage `Dockerfile` generating minimal, secure, non-root container images.
 - Cloud-native Kubernetes manifests (Deployments, Services, ConfigMaps, Secret references, Probes).
 - Optional Helm chart generation.

@@ -8,7 +8,7 @@
 ---
 
 ## 1. Goal & Objectives
-Elevate developer velocity with first-class local tooling:
+Improve developer workflow speed with local tooling:
 - `loy dev`: Built-in multi-process file watcher and supervisor using `fsnotify` (`ADR-017`).
 - `loy doctor`: Environment and dependency sanity checker with actionable remediation hints.
 - `loy graph`: Dependency and architecture layer visualizer (text, DOT, Mermaid).

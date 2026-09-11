@@ -16,7 +16,7 @@ When running commands like `loy make feature <name>` or `loy make crud <name>`, 
 ## Consequences
 - Deterministic, safe updates to developer-owned composition files.
 - Transparent and human-readable boundary markers.
-- Robust against arbitrary developer code edits outside the managed comments.
+- Survives arbitrary developer edits outside managed comments.
 
 ---
 

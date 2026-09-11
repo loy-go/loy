@@ -26,7 +26,7 @@ Use when persistence abstraction or a meaningful boundary is needed. Not mandato
 
 ### Service / Use Case
 
-Use for meaningful application orchestration. Do not create empty services simply to satisfy layering.
+Use for meaningful application orchestration. Do not create empty services only to satisfy layering.
 
 ### DTO
 

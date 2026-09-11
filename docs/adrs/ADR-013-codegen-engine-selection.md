@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-Initial design documents (04, 07, 12) specified `Templ` as the preferred renderer for both Go source files and frontend HTML templates. However, Templ is fundamentally designed for HTML/markup generation with streaming contexts and HTML-escaping rules. Using it to emit Go structs, interfaces, and function bodies introduces high friction, escaping workarounds, and potential compilation mismatch.
+Initial design documents (04, 07, 12) specified `Templ` as the preferred renderer for both Go source files and frontend HTML templates. However, Templ is designed for HTML/markup generation with streaming contexts and HTML-escaping rules. Using it to emit Go structs, interfaces, and function bodies introduces high friction, escaping workarounds, and potential compilation mismatch.
 
 ## Decision
 1. Use Go standard library `text/template` combined with strictly typed view models and `gofmt` (and optionally `goimports`) as the primary Go source code generator.
