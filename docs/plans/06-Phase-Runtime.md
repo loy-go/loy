@@ -1,7 +1,7 @@
 # Phase 6: Runtime Application Lifecycle Implementation Plan
 
 **Phase:** 6 of 10  
-**Status:** Ready for Implementation  
+**Status:** Completed  
 **Estimated Scope:** Application composition scaffold, lifecycle supervisor, graceful shutdown, health probes  
 **Primary Specifications:** [08-Runtime-Application-Lifecycle.md](../08-Runtime-Application-Lifecycle.md), [17-Observability.md](../17-Observability.md), [ADR-002](../adrs/ADR-002-minimal-runtime.md), [ADR-003](../adrs/ADR-003-explicit-wiring.md)
 
@@ -100,9 +100,9 @@ Scaffold the standard application runtime structure for generated projects:
 ---
 
 ## 5. Definition of Done
-- [ ] Composition root template passes `loy check` without warnings.
-- [ ] Graceful shutdown verified under high request volume using test harness.
-- [ ] Health probe endpoints conform to standard Kubernetes contract.
+- [x] Composition root template passes `loy check` without warnings.
+- [x] Graceful shutdown verified under high request volume using test harness.
+- [x] Health probe endpoints conform to standard Kubernetes contract.
 
 ---
 

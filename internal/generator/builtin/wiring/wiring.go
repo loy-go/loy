@@ -14,18 +14,12 @@ import (
 const DefaultWiringTemplate = `package app
 
 import (
-	"database/sql"
-
-	"github.com/gofiber/fiber/v2"
-
 	// loy:region:imports
 	// loy:endregion
 )
 
-// SetupApp initialises dependencies and registers routes.
-func SetupApp(app *fiber.App, db *sql.DB) error {
-	v1 := app.Group("/api/v1")
-
+// wireDependencies sets up repositories, services, handlers and registers routes.
+func (a *App) wireDependencies() error {
 	// loy:region:repositories
 	// loy:endregion
 
@@ -38,8 +32,6 @@ func SetupApp(app *fiber.App, db *sql.DB) error {
 	// loy:region:routes
 	// loy:endregion
 
-	_ = v1
-	_ = db
 	return nil
 }
 `
@@ -91,10 +83,10 @@ func GenerateWiringArtifacts(featureName, modulePath string) []model.Artifact {
 		pkgName, modulePath, pkgName,
 	)
 
-	repoCode := fmt.Sprintf("\t%sRepo, _ := %sRepo.NewPostgresRepository(db)\n\t_ = %sRepo", camel, pkgName, camel)
+	repoCode := fmt.Sprintf("\t%sRepo, _ := %sRepo.NewPostgresRepository(a.db)\n\t_ = %sRepo", camel, pkgName, camel)
 	serviceCode := fmt.Sprintf("\t%sSvc, _ := %sService.NewService(%sRepo)\n\t_ = %sSvc", camel, pkgName, camel, camel)
 	handlerCode := fmt.Sprintf("\t%sHandler, _ := %sHttp.NewHandler(%sSvc)", camel, pkgName, camel)
-	routeCode := fmt.Sprintf("\t%sHandler.RegisterRoutes(v1)", camel)
+	routeCode := fmt.Sprintf("\t%sHandler.RegisterRoutes(a.router.Group(\"/api/v1\"))", camel)
 
 	return []model.Artifact{
 		{

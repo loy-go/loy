@@ -1,0 +1,28 @@
+package config
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/caarlos0/env/v11"
+)
+
+// Config defines application configuration mapped from environment variables.
+type Config struct {
+	Environment     string        `env:"APP_ENV" envDefault:"development"`
+	Port            int           `env:"PORT" envDefault:"8080"`
+	LogLevel        string        `env:"LOG_LEVEL" envDefault:"info"`
+	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"15s"`
+
+	DatabaseURL string `env:"DATABASE_URL" envDefault:"postgres://postgres:postgres@localhost:5432/app?sslmode=disable"`
+	RedisURL    string `env:"REDIS_URL" envDefault:"localhost:6379"`
+}
+
+// Load parses environment variables into Config with defaults.
+func Load() (*Config, error) {
+	var cfg Config
+	if err := env.Parse(&cfg); err != nil {
+		return nil, fmt.Errorf("parsing config: %w", err)
+	}
+	return &cfg, nil
+}

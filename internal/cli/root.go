@@ -38,8 +38,8 @@ func GetOptions(ctx context.Context) *GlobalOptions {
 	return &GlobalOptions{}
 }
 
-// NewRootCmd initializes and configures the root cobra command.
-func NewRootCmd() *cobra.Command {
+// NewRootCmdWithFS initializes the root cobra command with custom filesystem and runner.
+func NewRootCmdWithFS(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 	opts := &GlobalOptions{}
 
 	rootCmd := &cobra.Command{
@@ -68,16 +68,25 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().BoolVar(&opts.NoColor, "no-color", false, "Disable colored ANSI output")
 	rootCmd.PersistentFlags().StringVarP(&opts.Directory, "directory", "C", "", "Change execution directory")
 
-	osFS := filesystem.NewOSFileSystem()
-	execRunner := process.NewExecRunner()
+	if fs == nil {
+		fs = filesystem.NewOSFileSystem()
+	}
+	if runner == nil {
+		runner = process.NewExecRunner()
+	}
 
 	rootCmd.AddCommand(newVersionCmd())
-	rootCmd.AddCommand(newInitCmd(osFS, execRunner))
-	rootCmd.AddCommand(newNewCmd(osFS, execRunner))
-	rootCmd.AddCommand(newCheckCmd(osFS, execRunner))
-	rootCmd.AddCommand(newMakeCmd(osFS, execRunner))
+	rootCmd.AddCommand(newInitCmd(fs, runner))
+	rootCmd.AddCommand(newNewCmd(fs, runner))
+	rootCmd.AddCommand(newCheckCmd(fs, runner))
+	rootCmd.AddCommand(newMakeCmd(fs, runner))
 
 	return rootCmd
+}
+
+// NewRootCmd initializes and configures the root cobra command using OS defaults.
+func NewRootCmd() *cobra.Command {
+	return NewRootCmdWithFS(nil, nil)
 }
 
 func newVersionCmd() *cobra.Command {

@@ -88,6 +88,8 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 		return builtin.NewTestGenerator(mod)
 	}, []string{}))
 
+	cmd.AddCommand(newRuntimeCmd(fs, runner, opts))
+
 	// Composers
 	cmd.AddCommand(newFeatureCmd(fs, runner, opts))
 	cmd.AddCommand(newCRUDCmd(fs, runner, opts))
@@ -110,6 +112,26 @@ func newArtifactCmd(name, short string, fs filesystem.FileSystem, runner process
 			}, artifactName, extraArgs, false)
 		},
 	}
+	return cmd
+}
+
+func newRuntimeCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	var httpFramework string
+	cmd := &cobra.Command{
+		Use:   "runtime",
+		Short: "Scaffold application runtime lifecycle, composition root, and health checks",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runGenerator(cmd, fs, runner, opts, func(mod string) generator.Generator {
+				fw := httpFramework
+				if fw == "" {
+					fw = "fiber"
+				}
+				return builtin.NewRuntimeGenerator(mod, fw)
+			}, "runtime", "", false)
+		},
+	}
+	cmd.Flags().StringVar(&httpFramework, "http", "", "HTTP framework to scaffold (fiber or nethttp)")
 	return cmd
 }
 
