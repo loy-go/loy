@@ -1,0 +1,27 @@
+-- name: Get{{.Pascal}}ByID :one
+SELECT * FROM {{.PluralLower}}
+WHERE id = $1 LIMIT 1;
+
+-- name: List{{.Plural}} :many
+SELECT * FROM {{.PluralLower}}
+ORDER BY id
+LIMIT $1 OFFSET $2;
+
+-- name: Create{{.Pascal}} :one
+{{- if .Fields}}
+INSERT INTO {{.PluralLower}} (
+{{- range $i, $f := .Fields}}
+    {{if $i}}, {{end}}{{$f.SnakeName}}
+{{- end}}
+) VALUES (
+{{- range $i, $f := .Fields}}
+    {{if $i}}, {{end}}${{add $i 1}}
+{{- end}}
+) RETURNING *;
+{{- else}}
+INSERT INTO {{.PluralLower}} DEFAULT VALUES RETURNING *;
+{{- end}}
+
+-- name: Delete{{.Pascal}} :exec
+DELETE FROM {{.PluralLower}}
+WHERE id = $1;

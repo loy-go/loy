@@ -1,7 +1,7 @@
 # Phase 5: Core Generators Implementation Plan
 
 **Phase:** 5 of 10  
-**Status:** Ready for Implementation  
+**Status:** Completed  
 **Estimated Scope:** Individual artifact generators, CRUD composer, wiring splicing  
 **Primary Specifications:** [04-Generator-Specification.md](../04-Generator-Specification.md), [12-Code-Generation-Templates.md](../12-Code-Generation-Templates.md), [13-Architecture-Design-Patterns.md](../13-Architecture-Design-Patterns.md), [ADR-014](../adrs/ADR-014-managed-code-splicing-via-comment-regions.md)
 
@@ -117,10 +117,10 @@ cmd/loy/
 ---
 
 ## 5. Definition of Done
-- [ ] All 13 `make` subcommands implemented and tested.
-- [ ] Plan composition works atomically without partial disk writes on error.
-- [ ] `wiring.go` cleanly updated via region comment splicing.
-- [ ] Generated code compiles under standard Go compiler.
+- [x] All 13 `make` subcommands implemented and tested.
+- [x] Plan composition works atomically without partial disk writes on error.
+- [x] `wiring.go` cleanly updated via region comment splicing.
+- [x] Generated code compiles under standard Go compiler.
 
 ---
 

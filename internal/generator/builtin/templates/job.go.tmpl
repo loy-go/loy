@@ -1,0 +1,44 @@
+package job
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/hibiken/asynq"
+)
+
+// Type{{.Pascal}}Process represents the Asynq task type.
+const Type{{.Pascal}}Process = "{{.Snake}}:process"
+
+// {{.Pascal}}Payload holds the background job parameters.
+type {{.Pascal}}Payload struct {
+	ID int64 `json:"id"`
+}
+
+// New{{.Pascal}}Task creates a new Asynq task.
+func New{{.Pascal}}Task(id int64) (*asynq.Task, error) {
+	payload, err := json.Marshal({{.Pascal}}Payload{ID: id})
+	if err != nil {
+		return nil, fmt.Errorf("marshaling task payload: %w", err)
+	}
+	return asynq.NewTask(Type{{.Pascal}}Process, payload), nil
+}
+
+// {{.Pascal}}Processor processes {{.Pascal}} background jobs.
+type {{.Pascal}}Processor struct{}
+
+// New{{.Pascal}}Processor constructs a new task processor.
+func New{{.Pascal}}Processor() *{{.Pascal}}Processor {
+	return &{{.Pascal}}Processor{}
+}
+
+// ProcessTask handles execution of the task.
+func (p *{{.Pascal}}Processor) ProcessTask(ctx context.Context, t *asynq.Task) error {
+	var payload {{.Pascal}}Payload
+	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
+		return fmt.Errorf("unmarshaling task payload: %w", err)
+	}
+	// Task processing logic
+	return nil
+}

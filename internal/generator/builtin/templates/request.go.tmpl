@@ -1,0 +1,29 @@
+package request
+
+import (
+	"fmt"
+	"strings"
+)
+
+// {{.Pascal}}Request represents the input payload for {{.Pascal}} operations.
+type {{.Pascal}}Request struct {
+{{- range .Fields}}
+	{{.PascalName}} {{if .IsPointer}}*{{end}}{{.Type}} `{{.JSONTag}}`
+{{- end}}
+}
+
+// Validate checks the request payload for validation rules.
+func (r *{{.Pascal}}Request) Validate() error {
+	var errs []string
+{{- range .Fields}}
+{{- if .IsRequired}}
+	if r.{{.PascalName}} == "" {
+		errs = append(errs, "{{.SnakeName}} is required")
+	}
+{{- end}}
+{{- end}}
+	if len(errs) > 0 {
+		return fmt.Errorf("validation failed: %s", strings.Join(errs, ", "))
+	}
+	return nil
+}

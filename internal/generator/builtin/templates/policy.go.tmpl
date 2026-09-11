@@ -1,0 +1,30 @@
+package policy
+
+import (
+	"context"
+
+	"{{.ModulePath}}/internal/{{.Feature}}/domain"
+)
+
+// {{.Pascal}}Policy defines authorization checks for {{.Pascal}} resources.
+type {{.Pascal}}Policy struct{}
+
+// New{{.Pascal}}Policy constructs a new authorization policy.
+func New{{.Pascal}}Policy() *{{.Pascal}}Policy {
+	return &{{.Pascal}}Policy{}
+}
+
+// CanView determines if the caller has view permission.
+func (p *{{.Pascal}}Policy) CanView(ctx context.Context, actorID int64, entity *domain.{{.Pascal}}) bool {
+	return true
+}
+
+// CanEdit determines if the caller has edit permission.
+func (p *{{.Pascal}}Policy) CanEdit(ctx context.Context, actorID int64, entity *domain.{{.Pascal}}) bool {
+	return true
+}
+
+// CanDelete determines if the caller has delete permission.
+func (p *{{.Pascal}}Policy) CanDelete(ctx context.Context, actorID int64, entity *domain.{{.Pascal}}) bool {
+	return true
+}

@@ -1,0 +1,27 @@
+package listener
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+
+	"{{.ModulePath}}/internal/{{.Feature}}/event"
+)
+
+// {{.Pascal}}CreatedListener handles {{.Pascal}}CreatedEvent.
+type {{.Pascal}}CreatedListener struct {
+	logger *slog.Logger
+}
+
+// New{{.Pascal}}CreatedListener constructs a new listener.
+func New{{.Pascal}}CreatedListener(logger *slog.Logger) *{{.Pascal}}CreatedListener {
+	return &{{.Pascal}}CreatedListener{logger: logger}
+}
+
+// Handle processes the received event.
+func (l *{{.Pascal}}CreatedListener) Handle(ctx context.Context, evt event.{{.Pascal}}CreatedEvent) error {
+	if l.logger != nil {
+		l.logger.InfoContext(ctx, "processing event", "event", evt.EventName(), "id", evt.ID)
+	}
+	return nil
+}

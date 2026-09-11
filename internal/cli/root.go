@@ -75,6 +75,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newInitCmd(osFS, execRunner))
 	rootCmd.AddCommand(newNewCmd(osFS, execRunner))
 	rootCmd.AddCommand(newCheckCmd(osFS, execRunner))
+	rootCmd.AddCommand(newMakeCmd(osFS, execRunner))
 
 	return rootCmd
 }

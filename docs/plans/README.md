@@ -10,11 +10,11 @@ This directory contains the standard engineering pipeline and detailed implement
 
 | Phase | Plan Document | Primary Scope | Status |
 |---|---|---|---|
-| **01** | [01-Phase-Foundation.md](./01-Phase-Foundation.md) | CLI root, OS filesystem abstraction, process runner, diagnostics model | Ready |
-| **02** | [02-Phase-Project-System.md](./02-Phase-Project-System.md) | Discovery, `loy.yaml` manifest, `go.work` resolution, presets, `loy new` | Ready |
-| **03** | [03-Phase-Generator-Engine.md](./03-Phase-Generator-Engine.md) | Generator contracts, naming rules, `text/template` + `gofmt`, plans, splicing | Ready |
-| **04** | [04-Phase-Architecture-Engine.md](./04-Phase-Architecture-Engine.md) | Two-phase analysis, dependency graphs, cycle detection, 14 rules, suppressions | Ready |
-| **05** | [05-Phase-Core-Generators.md](./05-Phase-Core-Generators.md) | `make model`, `repo`, `svc`, `handler`, `feature`, `crud`, managed wiring | Ready |
+| **01** | [01-Phase-Foundation.md](./01-Phase-Foundation.md) | CLI root, OS filesystem abstraction, process runner, diagnostics model | Completed |
+| **02** | [02-Phase-Project-System.md](./02-Phase-Project-System.md) | Discovery, `loy.yaml` manifest, `go.work` resolution, presets, `loy new` | Completed |
+| **03** | [03-Phase-Generator-Engine.md](./03-Phase-Generator-Engine.md) | Generator contracts, naming rules, `text/template` + `gofmt`, plans, splicing | Completed |
+| **04** | [04-Phase-Architecture-Engine.md](./04-Phase-Architecture-Engine.md) | Two-phase analysis, dependency graphs, cycle detection, 14 rules, suppressions | Completed |
+| **05** | [05-Phase-Core-Generators.md](./05-Phase-Core-Generators.md) | `make model`, `repo`, `svc`, `handler`, `feature`, `crud`, managed wiring | Completed |
 | **06** | [06-Phase-Runtime.md](./06-Phase-Runtime.md) | Composition root, lifecycle states, signal handling, graceful shutdown, health | Ready |
 | **07** | [07-Phase-Integrations.md](./07-Phase-Integrations.md) | Fiber, embedded `goose` migrations, `sqlc`, Valkey, Asynq, OpenTelemetry | Ready |
 | **08** | [08-Phase-Developer-Experience.md](./08-Phase-Developer-Experience.md) | Native `loy dev` supervisor, `loy doctor`, `loy graph`, shell completion | Ready |

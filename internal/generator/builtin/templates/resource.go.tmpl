@@ -1,0 +1,41 @@
+package resource
+
+import (
+	"time"
+
+	"{{.ModulePath}}/internal/{{.Feature}}/domain"
+)
+
+// {{.Pascal}}Resource represents the formatted API response for {{.Pascal}}.
+type {{.Pascal}}Resource struct {
+	ID        int64     `json:"id"`
+{{- range .Fields}}
+	{{.PascalName}} {{if .IsPointer}}*{{end}}{{.Type}} `{{.JSONTag}}`
+{{- end}}
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// Transform maps a domain entity into a public resource response.
+func Transform(entity *domain.{{.Pascal}}) *{{.Pascal}}Resource {
+	if entity == nil {
+		return nil
+	}
+	return &{{.Pascal}}Resource{
+		ID:        entity.ID,
+{{- range .Fields}}
+		{{.PascalName}}: entity.{{.PascalName}},
+{{- end}}
+		CreatedAt: entity.CreatedAt,
+		UpdatedAt: entity.UpdatedAt,
+	}
+}
+
+// TransformCollection maps a slice of domain entities into resources.
+func TransformCollection(entities []*domain.{{.Pascal}}) []*{{.Pascal}}Resource {
+	res := make([]*{{.Pascal}}Resource, len(entities))
+	for i, e := range entities {
+		res[i] = Transform(e)
+	}
+	return res
+}

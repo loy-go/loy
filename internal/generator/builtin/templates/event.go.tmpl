@@ -1,0 +1,16 @@
+package event
+
+import (
+	"time"
+)
+
+// {{.Pascal}}CreatedEvent triggers when a {{.Pascal}} entity is created.
+type {{.Pascal}}CreatedEvent struct {
+	ID        int64     `json:"id"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
+// EventName returns the unique event identifier.
+func ({{.Pascal}}CreatedEvent) EventName() string {
+	return "{{.Snake}}.created"
+}
