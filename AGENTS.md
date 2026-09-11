@@ -40,7 +40,9 @@ Every contributor and AI agent must uphold standard Go senior engineering practi
 
 ### 2.4 Security & Subprocess Execution
 - **Zero shell interpolation**: External processes must be invoked via `exec.CommandContext(ctx, name, args...)` with separate argument slices. Never execute `sh -c` or concatenate user inputs into shell strings.
-- **Sandboxed filesystem access**: No file read, write, or stat may occur without passing through `filesystem.CleanAndValidatePath` to guarantee the target stays within the designated root directory.
+- **Sandboxed filesystem access**: No file read, write, or stat may occur without passing through `filesystem.CleanAndValidatePath` or package-level target resolver (`ResolveTargetPath`) to guarantee the target stays within the designated root directory.
+- **Atomic mutations & journal ordering**: In atomic execution pipelines, state journal records must be pre-registered *before* file mutations occur to guarantee clean rollbacks on partial write failures.
+- **Robust multi-line pattern matching**: Block search and code splicing must match multi-line subsequences rather than single-line exact equality to preserve idempotency on multi-line statements.
 
 ---
 
@@ -114,6 +116,10 @@ Per [Doc 22 (Traceability & Roadmap)](docs/22-Traceability-Roadmap.md), architec
 Idea → ADR in docs/adrs/ → Impact analysis → Spec update in docs/ → Implementation → Tests
 ```
 Never modify codebase invariants or add framework dependencies without an accepted ADR in `docs/adrs/`.
+
+### 7.1 Plan & Documentation Synchronization
+- **Real-time Phase Plan updates**: Whenever an implementation step finishes and passes verification, update the corresponding phase plan (`docs/plans/0X-Phase-*.md`) status to `Completed` and mark definition of done checkboxes immediately. Never leave completed phases in `Ready for Implementation` status.
+- **Pre-Review self-audit**: Before requesting or performing code review, verify code against all Section 2 invariants (path jail, zero shell interpolation, explicit constructor injection, journal pre-registration).
 
 ---
 
