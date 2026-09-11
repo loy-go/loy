@@ -91,7 +91,7 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 
 			// Initialize go.mod
 			goModPath, _ := filesystem.CleanAndValidatePath(targetDir, filepath.Join(targetDir, "go.mod"))
-			_ = fs.WriteFile(goModPath, []byte(fmt.Sprintf("module %s\n\ngo 1.22\n", projectName)), 0644)
+			_ = fs.WriteFile(goModPath, fmt.Appendf(nil, "module %s\n\ngo 1.22\n", projectName), 0644)
 
 			manifestPath, _ := filesystem.CleanAndValidatePath(targetDir, filepath.Join(targetDir, "loy.yaml"))
 			yamlContent := p.MaterializeYAML(projectName)
