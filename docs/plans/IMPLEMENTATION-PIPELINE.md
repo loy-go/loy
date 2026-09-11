@@ -4,13 +4,16 @@ Standard protocol governing implementation of Phases 2 through 10. Derived from 
 
 ---
 
-## 1. Core Lessons Learned from Phase 1
+## 1. Core Lessons Learned Across Phases
 
 1. **No Global State**: Package-level globals (`cli.Globals`) violate architectural invariants and leak across tests. Context-scoped state or explicit struct passing is mandatory.
 2. **Contract Parity**: Test doubles (`memFS`) must match OS behavior exactly (directory collisions, `SkipDir` pruning, file mode flags). Contract test suites must run against both.
 3. **Test Isolation**: Tests mutating process state (`os.Chdir`, env vars) must register cleanup via `t.Cleanup` or use isolated temp roots.
-4. **Binary-Level Smoke Tests**: Unit tests alone miss CLI execution wiring. Every phase must include compiled binary integration tests verifying exit codes (0, 1, 2, 3), stdout/stderr routing, and `--json` error schemas.
+4. **Binary-Level Smoke Tests & Compiler Acceptance**: Unit tests alone miss CLI execution wiring or missing imports in generated code. Every codegen and CLI phase must include compiled binary integration tests verifying exit codes (0, 1, 2, 3), stdout/stderr routing, `--json` stream purity, and real `go build` compilation of generated projects.
 5. **Path Security**: All path operations must pass boundary validation before disk touches.
+6. **Stream Purity**: Never call `fmt.Println` or write uncoordinated bytes to stdout/stderr in CLI subcommands or background checks. All CLI writes must use `cmd.OutOrStdout()` or check `--json` and `--quiet`.
+7. **Pre-Warmed Engines**: Re-instantiating heavy template renderers or AST parsers on each generation pass creates unnecessary GC churn; cache shared engines as thread-safe singletons.
+8. **Explicit Target Directory Subprocesses**: Tools executed by the CLI (e.g. `sqlc generate`, `go mod`) must execute explicitly within the resolved target module directory (`targetDir`), never defaulting blindly to `.` (the CLI invocation directory).
 
 ---
 

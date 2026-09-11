@@ -32,17 +32,20 @@ Every contributor and AI agent must uphold standard Go senior engineering practi
 - **Structured diagnostics**: User-facing or CLI errors must wrap or construct a `diagnostics.Diagnostic` with severity, code (`LOY-*`), message, and remediation hint ([docs/14-Error-Diagnostics.md](docs/14-Error-Diagnostics.md)).
 - **Wrap internal errors**: Always wrap lower-level errors with context using `%w`: `fmt.Errorf("reading manifest %s: %w", path, err)`.
 - **Sentinel error matching**: Use `errors.Is` and `errors.As`. Never inspect error strings directly (`strings.Contains(err.Error(), ...)`).
+- **Stream purity & JSON isolation**: Never call `fmt.Println` or write directly to standard streams (`os.Stdout`/`os.Stderr`) in subcommands or helpers without checking `--json` and `--quiet`. Use `cmd.OutOrStdout()` or structured diagnostics to avoid corrupting machine-readable streams.
 
 ### 2.3 Concurrency & Resource Safety
 - **No unowned goroutines**: Every spawned goroutine must have an explicit owner, a bound context cancellation path, and a `sync.WaitGroup` or errgroup coordinating its exit.
 - **Leak prevention**: Always register resource cleanups immediately via `defer`: files, HTTP bodies (`defer resp.Body.Close()`), and mutexes.
 - **No magic sleeps**: Never use `time.Sleep` to synchronize concurrent operations in tests or production. Use channels, sync primitives, or polled wait conditions with timeout bounds.
+- **Pre-warmed engines & caching**: Heavy template renderers, AST parsers, or reflection models must be pre-warmed or cached as singletons; avoid repeated re-instantiations and redundant allocations in hot loops.
 
 ### 2.4 Security & Subprocess Execution
 - **Zero shell interpolation**: External processes must be invoked via `exec.CommandContext(ctx, name, args...)` with separate argument slices. Never execute `sh -c` or concatenate user inputs into shell strings.
 - **Sandboxed filesystem access**: No file read, write, or stat may occur without passing through `filesystem.CleanAndValidatePath` or package-level target resolver (`ResolveTargetPath`) to guarantee the target stays within the designated root directory.
 - **Atomic mutations & journal ordering**: In atomic execution pipelines, state journal records must be pre-registered *before* file mutations occur to guarantee clean rollbacks on partial write failures.
 - **Robust multi-line pattern matching**: Block search and code splicing must match multi-line subsequences rather than single-line exact equality to preserve idempotency on multi-line statements.
+- **Explicit target directory execution**: Subprocess runners (e.g. `sqlc generate`, `go mod`) must execute explicitly within the resolved target application module directory (`targetDir`), never defaulting blindly to `.` (the CLI invocation directory).
 
 ---
 
