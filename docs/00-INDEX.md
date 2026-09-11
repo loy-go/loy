@@ -34,6 +34,7 @@ This package contains the final Loy specification baseline consolidated from the
 
 The engineering rollout is decomposed into 10 phase execution plans in [plans/](./plans/README.md):
 
+- [Engineering Implementation Pipeline & Verification Loop](./plans/IMPLEMENTATION-PIPELINE.md)
 - [Phase 1: Foundation](./plans/01-Phase-Foundation.md)
 - [Phase 2: Project & Workspace System](./plans/02-Phase-Project-System.md)
 - [Phase 3: Generator Engine](./plans/03-Phase-Generator-Engine.md)

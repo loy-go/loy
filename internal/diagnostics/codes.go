@@ -1,0 +1,20 @@
+package diagnostics
+
+// Diagnostic codes standardized across the Loy platform.
+const (
+	// CLI codes
+	CodeCLIUsageError    = "LOY-CLI-001"
+	CodeCLIExecutionFail = "LOY-CLI-002"
+
+	// Filesystem codes
+	CodeFSNotFound      = "LOY-FS-001"
+	CodeFSPathTraversal = "LOY-FS-002"
+	CodeFSPermission    = "LOY-FS-003"
+
+	// Process codes
+	CodeProcessTimeout   = "LOY-PROC-001"
+	CodeProcessExecution = "LOY-PROC-002"
+
+	// Internal system error
+	CodeInternalError = "LOY-SYS-999"
+)

@@ -1,6 +1,10 @@
 # Loy Implementation Plans Index
 
-This directory contains the detailed, comprehensive implementation plans for each of the 10 engineering phases defined in [03-TIP.md](../03-TIP.md).
+This directory contains the standard engineering pipeline and detailed implementation plans for each of the 10 engineering phases defined in [03-TIP.md](../03-TIP.md).
+
+## Implementation Standard
+
+- **[IMPLEMENTATION-PIPELINE.md](./IMPLEMENTATION-PIPELINE.md)** — Standard 6-step engineering pipeline & verification loop established from Phase 1 learnings.
 
 ## Phase Roadmap
 
