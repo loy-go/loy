@@ -1,7 +1,7 @@
 # Phase 3: Generator Engine Implementation Plan
 
 **Phase:** 3 of 10  
-**Status:** Ready for Implementation  
+**Status:** Completed  
 **Estimated Scope:** Generator contract, typed models, template engine, atomic plan builder, conflict detection  
 **Primary Specifications:** [04-Generator-Specification.md](../04-Generator-Specification.md), [12-Code-Generation-Templates.md](../12-Code-Generation-Templates.md), [ADR-007](../adrs/ADR-007-plan-based-generation.md), [ADR-013](../adrs/ADR-013-codegen-engine-selection.md), [ADR-014](../adrs/ADR-014-managed-code-splicing-via-comment-regions.md)
 
@@ -120,10 +120,10 @@ internal/
 ---
 
 ## 5. Definition of Done
-- [ ] Centralized naming rules covered by 100% test cases.
-- [ ] `text/template` + `gofmt` renderer operational with clear syntax error diagnostics.
-- [ ] Region splicing verified across multiple consecutive invocations.
-- [ ] Plan generation, dry-run diffing, and atomic execution working.
+- [x] Centralized naming rules covered by 100% test cases.
+- [x] `text/template` + `gofmt` renderer operational with clear syntax error diagnostics.
+- [x] Region splicing verified across multiple consecutive invocations.
+- [x] Plan generation, dry-run diffing, and atomic execution working.
 
 ---
 

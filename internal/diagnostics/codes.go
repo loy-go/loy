@@ -26,6 +26,12 @@ const (
 	CodeWorkspaceConflict    = "LOY-WRK-001"
 	CodeWorkspaceTargetError = "LOY-WRK-002"
 
+	// Generator & Template codes
+	CodeGenConflict       = "LOY-GEN-001"
+	CodeGenRegionCorrupt  = "LOY-GEN-002"
+	CodeGenTemplateError  = "LOY-GEN-003"
+	CodeGenExecutionError = "LOY-GEN-004"
+
 	// Internal system error
 	CodeInternalError = "LOY-SYS-999"
 )
