@@ -3,7 +3,7 @@ package architecture
 import (
 	"fmt"
 
-	"github.com/uloydev/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/diagnostics"
 )
 
 // Violation describes a specific architecture rule failure.

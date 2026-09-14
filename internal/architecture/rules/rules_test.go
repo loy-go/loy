@@ -6,8 +6,8 @@ import (
 	"go/token"
 	"testing"
 
-	"github.com/uloydev/loy/internal/architecture"
-	"github.com/uloydev/loy/internal/graph"
+	"github.com/loy-go/loy/internal/architecture"
+	"github.com/loy-go/loy/internal/graph"
 )
 
 func TestRulesSuite(t *testing.T) {

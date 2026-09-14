@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/uloydev/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/diagnostics"
 )
 
 // SelectTarget matches a requested target against workspace apps.

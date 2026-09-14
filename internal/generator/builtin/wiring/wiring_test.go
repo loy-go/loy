@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/generator/builtin/wiring"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/generator/builtin/wiring"
 )
 
 func TestWiringManager(t *testing.T) {

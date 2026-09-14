@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	"{{.ModulePath}}/internal/{{.Feature}}/domain"
-	"{{.ModulePath}}/internal/{{.Feature}}/service"
+	"{{.ModulePath}}/internal/{{.FeaturePkg}}/domain"
+	"{{.ModulePath}}/internal/{{.FeaturePkg}}/service"
 )
 
 // Handler exposes HTTP transport endpoints for {{.PluralLower}}.
@@ -23,7 +23,7 @@ func NewHandler(svc *service.Service) (*Handler, error) {
 	return &Handler{service: svc}, nil
 }
 
-// RegisterRoutes attaches {{.Feature}} routes to the provided Fiber router.
+// RegisterRoutes attaches {{.FeaturePkg}} routes to the provided Fiber router.
 func (h *Handler) RegisterRoutes(router fiber.Router) {
 	group := router.Group("/{{.PluralLower}}")
 	group.Get("/", h.List)

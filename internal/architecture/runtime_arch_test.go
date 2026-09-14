@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/uloydev/loy/internal/architecture"
-	"github.com/uloydev/loy/internal/architecture/rules"
-	"github.com/uloydev/loy/internal/cli"
-	"github.com/uloydev/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/architecture"
+	"github.com/loy-go/loy/internal/architecture/rules"
+	"github.com/loy-go/loy/internal/cli"
+	"github.com/loy-go/loy/internal/filesystem"
 )
 
 func TestArchitectureCheckOnRuntimeScaffold(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/uloydev/loy/internal/architecture"
-	"github.com/uloydev/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/architecture"
+	"github.com/loy-go/loy/internal/diagnostics"
 )
 
 // RuleArch011 flags service locator / DI container usage.

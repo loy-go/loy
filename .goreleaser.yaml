@@ -1,0 +1,101 @@
+version: 2
+
+project_name: loy
+
+before:
+  hooks:
+    - go mod tidy
+    - go vet ./...
+
+builds:
+  - id: loy
+    main: ./cmd/loy
+    binary: loy
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/loy-go/loy/internal/version.Version={{.Version}}
+      - -X github.com/loy-go/loy/internal/version.Commit={{.FullCommit}}
+      - -X github.com/loy-go/loy/internal/version.Date={{.Date}}
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE*
+      - README*
+      - docs/*
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^merge:"
+
+brews:
+  - name: loy
+    repository:
+      owner: loy-go
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    commit_author:
+      name: loy-bot
+      email: bot@loy.dev
+    description: "Build-time Go developer platform for typed architecture and scaffolding"
+    homepage: "https://loy.dev"
+    license: "Apache-2.0"
+    install: |
+      bin.install "loy"
+      generate_completions_from_executable(bin/"loy", "completion")
+    test: |
+      system "#{bin}/loy version"
+
+dockers:
+  - image_templates:
+      - "ghcr.io/loy-go/loy:{{ .Version }}-amd64"
+    dockerfile: Dockerfile.release
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+  - image_templates:
+      - "ghcr.io/loy-go/loy:{{ .Version }}-arm64"
+    goarch: arm64
+    dockerfile: Dockerfile.release
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+
+docker_manifests:
+  - name_template: "ghcr.io/loy-go/loy:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/loy-go/loy:{{ .Version }}-amd64"
+      - "ghcr.io/loy-go/loy:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/loy-go/loy:latest"
+    image_templates:
+      - "ghcr.io/loy-go/loy:{{ .Version }}-amd64"
+      - "ghcr.io/loy-go/loy:{{ .Version }}-arm64"

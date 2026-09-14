@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/generator"
-	"github.com/uloydev/loy/internal/generator/model"
-	"github.com/uloydev/loy/internal/generator/plan"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/generator"
+	"github.com/loy-go/loy/internal/generator/model"
+	"github.com/loy-go/loy/internal/generator/plan"
 )
 
 func TestPlan_CoverageEdgeCases(t *testing.T) {
@@ -77,13 +77,4 @@ func TestPlan_CoverageEdgeCases(t *testing.T) {
 			t.Fatalf("expected overwrite with force, got %s (err: %v)", op, err)
 		}
 	})
-}
-
-func stringsContains(s, substr string) bool {
-	for i := 0; i+len(substr) <= len(s); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

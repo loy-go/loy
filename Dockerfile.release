@@ -1,0 +1,3 @@
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY loy /usr/local/bin/loy
+ENTRYPOINT ["/usr/local/bin/loy"]

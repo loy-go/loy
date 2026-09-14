@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/discovery"
-	"github.com/uloydev/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/discovery"
+	"github.com/loy-go/loy/internal/filesystem"
 )
 
 func TestDiscoverer_FindsLoyManifest(t *testing.T) {

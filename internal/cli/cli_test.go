@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/uloydev/loy/internal/cli"
-	"github.com/uloydev/loy/internal/version"
+	"github.com/loy-go/loy/internal/cli"
+	"github.com/loy-go/loy/internal/version"
 )
 
 func TestVersionCmd_Output(t *testing.T) {

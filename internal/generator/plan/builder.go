@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/generator"
-	"github.com/uloydev/loy/internal/generator/model"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/generator"
+	"github.com/loy-go/loy/internal/generator/model"
 )
 
 // Builder coordinates generation artifacts into an executable Plan.

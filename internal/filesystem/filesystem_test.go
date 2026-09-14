@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/uloydev/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/filesystem"
 )
 
 func testFileSystemContract(t *testing.T, fsys filesystem.FileSystem, baseDir string) {
@@ -65,7 +65,9 @@ func TestOSFileSystem(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tempDir)
+	t.Cleanup(func() {
+		_ = os.RemoveAll(tempDir)
+	})
 
 	fsys := filesystem.NewOSFileSystem()
 	testFileSystemContract(t, fsys, tempDir)
@@ -81,7 +83,9 @@ func TestOSFileSystem_WalkAndRemove(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tempDir)
+	t.Cleanup(func() {
+		_ = os.RemoveAll(tempDir)
+	})
 
 	fsys := filesystem.NewOSFileSystem()
 	f1 := filepath.Join(tempDir, "a", "file1.txt")

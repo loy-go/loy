@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/generator/model"
-	"github.com/uloydev/loy/internal/generator/naming"
-	"github.com/uloydev/loy/internal/generator/splicer"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/generator/model"
+	"github.com/loy-go/loy/internal/generator/naming"
+	"github.com/loy-go/loy/internal/generator/splicer"
 )
 
 const DefaultWiringTemplate = `package app

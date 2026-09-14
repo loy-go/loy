@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/discovery"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/preset"
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/discovery"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/preset"
+	"github.com/loy-go/loy/internal/process"
 )
 
 func newInitCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
@@ -116,9 +116,9 @@ func newInitCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 
 			if !opts.Quiet {
 				if opts.JSON {
-					fmt.Fprintf(cmd.OutOrStdout(), `{"status":"initialized","file":%q,"preset":%q,"project":%q}`+"\n", manifestPath, presetName, projectName)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), `{"status":"initialized","file":%q,"preset":%q,"project":%q}`+"\n", manifestPath, presetName, projectName)
 				} else {
-					fmt.Fprintf(cmd.OutOrStdout(), "Initialized Loy project %q using preset %q in %s\n", projectName, presetName, manifestPath)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Initialized Loy project %q using preset %q in %s\n", projectName, presetName, manifestPath)
 				}
 			}
 

@@ -7,9 +7,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/process"
-	"github.com/uloydev/loy/internal/version"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/process"
+	"github.com/loy-go/loy/internal/version"
 )
 
 type contextKey string
@@ -106,7 +106,7 @@ func newVersionCmd() *cobra.Command {
 				enc.SetIndent("", "  ")
 				return enc.Encode(info)
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "loy version %s (commit: %s, date: %s, %s)\n", info.Version, info.Commit, info.BuildDate, info.Platform)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "loy version %s (commit: %s, date: %s, %s)\n", info.Version, info.Commit, info.BuildDate, info.Platform)
 			return nil
 		},
 	}

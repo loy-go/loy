@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/uloydev/loy/internal/generator"
-	"github.com/uloydev/loy/internal/generator/builtin"
+	"github.com/loy-go/loy/internal/generator"
+	"github.com/loy-go/loy/internal/generator/builtin"
 )
 
 func TestGeneratorErrors(t *testing.T) {

@@ -3,7 +3,7 @@ package integration_test
 import (
 	"testing"
 
-	"github.com/uloydev/loy/internal/integration"
+	"github.com/loy-go/loy/internal/integration"
 )
 
 func TestCapabilityValidity(t *testing.T) {

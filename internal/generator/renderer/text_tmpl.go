@@ -8,8 +8,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/generator/naming"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/generator/naming"
 )
 
 // TextRenderer implements Renderer using Go standard text/template.
@@ -82,7 +82,7 @@ func (r *TextRenderer) RenderGo(ctx context.Context, name string, tmplContent st
 		lines := strings.Split(string(rendered), "\n")
 		var annotated strings.Builder
 		for i, line := range lines {
-			annotated.WriteString(fmt.Sprintf("%4d | %s\n", i+1, line))
+			fmt.Fprintf(&annotated, "%4d | %s\n", i+1, line)
 		}
 
 		diag := diagnostics.NewError(

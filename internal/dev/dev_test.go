@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/uloydev/loy/internal/dev"
-	"github.com/uloydev/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/dev"
+	"github.com/loy-go/loy/internal/filesystem"
 )
 
 func TestPrefixedLogger(t *testing.T) {
@@ -118,7 +118,7 @@ func TestWatcherDebounceAndClose(t *testing.T) {
 	if err != nil {
 		t.Fatalf("creating watcher: %v", err)
 	}
-	defer watcher.Close()
+	defer func() { _ = watcher.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()

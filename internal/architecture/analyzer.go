@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/graph"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/graph"
 	"golang.org/x/tools/go/packages"
 )
 

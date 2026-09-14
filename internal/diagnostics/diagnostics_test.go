@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/uloydev/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/diagnostics"
 )
 
 func TestDiagnosticFormatting_JSON(t *testing.T) {

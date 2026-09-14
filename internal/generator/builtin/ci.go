@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/uloydev/loy/internal/generator"
-	"github.com/uloydev/loy/internal/generator/model"
+	"github.com/loy-go/loy/internal/generator"
+	"github.com/loy-go/loy/internal/generator/model"
 )
 
 // CIData holds parameters for CI pipeline generation.

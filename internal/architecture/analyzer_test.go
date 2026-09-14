@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/uloydev/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/filesystem"
 )
 
 // mockRule tests analyzer rule invocation

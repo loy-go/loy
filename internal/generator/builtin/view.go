@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/uloydev/loy/internal/generator"
-	"github.com/uloydev/loy/internal/generator/model"
-	"github.com/uloydev/loy/internal/generator/naming"
+	"github.com/loy-go/loy/internal/generator"
+	"github.com/loy-go/loy/internal/generator/model"
+	"github.com/loy-go/loy/internal/generator/naming"
 )
 
 // ViewData holds view template rendering context.
@@ -47,10 +47,7 @@ func (g *ViewGenerator) Generate(ctx context.Context, input generator.Input) ([]
 		return nil, fmt.Errorf("view path %q escapes views directory", rawName)
 	}
 
-	isPartial := false
-	if input.Args != nil && (input.Args["partial"] == "true" || input.Args["partial"] == "1") {
-		isPartial = true
-	}
+	isPartial := input.Args != nil && (input.Args["partial"] == "true" || input.Args["partial"] == "1")
 
 	dir := filepath.Dir(clean)
 	base := filepath.Base(clean)

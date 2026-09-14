@@ -8,10 +8,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/uloydev/loy/internal/cli"
+	"github.com/loy-go/loy/internal/cli"
 )
 
 func TestCanonicalEndToEndLoop(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping canonical end-to-end integration test in short mode")
+	}
+
 	origDir, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("getwd: %v", err)

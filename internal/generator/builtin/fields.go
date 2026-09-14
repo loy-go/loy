@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/uloydev/loy/internal/generator/naming"
+	"github.com/loy-go/loy/internal/generator/naming"
 )
 
 // Field represents a parsed field specification for models and DTOs.

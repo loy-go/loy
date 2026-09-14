@@ -3,7 +3,7 @@ package plan
 import (
 	"io/fs"
 
-	"github.com/uloydev/loy/internal/generator/model"
+	"github.com/loy-go/loy/internal/generator/model"
 )
 
 // OperationType specifies the kind of filesystem operation.

@@ -9,11 +9,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/discovery"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/manifest"
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/discovery"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/manifest"
+	"github.com/loy-go/loy/internal/process"
 )
 
 var goVersionRegex = regexp.MustCompile(`go(\d+)\.(\d+)`)

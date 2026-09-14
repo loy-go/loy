@@ -10,17 +10,17 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/discovery"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/generator"
-	"github.com/uloydev/loy/internal/generator/builtin"
-	"github.com/uloydev/loy/internal/generator/builtin/wiring"
-	"github.com/uloydev/loy/internal/generator/model"
-	"github.com/uloydev/loy/internal/generator/plan"
-	"github.com/uloydev/loy/internal/manifest"
-	"github.com/uloydev/loy/internal/process"
-	"github.com/uloydev/loy/internal/workspace"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/discovery"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/generator"
+	"github.com/loy-go/loy/internal/generator/builtin"
+	"github.com/loy-go/loy/internal/generator/builtin/wiring"
+	"github.com/loy-go/loy/internal/generator/model"
+	"github.com/loy-go/loy/internal/generator/plan"
+	"github.com/loy-go/loy/internal/manifest"
+	"github.com/loy-go/loy/internal/process"
+	"github.com/loy-go/loy/internal/workspace"
 	"golang.org/x/mod/modfile"
 )
 
@@ -328,9 +328,9 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 			enc.SetIndent("", "  ")
 			return enc.Encode(executionPlan)
 		}
-		fmt.Fprintf(cmd.OutOrStdout(), "Plan operations (dry-run) for %s %s:\n", gen.Name(), name)
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Plan operations (dry-run) for %s %s:\n", gen.Name(), name)
 		for _, op := range executionPlan.Operations {
-			fmt.Fprintf(cmd.OutOrStdout(), "  [%s] %s\n", op.Type, op.Path)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  [%s] %s\n", op.Type, op.Path)
 		}
 		return nil
 	}
@@ -355,10 +355,10 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 	}
 
 	if !globalOpts.Quiet {
-		fmt.Fprintf(cmd.OutOrStdout(), "Successfully generated %s %s\n", gen.Name(), name)
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Successfully generated %s %s\n", gen.Name(), name)
 		for _, op := range executionPlan.Operations {
 			if op.Type != plan.OpSkip {
-				fmt.Fprintf(cmd.OutOrStdout(), "  + %s (%s)\n", op.Path, op.Type)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  + %s (%s)\n", op.Path, op.Type)
 			}
 		}
 	}
@@ -382,9 +382,9 @@ func checkSQLC(cmd *cobra.Command, fs filesystem.FileSystem, runner process.Runn
 	_, err = exec.LookPath("sqlc")
 	if err != nil {
 		if !globalOpts.JSON && !globalOpts.Quiet {
-			fmt.Fprintln(cmd.OutOrStdout(), "\nNote: 'sqlc' binary was not found on $PATH.")
-			fmt.Fprintln(cmd.OutOrStdout(), "To generate type-safe Go SQL queries, install it with:")
-			fmt.Fprintln(cmd.OutOrStdout(), "  go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "\nNote: 'sqlc' binary was not found on $PATH.")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "To generate type-safe Go SQL queries, install it with:")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "  go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest")
 		}
 		return
 	}
@@ -459,9 +459,9 @@ func newViewCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptio
 					enc.SetIndent("", "  ")
 					return enc.Encode(executionPlan)
 				}
-				fmt.Fprintf(cmd.OutOrStdout(), "Plan operations (dry-run) for %s %s:\n", gen.Name(), name)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Plan operations (dry-run) for %s %s:\n", gen.Name(), name)
 				for _, op := range executionPlan.Operations {
-					fmt.Fprintf(cmd.OutOrStdout(), "  [%s] %s\n", op.Type, op.Path)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  [%s] %s\n", op.Type, op.Path)
 				}
 				return nil
 			}
@@ -481,9 +481,9 @@ func newViewCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptio
 
 			if !globalOpts.Quiet {
 				if globalOpts.JSON {
-					fmt.Fprintf(cmd.OutOrStdout(), `{"status":"generated","artifact":%q,"name":%q,"path":%q}`+"\n", gen.Name(), name, artifacts[0].Path)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), `{"status":"generated","artifact":%q,"name":%q,"path":%q}`+"\n", gen.Name(), name, artifacts[0].Path)
 				} else {
-					fmt.Fprintf(cmd.OutOrStdout(), "Generated %s: %s\n", gen.Name(), artifacts[0].Path)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Generated %s: %s\n", gen.Name(), artifacts[0].Path)
 				}
 			}
 
@@ -826,9 +826,9 @@ func executeDeployPlan(cmd *cobra.Command, fs filesystem.FileSystem, opts *makeO
 			enc.SetIndent("", "  ")
 			return enc.Encode(executionPlan)
 		}
-		fmt.Fprintf(cmd.OutOrStdout(), "Plan operations (dry-run) for %s:\n", title)
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Plan operations (dry-run) for %s:\n", title)
 		for _, op := range executionPlan.Operations {
-			fmt.Fprintf(cmd.OutOrStdout(), "  [%s] %s\n", op.Type, op.Path)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  [%s] %s\n", op.Type, op.Path)
 		}
 		return nil
 	}
@@ -857,11 +857,11 @@ func executeDeployPlan(cmd *cobra.Command, fs filesystem.FileSystem, opts *makeO
 				"deploy":    title,
 				"artifacts": paths,
 			})
-			fmt.Fprintln(cmd.OutOrStdout(), string(data))
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), string(data))
 		} else {
-			fmt.Fprintf(cmd.OutOrStdout(), "Generated %s (%d files):\n", title, len(artifacts))
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Generated %s (%d files):\n", title, len(artifacts))
 			for _, a := range artifacts {
-				fmt.Fprintf(cmd.OutOrStdout(), "  + %s\n", a.Path)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  + %s\n", a.Path)
 			}
 		}
 	}

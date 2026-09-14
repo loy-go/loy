@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/uloydev/loy/internal/dev"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/dev"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/process"
 )
 
 func newDevCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {

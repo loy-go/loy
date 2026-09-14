@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/generator"
-	"github.com/uloydev/loy/internal/generator/model"
-	"github.com/uloydev/loy/internal/generator/plan"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/generator"
+	"github.com/loy-go/loy/internal/generator/model"
+	"github.com/loy-go/loy/internal/generator/plan"
 )
 
 func TestPlan_ConflictDetection(t *testing.T) {

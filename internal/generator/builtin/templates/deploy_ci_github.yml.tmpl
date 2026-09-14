@@ -51,7 +51,7 @@ jobs:
         run: go vet ./...
 
       - name: Verify architecture boundaries (loy check)
-        run: go run github.com/uloydev/loy/cmd/loy@latest check
+        run: go run github.com/loy-go/loy/cmd/loy@latest check
 
       - name: Run test suite with race detector
         env:

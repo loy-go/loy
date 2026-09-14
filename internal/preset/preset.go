@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/uloydev/loy/internal/manifest"
+	"github.com/loy-go/loy/internal/manifest"
 )
 
 // Preset represents a concrete configuration template for a new or initialized project.
@@ -34,23 +34,23 @@ func (p Preset) MaterializeYAML(projectName string) string {
 	b.WriteString("# Loy project configuration\n")
 	b.WriteString("# See https://loy.dev/docs for configuration details.\n")
 	b.WriteString("version: 1\n\n")
-	b.WriteString(fmt.Sprintf("project:\n  name: %s\n\n", projectName))
+	fmt.Fprintf(&b, "project:\n  name: %s\n\n", projectName)
 
 	if p.Workspace != nil {
 		b.WriteString("workspace:\n")
 		if p.Workspace.DefaultTarget != "" {
-			b.WriteString(fmt.Sprintf("  default_target: %s\n", p.Workspace.DefaultTarget))
+			fmt.Fprintf(&b, "  default_target: %s\n", p.Workspace.DefaultTarget)
 		}
 		if len(p.Workspace.Apps) > 0 {
 			b.WriteString("  apps:\n")
 			for _, app := range p.Workspace.Apps {
-				b.WriteString(fmt.Sprintf("    - %s\n", app))
+				fmt.Fprintf(&b, "    - %s\n", app)
 			}
 		}
 		if len(p.Workspace.Packages) > 0 {
 			b.WriteString("  packages:\n")
 			for _, pkg := range p.Workspace.Packages {
-				b.WriteString(fmt.Sprintf("    - %s\n", pkg))
+				fmt.Fprintf(&b, "    - %s\n", pkg)
 			}
 		}
 		return b.String()
@@ -58,22 +58,22 @@ func (p Preset) MaterializeYAML(projectName string) string {
 
 	b.WriteString("defaults:\n")
 	if p.Defaults.HTTP != "" {
-		b.WriteString(fmt.Sprintf("  http: %s\n", p.Defaults.HTTP))
+		fmt.Fprintf(&b, "  http: %s\n", p.Defaults.HTTP)
 	}
 	if p.Defaults.Database != "" {
-		b.WriteString(fmt.Sprintf("  database: %s\n", p.Defaults.Database))
+		fmt.Fprintf(&b, "  database: %s\n", p.Defaults.Database)
 	}
 	if p.Defaults.Cache != "" {
-		b.WriteString(fmt.Sprintf("  cache: %s\n", p.Defaults.Cache))
+		fmt.Fprintf(&b, "  cache: %s\n", p.Defaults.Cache)
 	}
 	if p.Defaults.Queue != "" {
-		b.WriteString(fmt.Sprintf("  queue: %s\n", p.Defaults.Queue))
+		fmt.Fprintf(&b, "  queue: %s\n", p.Defaults.Queue)
 	}
 	if p.Defaults.Template != "" {
-		b.WriteString(fmt.Sprintf("  template: %s\n", p.Defaults.Template))
+		fmt.Fprintf(&b, "  template: %s\n", p.Defaults.Template)
 	}
 	if p.Defaults.Assets != "" {
-		b.WriteString(fmt.Sprintf("  assets: %s\n", p.Defaults.Assets))
+		fmt.Fprintf(&b, "  assets: %s\n", p.Defaults.Assets)
 	}
 
 	return b.String()

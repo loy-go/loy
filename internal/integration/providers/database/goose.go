@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/pressly/goose/v3"
-	"github.com/uloydev/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/filesystem"
 )
 
 var validTableNameRegex = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
@@ -140,7 +140,7 @@ func (r *GooseRunner) Up(ctx context.Context, opts MigrationOptions) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	timeout := opts.Timeout
 	if timeout <= 0 {
@@ -175,7 +175,7 @@ func (r *GooseRunner) Down(ctx context.Context, opts MigrationOptions) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	timeout := opts.Timeout
 	if timeout <= 0 {
@@ -200,7 +200,7 @@ func (r *GooseRunner) DownTo(ctx context.Context, opts MigrationOptions, version
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	timeout := opts.Timeout
 	if timeout <= 0 {
@@ -225,7 +225,7 @@ func (r *GooseRunner) Redo(ctx context.Context, opts MigrationOptions) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	timeout := opts.Timeout
 	if timeout <= 0 {
@@ -250,7 +250,7 @@ func (r *GooseRunner) Reset(ctx context.Context, opts MigrationOptions) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	timeout := opts.Timeout
 	if timeout <= 0 {
@@ -275,7 +275,7 @@ func (r *GooseRunner) Status(ctx context.Context, opts MigrationOptions) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	timeout := opts.Timeout
 	if timeout <= 0 {
@@ -300,7 +300,7 @@ func (r *GooseRunner) Version(ctx context.Context, opts MigrationOptions) (int64
 	if err != nil {
 		return 0, err
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	timeout := opts.Timeout
 	if timeout <= 0 {
@@ -335,7 +335,7 @@ func (r *GooseRunner) Create(ctx context.Context, dir, name string) (string, err
 
 	filePath := filepath.Join(dir, filename)
 
-	content := fmt.Sprintf(`-- +goose Up
+	content := `-- +goose Up
 -- +goose StatementBegin
 -- SQL in this section is executed when the migration is applied.
 -- +goose StatementEnd
@@ -344,7 +344,7 @@ func (r *GooseRunner) Create(ctx context.Context, dir, name string) (string, err
 -- +goose StatementBegin
 -- SQL in this section is executed when the migration is rolled back.
 -- +goose StatementEnd
-`)
+`
 
 	if err := r.fs.WriteFile(filePath, []byte(content), 0644); err != nil {
 		return "", fmt.Errorf("writing migration file %s: %w", filePath, err)

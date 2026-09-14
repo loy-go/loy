@@ -3,7 +3,7 @@ package model_test
 import (
 	"testing"
 
-	"github.com/uloydev/loy/internal/generator/model"
+	"github.com/loy-go/loy/internal/generator/model"
 )
 
 func TestOwnership_String(t *testing.T) {

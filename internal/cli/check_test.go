@@ -5,8 +5,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/process"
 )
 
 type dummyRunner struct{}

@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/uloydev/loy/internal/architecture"
-	"github.com/uloydev/loy/internal/architecture/rules"
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/discovery"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/manifest"
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/architecture"
+	"github.com/loy-go/loy/internal/architecture/rules"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/discovery"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/manifest"
+	"github.com/loy-go/loy/internal/process"
 	"golang.org/x/mod/modfile"
 )
 
@@ -120,7 +120,7 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 			if opts.JSON && len(violations) == 0 {
 				_ = (&diagnostics.JSONFormatter{Indent: true}).Format(cmd.OutOrStdout(), []diagnostics.Diagnostic{})
 			} else if !opts.Quiet && !opts.JSON {
-				fmt.Fprintln(cmd.OutOrStdout(), "All architecture rules passed.")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "All architecture rules passed.")
 			}
 
 			return nil

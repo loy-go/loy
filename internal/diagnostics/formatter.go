@@ -79,17 +79,23 @@ func (f *HumanFormatter) Format(w io.Writer, diags []Diagnostic) error {
 			}
 		}
 
-		fmt.Fprintf(w, "%s %s%s: %s\n", prefix, codeStr, loc, d.Message)
+		if _, err := fmt.Fprintf(w, "%s %s%s: %s\n", prefix, codeStr, loc, d.Message); err != nil {
+			return err
+		}
 
 		if d.Detail != "" {
-			fmt.Fprintf(w, "   Detail: %s\n", d.Detail)
+			if _, err := fmt.Fprintf(w, "   Detail: %s\n", d.Detail); err != nil {
+				return err
+			}
 		}
 		if d.Hint != "" {
 			hintPrefix := "   Hint:"
 			if f.Color {
 				hintPrefix = ansiCyan + hintPrefix + ansiReset
 			}
-			fmt.Fprintf(w, "%s %s\n", hintPrefix, d.Hint)
+			if _, err := fmt.Fprintf(w, "%s %s\n", hintPrefix, d.Hint); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

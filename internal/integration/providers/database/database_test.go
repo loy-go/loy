@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/integration/providers/database"
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/integration/providers/database"
+	"github.com/loy-go/loy/internal/process"
 )
 
 func TestDriverRegistry(t *testing.T) {

@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/uloydev/loy/internal/cli"
-	"github.com/uloydev/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/cli"
+	"github.com/loy-go/loy/internal/diagnostics"
 )
 
 // Exit codes per Doc 09:

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uloydev/loy/internal/architecture"
-	"github.com/uloydev/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/architecture"
+	"github.com/loy-go/loy/internal/diagnostics"
 )
 
 // RuleArch002 flags domain importing infrastructure.

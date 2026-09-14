@@ -3,8 +3,8 @@ package preset_test
 import (
 	"testing"
 
-	"github.com/uloydev/loy/internal/manifest"
-	"github.com/uloydev/loy/internal/preset"
+	"github.com/loy-go/loy/internal/manifest"
+	"github.com/loy-go/loy/internal/preset"
 )
 
 func TestRegistry_Presets(t *testing.T) {

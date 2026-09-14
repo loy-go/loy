@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/uloydev/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/diagnostics"
 )
 
 // CommandError represents a failed command execution carrying structured diagnostics and an exit code.

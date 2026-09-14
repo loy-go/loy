@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/uloydev/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/diagnostics"
 	"gopkg.in/yaml.v3"
 )
 

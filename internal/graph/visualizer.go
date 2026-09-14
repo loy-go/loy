@@ -65,7 +65,7 @@ func RenderASCII(w io.Writer, gm *GraphModel, violationsOnly bool) {
 			continue
 		}
 
-		fmt.Fprintf(w, "%s [%s]\n", pkg, layer)
+		_, _ = fmt.Fprintf(w, "%s [%s]\n", pkg, layer)
 
 		vSet := make(map[string]bool)
 		for _, v := range violations {
@@ -87,9 +87,9 @@ func RenderASCII(w io.Writer, gm *GraphModel, violationsOnly bool) {
 			}
 			tLayer := gm.Packages[target]
 			if vSet[target] {
-				fmt.Fprintf(w, "  %s %s [%s] (VIOLATION)\n", prefix, target, tLayer)
+				_, _ = fmt.Fprintf(w, "  %s %s [%s] (VIOLATION)\n", prefix, target, tLayer)
 			} else {
-				fmt.Fprintf(w, "  %s %s [%s]\n", prefix, target, tLayer)
+				_, _ = fmt.Fprintf(w, "  %s %s [%s]\n", prefix, target, tLayer)
 			}
 		}
 	}
@@ -97,9 +97,9 @@ func RenderASCII(w io.Writer, gm *GraphModel, violationsOnly bool) {
 
 // RenderDOT formats the graph in Graphviz DOT format.
 func RenderDOT(w io.Writer, gm *GraphModel, violationsOnly bool) {
-	fmt.Fprintln(w, "digraph Architecture {")
-	fmt.Fprintln(w, "  rankdir=LR;")
-	fmt.Fprintln(w, "  node [shape=box, fontname=\"Helvetica\"];")
+	_, _ = fmt.Fprintln(w, "digraph Architecture {")
+	_, _ = fmt.Fprintln(w, "  rankdir=LR;")
+	_, _ = fmt.Fprintln(w, "  node [shape=box, fontname=\"Helvetica\"];")
 
 	vMap := make(map[string]bool)
 	involved := make(map[string]bool)
@@ -136,7 +136,7 @@ func RenderDOT(w io.Writer, gm *GraphModel, violationsOnly bool) {
 		case "transport":
 			color = "plum"
 		}
-		fmt.Fprintf(w, "  %q [label=\"%s\\n[%s]\", fillcolor=\"%s\", style=\"filled\"];\n", pkg, pkg, layer, color)
+		_, _ = fmt.Fprintf(w, "  %q [label=\"%s\\n[%s]\", fillcolor=\"%s\", style=\"filled\"];\n", pkg, pkg, layer, color)
 	}
 
 	// Declare edges
@@ -149,20 +149,20 @@ func RenderDOT(w io.Writer, gm *GraphModel, violationsOnly bool) {
 				continue
 			}
 			if isViol {
-				fmt.Fprintf(w, "  %q -> %q [color=\"red\", penwidth=2.0];\n", from, to)
+				_, _ = fmt.Fprintf(w, "  %q -> %q [color=\"red\", penwidth=2.0];\n", from, to)
 			} else {
-				fmt.Fprintf(w, "  %q -> %q;\n", from, to)
+				_, _ = fmt.Fprintf(w, "  %q -> %q;\n", from, to)
 			}
 		}
 	}
 
-	fmt.Fprintln(w, "}")
+	_, _ = fmt.Fprintln(w, "}")
 }
 
 // RenderMermaid formats the graph in Mermaid markdown syntax.
 func RenderMermaid(w io.Writer, gm *GraphModel, violationsOnly bool) {
-	fmt.Fprintln(w, "```mermaid")
-	fmt.Fprintln(w, "graph TD")
+	_, _ = fmt.Fprintln(w, "```mermaid")
+	_, _ = fmt.Fprintln(w, "graph TD")
 
 	sanitize := func(s string) string {
 		r := strings.NewReplacer("/", "_", ".", "_", "-", "_")
@@ -193,7 +193,7 @@ func RenderMermaid(w io.Writer, gm *GraphModel, violationsOnly bool) {
 		}
 		layer := gm.Packages[pkg]
 		id := sanitize(pkg)
-		fmt.Fprintf(w, "  %s[\"%s<br/>(%s)\"]\n", id, pkg, layer)
+		_, _ = fmt.Fprintf(w, "  %s[\"%s<br/>(%s)\"]\n", id, pkg, layer)
 	}
 
 	for _, from := range pkgs {
@@ -207,12 +207,12 @@ func RenderMermaid(w io.Writer, gm *GraphModel, violationsOnly bool) {
 				continue
 			}
 			if isViol {
-				fmt.Fprintf(w, "  %s -.->|violation| %s\n", fromID, toID)
+				_, _ = fmt.Fprintf(w, "  %s -.->|violation| %s\n", fromID, toID)
 			} else {
-				fmt.Fprintf(w, "  %s --> %s\n", fromID, toID)
+				_, _ = fmt.Fprintf(w, "  %s --> %s\n", fromID, toID)
 			}
 		}
 	}
 
-	fmt.Fprintln(w, "```")
+	_, _ = fmt.Fprintln(w, "```")
 }

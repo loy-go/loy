@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/uloydev/loy/internal/architecture"
-	"github.com/uloydev/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/architecture"
+	"github.com/loy-go/loy/internal/diagnostics"
 )
 
 // RuleArch007 checks transport business logic leakage.

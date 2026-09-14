@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/uloydev/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/filesystem"
 )
 
 // Supervisor coordinates multiple ManagedProcesses and triggers hot-reloads on file change.

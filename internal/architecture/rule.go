@@ -5,7 +5,7 @@ import (
 	"go/ast"
 	"go/token"
 
-	"github.com/uloydev/loy/internal/graph"
+	"github.com/loy-go/loy/internal/graph"
 	"golang.org/x/tools/go/packages"
 )
 

@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/doctor"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/doctor"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/process"
 )
 
 func newDoctorCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
@@ -58,15 +58,15 @@ func newDoctorCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Comman
 			} else {
 				for _, c := range checks {
 					if c.Passed {
-						fmt.Fprintf(cmd.OutOrStdout(), "[✓] %-15s : %s\n", c.Name, c.Detail)
+						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "[✓] %-15s : %s\n", c.Name, c.Detail)
 					} else {
 						tag := "[!]"
 						if c.Diagnostic != nil && c.Diagnostic.Severity == diagnostics.SeverityError {
 							tag = "[x]"
 						}
-						fmt.Fprintf(cmd.OutOrStdout(), "%s %-15s : %s\n", tag, c.Name, c.Detail)
+						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s %-15s : %s\n", tag, c.Name, c.Detail)
 						if c.Diagnostic != nil && c.Diagnostic.Hint != "" {
-							fmt.Fprintf(cmd.OutOrStdout(), "    Hint: %s\n", c.Diagnostic.Hint)
+							_, _ = fmt.Fprintf(cmd.OutOrStdout(), "    Hint: %s\n", c.Diagnostic.Hint)
 						}
 					}
 				}

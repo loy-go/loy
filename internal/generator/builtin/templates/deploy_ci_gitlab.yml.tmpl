@@ -22,7 +22,7 @@ variables:
   script:
     - go mod verify
     - go vet ./...
-    - go run github.com/uloydev/loy/cmd/loy@latest check
+    - go run github.com/loy-go/loy/cmd/loy@latest check
     - go test -v -race -cover ./...
 
 build:

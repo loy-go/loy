@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/uloydev/loy/internal/cli"
-	"github.com/uloydev/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/cli"
+	"github.com/loy-go/loy/internal/filesystem"
 )
 
 func TestNewProjectGeneratesRuntime(t *testing.T) {

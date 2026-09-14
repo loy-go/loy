@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	"github.com/uloydev/loy/internal/cli"
+	"github.com/loy-go/loy/internal/cli"
 )
 
 func executeMakeCommand(root *cobra.Command, args ...string) (string, error) {

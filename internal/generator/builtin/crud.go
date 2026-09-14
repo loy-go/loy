@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/uloydev/loy/internal/generator"
-	"github.com/uloydev/loy/internal/generator/model"
+	"github.com/loy-go/loy/internal/generator"
+	"github.com/loy-go/loy/internal/generator/model"
 )
 
 // CRUDGenerator creates full vertical stack: migration, query, domain, repo, svc, handler, wiring.

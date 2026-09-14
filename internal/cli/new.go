@@ -6,13 +6,13 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/generator"
-	"github.com/uloydev/loy/internal/generator/builtin"
-	"github.com/uloydev/loy/internal/generator/plan"
-	"github.com/uloydev/loy/internal/preset"
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/generator"
+	"github.com/loy-go/loy/internal/generator/builtin"
+	"github.com/loy-go/loy/internal/generator/plan"
+	"github.com/loy-go/loy/internal/preset"
+	"github.com/loy-go/loy/internal/process"
 )
 
 func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
@@ -135,9 +135,9 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 
 			if !opts.Quiet {
 				if opts.JSON {
-					fmt.Fprintf(cmd.OutOrStdout(), `{"status":"created","project":%q,"directory":%q,"preset":%q}`+"\n", projectName, targetDir, presetName)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), `{"status":"created","project":%q,"directory":%q,"preset":%q}`+"\n", projectName, targetDir, presetName)
 				} else {
-					fmt.Fprintf(cmd.OutOrStdout(), "Created new Loy project %q (%s) in %s\n", projectName, presetName, targetDir)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Created new Loy project %q (%s) in %s\n", projectName, presetName, targetDir)
 				}
 			}
 

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/uloydev/loy/internal/generator"
-	"github.com/uloydev/loy/internal/generator/builtin"
+	"github.com/loy-go/loy/internal/generator"
+	"github.com/loy-go/loy/internal/generator/builtin"
 )
 
 func TestCIGenerator(t *testing.T) {
@@ -35,7 +35,7 @@ func TestCIGenerator(t *testing.T) {
 		if !strings.Contains(content, "cache: true") {
 			t.Errorf("missing cache: true in github actions:\n%s", content)
 		}
-		if !strings.Contains(content, "go run github.com/uloydev/loy/cmd/loy@latest check") {
+		if !strings.Contains(content, "go run github.com/loy-go/loy/cmd/loy@latest check") {
 			t.Errorf("missing loy check in github actions:\n%s", content)
 		}
 		if !strings.Contains(content, "image: postgres:16-alpine") {

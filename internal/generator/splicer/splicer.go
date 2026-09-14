@@ -6,7 +6,7 @@ import (
 	"go/format"
 	"strings"
 
-	"github.com/uloydev/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/diagnostics"
 )
 
 // RegionInfo stores parsed coordinates of a managed region.

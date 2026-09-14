@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/generator/renderer"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/generator/renderer"
 )
 
 type sampleViewModel struct {

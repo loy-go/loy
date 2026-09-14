@@ -3,7 +3,7 @@ package naming_test
 import (
 	"testing"
 
-	"github.com/uloydev/loy/internal/generator/naming"
+	"github.com/loy-go/loy/internal/generator/naming"
 )
 
 func TestCasingConversions(t *testing.T) {

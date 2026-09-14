@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/uloydev/loy/internal/cli"
+	"github.com/loy-go/loy/internal/cli"
 )
 
 func TestMakeCRUDAndJSON(t *testing.T) {

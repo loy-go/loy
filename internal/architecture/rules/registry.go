@@ -1,7 +1,7 @@
 package rules
 
 import (
-	"github.com/uloydev/loy/internal/architecture"
+	"github.com/loy-go/loy/internal/architecture"
 )
 
 // DefaultRules returns instances of all 14 standard architecture rules.

@@ -58,9 +58,9 @@ func (l *PrefixedLogger) LogLine(tag, text string) {
 
 	color := l.getColor(tag)
 	if color != "" {
-		fmt.Fprintf(l.out, "%s[%s]%s %s\n", color, tag, colorReset, text)
+		_, _ = fmt.Fprintf(l.out, "%s[%s]%s %s\n", color, tag, colorReset, text)
 	} else {
-		fmt.Fprintf(l.out, "[%s] %s\n", tag, text)
+		_, _ = fmt.Fprintf(l.out, "[%s] %s\n", tag, text)
 	}
 }
 

@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/uloydev/loy/internal/architecture"
-	"github.com/uloydev/loy/internal/architecture/rules"
-	"github.com/uloydev/loy/internal/discovery"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/graph"
-	"github.com/uloydev/loy/internal/manifest"
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/architecture"
+	"github.com/loy-go/loy/internal/architecture/rules"
+	"github.com/loy-go/loy/internal/discovery"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/graph"
+	"github.com/loy-go/loy/internal/manifest"
+	"github.com/loy-go/loy/internal/process"
 	"golang.org/x/mod/modfile"
 )
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/process"
 )
 
 // SqlcConfigOptions contains properties to generate a standard sqlc.yaml configuration.

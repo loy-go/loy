@@ -3,8 +3,8 @@ package manifest_test
 import (
 	"testing"
 
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/manifest"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/manifest"
 )
 
 func TestParser_ParseStrict_Valid(t *testing.T) {

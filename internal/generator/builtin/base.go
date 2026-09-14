@@ -4,8 +4,8 @@ import (
 	"embed"
 	"strings"
 
-	"github.com/uloydev/loy/internal/generator/naming"
-	"github.com/uloydev/loy/internal/generator/renderer"
+	"github.com/loy-go/loy/internal/generator/naming"
+	"github.com/loy-go/loy/internal/generator/renderer"
 )
 
 //go:embed templates/*

@@ -53,6 +53,8 @@ Every contributor and AI agent must uphold standard Go senior engineering practi
 - **Flag semantics & zero-value distinction**: When evaluating optional numerical CLI flags, always check `cmd.Flags().Changed("flag")`. Never assume `> 0` because zero (`0`) is often a valid semantic argument (e.g. `--to 0` for base migration rollback).
 - **Resolution cascade hygiene**: Keep intermediate configuration structures zero-valued during cascade resolution (CLI flags > Env > Config file). Apply hardcoded defaults only at the final resolution step to avoid shadowing lower-precedence config files.
 - **Template compile & dead code audit**: All Go code templates must be verified for unused imports (`gofmt`/`go/parser`) and zero unreferenced dead artifacts. Never silence template rendering errors with `if err == nil`.
+- **Template casing safety**: In code generation templates, always use `{{.FeaturePkg}}` (lowercase flat/snake name) for package paths and imports rather than `{{.Feature}}`. This guarantees cross-platform safety on case-insensitive filesystems (macOS, Windows).
+- **Canonical module identity**: The authoritative module path is `github.com/loy-go/loy` targeting Go 1.24.0+. All internal packages and CLI references must import from `github.com/loy-go/loy`.
 
 
 ---

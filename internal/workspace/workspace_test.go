@@ -3,9 +3,9 @@ package workspace_test
 import (
 	"testing"
 
-	"github.com/uloydev/loy/internal/diagnostics"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/workspace"
+	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/workspace"
 )
 
 func TestWorkspaceResolver_SingleModule(t *testing.T) {

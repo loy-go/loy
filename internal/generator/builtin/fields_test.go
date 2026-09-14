@@ -3,7 +3,7 @@ package builtin_test
 import (
 	"testing"
 
-	"github.com/uloydev/loy/internal/generator/builtin"
+	"github.com/loy-go/loy/internal/generator/builtin"
 )
 
 func TestParseFields(t *testing.T) {

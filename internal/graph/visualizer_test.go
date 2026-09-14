@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/uloydev/loy/internal/graph"
+	"github.com/loy-go/loy/internal/graph"
 )
 
 func TestVisualizerRenderers(t *testing.T) {

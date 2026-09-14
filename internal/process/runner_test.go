@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/process"
 )
 
 func TestExecRunner_RunSuccess(t *testing.T) {

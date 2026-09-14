@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/uloydev/loy/internal/discovery"
-	"github.com/uloydev/loy/internal/filesystem"
-	"github.com/uloydev/loy/internal/integration/providers/database"
-	"github.com/uloydev/loy/internal/manifest"
-	"github.com/uloydev/loy/internal/process"
+	"github.com/loy-go/loy/internal/discovery"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/integration/providers/database"
+	"github.com/loy-go/loy/internal/manifest"
+	"github.com/loy-go/loy/internal/process"
 )
 
 type migrateFlags struct {
@@ -154,7 +154,7 @@ func newMigrateUpCmd(fs filesystem.FileSystem, runner process.Runner, flags *mig
 					"command": "up",
 				})
 			} else if !cliOpts.Quiet {
-				fmt.Fprintln(cmd.OutOrStdout(), "Successfully applied migrations.")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Successfully applied migrations.")
 			}
 			return nil
 		},
@@ -196,7 +196,7 @@ func newMigrateDownCmd(fs filesystem.FileSystem, runner process.Runner, flags *m
 					"command": "down",
 				})
 			} else if !cliOpts.Quiet {
-				fmt.Fprintln(cmd.OutOrStdout(), "Successfully rolled back migration.")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Successfully rolled back migration.")
 			}
 			return nil
 		},
@@ -251,7 +251,7 @@ func newMigrateCreateCmd(fs filesystem.FileSystem, runner process.Runner, flags 
 					"file":   filePath,
 				})
 			} else if !cliOpts.Quiet {
-				fmt.Fprintf(cmd.OutOrStdout(), "Created migration: %s\n", filePath)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Created migration: %s\n", filePath)
 			}
 			return nil
 		},
@@ -282,7 +282,7 @@ func newMigrateRedoCmd(fs filesystem.FileSystem, runner process.Runner, flags *m
 					"command": "redo",
 				})
 			} else if !cliOpts.Quiet {
-				fmt.Fprintln(cmd.OutOrStdout(), "Successfully redid migration.")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Successfully redid migration.")
 			}
 			return nil
 		},
@@ -313,7 +313,7 @@ func newMigrateResetCmd(fs filesystem.FileSystem, runner process.Runner, flags *
 					"command": "reset",
 				})
 			} else if !cliOpts.Quiet {
-				fmt.Fprintln(cmd.OutOrStdout(), "Successfully reset all migrations.")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Successfully reset all migrations.")
 			}
 			return nil
 		},
@@ -344,7 +344,7 @@ func newMigrateVersionCmd(fs filesystem.FileSystem, runner process.Runner, flags
 					"version": strconv.FormatInt(ver, 10),
 				})
 			} else if !cliOpts.Quiet {
-				fmt.Fprintf(cmd.OutOrStdout(), "Current database version: %d\n", ver)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Current database version: %d\n", ver)
 			}
 			return nil
 		},
