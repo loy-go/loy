@@ -131,6 +131,7 @@ func (r *Resolver) Resolve(rootDir string) (*Workspace, []*diagnostics.Diagnosti
 }
 
 func (r *Resolver) inspectModule(absModDir, relPath string) (*Module, *diagnostics.Diagnostic) {
+	relPath = filepath.ToSlash(relPath)
 	goModPath, err := filesystem.CleanAndValidatePath(absModDir, filepath.Join(absModDir, "go.mod"))
 	if err != nil {
 		return nil, &diagnostics.Diagnostic{
@@ -182,7 +183,8 @@ func (r *Resolver) inspectModule(absModDir, relPath string) (*Module, *diagnosti
 }
 
 func (r *Resolver) classifyModule(absModDir, relPath string) ModuleType {
-	if strings.HasPrefix(relPath, "apps/") || strings.Contains(relPath, "/apps/") {
+	normRel := filepath.ToSlash(relPath)
+	if strings.HasPrefix(normRel, "apps/") || strings.Contains(normRel, "/apps/") {
 		return TypeApp
 	}
 	cmdPath, err := filesystem.CleanAndValidatePath(absModDir, filepath.Join(absModDir, "cmd"))

@@ -2,11 +2,9 @@
 import { defineConfig, passthroughImageService } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
-const isGitHubPages = process.env.GITHUB_PAGES === 'true' || process.env.GITHUB_ACTIONS === 'true';
-
 export default defineConfig({
-  site: isGitHubPages ? 'https://loy-go.github.io' : 'https://loy.dev',
-  base: isGitHubPages ? '/loy' : '/',
+  site: 'https://loy-go.github.io',
+  base: '/loy',
   image: {
     service: passthroughImageService(),
   },

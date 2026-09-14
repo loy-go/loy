@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/loy-go/loy/internal/diagnostics"
@@ -42,14 +43,16 @@ func (ws *Workspace) SelectTarget(target string) (*Module, *diagnostics.Diagnost
 
 	// Match by full name, rel path, or base name
 	for _, app := range ws.Apps {
-		if app.Name == target || app.Rel == target || strings.HasSuffix(app.Rel, "/"+target) {
+		normRel := filepath.ToSlash(app.Rel)
+		if app.Name == target || normRel == target || strings.HasSuffix(normRel, "/"+target) {
 			return app, nil
 		}
 	}
 
 	// Check in all modules
 	for _, mod := range ws.Modules {
-		if mod.Name == target || mod.Rel == target || strings.HasSuffix(mod.Rel, "/"+target) {
+		normRel := filepath.ToSlash(mod.Rel)
+		if mod.Name == target || normRel == target || strings.HasSuffix(normRel, "/"+target) {
 			return mod, nil
 		}
 	}

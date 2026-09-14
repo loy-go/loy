@@ -1,11 +1,11 @@
-version: 2
+version: "2"
 
 run:
   timeout: 5m
   tests: true
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - errcheck
     - govet
@@ -13,19 +13,19 @@ linters:
     - staticcheck
     - unused
     - whitespace
-
-linters-settings:
-  govet:
-    enable-all: false
-    disable:
-      - fieldalignment
-  errcheck:
-    check-type-assertions: false
-    check-blank: false
+  settings:
+    govet:
+      enable-all: false
+      disable:
+        - fieldalignment
+    errcheck:
+      check-type-assertions: false
+      check-blank: false
+  exclusions:
+    paths:
+      - testdata
+      - vendor
 
 issues:
-  exclude-dirs:
-    - testdata
-    - vendor
   max-issues-per-linter: 50
   max-same-issues: 10
