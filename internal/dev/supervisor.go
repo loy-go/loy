@@ -2,9 +2,11 @@ package dev
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync"
 	"time"
@@ -59,6 +61,15 @@ func NewSupervisor(opts SupervisorOptions, fs filesystem.FileSystem) (*Superviso
 		return nil, fmt.Errorf("initializing file watcher: %w", err)
 	}
 
+	// Graceful warning if views/ directory exists but templ CLI is not found in PATH
+	viewsPath := filepath.Join(opts.RootDir, "views")
+	if exists, _ := fs.Exists(viewsPath); exists {
+		if _, err := exec.LookPath("templ"); err != nil {
+			logger.LogLine("supervisor", "Warning: 'views/' directory detected but 'templ' CLI is not found in PATH.")
+			logger.LogLine("supervisor", "To enable live Templ compilation, install it with: go install github.com/a-h/templ/cmd/templ@latest")
+		}
+	}
+
 	s := &Supervisor{
 		rootDir:     opts.RootDir,
 		tasks:       opts.Tasks,
@@ -70,6 +81,23 @@ func NewSupervisor(opts SupervisorOptions, fs filesystem.FileSystem) (*Superviso
 	return s, nil
 }
 
+// ResolvePackageManager determines the JS package manager based on lockfiles.
+func ResolvePackageManager(rootDir string, fs filesystem.FileSystem) string {
+	if fs == nil {
+		fs = filesystem.NewOSFileSystem()
+	}
+	if exists, _ := fs.Exists(filepath.Join(rootDir, "pnpm-lock.yaml")); exists {
+		return "pnpm"
+	}
+	if exists, _ := fs.Exists(filepath.Join(rootDir, "bun.lockb")); exists {
+		return "bun"
+	}
+	if exists, _ := fs.Exists(filepath.Join(rootDir, "yarn.lock")); exists {
+		return "yarn"
+	}
+	return "npm"
+}
+
 // DiscoverTasks inspects the project directory and returns standard default process tasks.
 func DiscoverTasks(rootDir string, fs filesystem.FileSystem) []ProcessTask {
 	if fs == nil {
@@ -78,7 +106,18 @@ func DiscoverTasks(rootDir string, fs filesystem.FileSystem) []ProcessTask {
 
 	var tasks []ProcessTask
 
-	// 1. Check for cmd/api
+	// 1. Check for cmd/web
+	webPath := filepath.Join(rootDir, "cmd", "web")
+	if exists, _ := fs.Exists(webPath); exists {
+		tasks = append(tasks, ProcessTask{
+			Name:    "web",
+			Command: "go",
+			Args:    []string{"run", "./cmd/web"},
+			Dir:     rootDir,
+		})
+	}
+
+	// 2. Check for cmd/api
 	apiPath := filepath.Join(rootDir, "cmd", "api")
 	if exists, _ := fs.Exists(apiPath); exists {
 		tasks = append(tasks, ProcessTask{
@@ -87,8 +126,8 @@ func DiscoverTasks(rootDir string, fs filesystem.FileSystem) []ProcessTask {
 			Args:    []string{"run", "./cmd/api"},
 			Dir:     rootDir,
 		})
-	} else {
-		// Fallback to main.go in root if exists
+	} else if len(tasks) == 0 {
+		// Fallback to main.go in root if neither cmd/web nor cmd/api exists
 		mainPath := filepath.Join(rootDir, "main.go")
 		if exists, _ := fs.Exists(mainPath); exists {
 			tasks = append(tasks, ProcessTask{
@@ -100,7 +139,7 @@ func DiscoverTasks(rootDir string, fs filesystem.FileSystem) []ProcessTask {
 		}
 	}
 
-	// 2. Check for cmd/worker
+	// 3. Check for cmd/worker
 	workerPath := filepath.Join(rootDir, "cmd", "worker")
 	if exists, _ := fs.Exists(workerPath); exists {
 		tasks = append(tasks, ProcessTask{
@@ -109,6 +148,41 @@ func DiscoverTasks(rootDir string, fs filesystem.FileSystem) []ProcessTask {
 			Args:    []string{"run", "./cmd/worker"},
 			Dir:     rootDir,
 		})
+	}
+
+	// 4. Check for Templ in views/
+	viewsPath := filepath.Join(rootDir, "views")
+	if exists, _ := fs.Exists(viewsPath); exists {
+		if _, err := exec.LookPath("templ"); err == nil {
+			tasks = append(tasks, ProcessTask{
+				Name:    "templ",
+				Command: "templ",
+				Args:    []string{"generate", "--watch"},
+				Dir:     rootDir,
+			})
+		}
+	}
+
+	// 5. Check for package.json with dev script (Vite)
+	pkgPath := filepath.Join(rootDir, "package.json")
+	if exists, _ := fs.Exists(pkgPath); exists {
+		pkgData, err := fs.ReadFile(pkgPath)
+		if err == nil {
+			var pkgInfo struct {
+				Scripts map[string]string `json:"scripts"`
+			}
+			if json.Unmarshal(pkgData, &pkgInfo) == nil {
+				if _, hasDev := pkgInfo.Scripts["dev"]; hasDev {
+					pm := ResolvePackageManager(rootDir, fs)
+					tasks = append(tasks, ProcessTask{
+						Name:    "vite",
+						Command: pm,
+						Args:    []string{"run", "dev"},
+						Dir:     rootDir,
+					})
+				}
+			}
+		}
 	}
 
 	return tasks

@@ -40,7 +40,7 @@ func (c *Classifier) Classify(importPath string) Layer {
 	parts := strings.Split(filepath.ToSlash(relPath), "/")
 	for i, part := range parts {
 		switch part {
-		case "transport", "handler", "handlers", "http", "grpc", "controller", "controllers":
+		case "transport", "handler", "handlers", "http", "grpc", "controller", "controllers", "views", "view":
 			return LayerTransport
 		case "application", "service", "services", "usecase", "usecases":
 			return LayerApplication
@@ -52,7 +52,7 @@ func (c *Classifier) Classify(importPath string) Layer {
 		// Also support internal/layer pattern
 		if part == "internal" && i+1 < len(parts) {
 			switch parts[i+1] {
-			case "transport", "handler", "handlers", "http", "grpc", "controller", "controllers":
+			case "transport", "handler", "handlers", "http", "grpc", "controller", "controllers", "views", "view":
 				return LayerTransport
 			case "application", "service", "services", "usecase", "usecases":
 				return LayerApplication

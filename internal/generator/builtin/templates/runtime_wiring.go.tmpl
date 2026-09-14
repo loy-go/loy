@@ -1,6 +1,9 @@
 package app
 
 import (
+{{if eq .Template "templ"}}
+	"{{.ModulePath}}/internal/transport/http/handler"
+{{end}}
 	// loy:region:imports
 	// loy:endregion
 )
@@ -13,9 +16,18 @@ func (a *App) wireDependencies() error {
 	// loy:region:services
 	// loy:endregion
 
+{{if eq .Template "templ"}}
+	webHandler := handler.NewWebHandler()
+{{end}}
 	// loy:region:handlers
 	// loy:endregion
 
+{{if eq .Template "templ"}}
+	if a.router != nil {
+		a.router.Get("/", webHandler.Home)
+		a.router.Get("/api/ping", webHandler.Ping)
+	}
+{{end}}
 	// loy:region:routes
 	// loy:endregion
 

@@ -15,6 +15,8 @@ func TestLayerClassifier(t *testing.T) {
 	}{
 		{"github.com/example/app/internal/transport/http", LayerTransport},
 		{"github.com/example/app/internal/handler/user", LayerTransport},
+		{"github.com/example/app/views/pages", LayerTransport},
+		{"github.com/example/app/internal/views/components", LayerTransport},
 		{"github.com/example/app/internal/service/order", LayerApplication},
 		{"github.com/example/app/internal/domain/order", LayerDomain},
 		{"github.com/example/app/internal/repository/postgres", LayerInfrastructure},

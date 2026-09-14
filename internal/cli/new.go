@@ -105,7 +105,15 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 				if httpFw == "" {
 					httpFw = "fiber"
 				}
-				runtimeGen := builtin.NewRuntimeGenerator(projectName, httpFw)
+				runtimeGen := builtin.NewRuntimeGenerator(projectName, httpFw).
+					WithCapabilities(p.Defaults.Database != "", p.Defaults.Cache != "", p.Defaults.Queue != "", true).
+					WithTemplate(p.Defaults.Template).
+					WithAssets(p.Defaults.Assets)
+
+				if p.Defaults.Template != "" || p.Name == "web" || p.Name == "fullstack" {
+					runtimeGen = runtimeGen.WithEntrypoint("web")
+				}
+
 				artifacts, err := runtimeGen.Generate(ctx, generator.Input{Name: "runtime"})
 				if err != nil {
 					return fmt.Errorf("scaffolding runtime: %w", err)

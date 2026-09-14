@@ -1,0 +1,34 @@
+package view
+
+import (
+	"github.com/a-h/templ"
+	"github.com/gofiber/fiber/v2"
+)
+
+// LayoutFunc represents a layout component constructor.
+type LayoutFunc func(title string) templ.Component
+
+// Render renders a Templ component to Fiber response.
+// If the request is an HTMX request (HX-Request: true), it renders the component directly.
+// If not and a layout function is provided, it wraps the component in the layout via templ.WithChildren.
+func Render(c *fiber.Ctx, component templ.Component, layout ...LayoutFunc) error {
+	c.Set("Content-Type", "text/html; charset=utf-8")
+	ctx := c.Context()
+
+	isHTMX := c.Get("HX-Request") == "true"
+	if !isHTMX && len(layout) > 0 && layout[0] != nil {
+		title := "Loy App"
+		if t, ok := c.Locals("title").(string); ok && t != "" {
+			title = t
+		}
+		ctx = templ.WithChildren(ctx, component)
+		return layout[0](title).Render(ctx, c.Response().BodyWriter())
+	}
+
+	return component.Render(ctx, c.Response().BodyWriter())
+}
+
+// IsHTMX checks if current request is dispatched from HTMX.
+func IsHTMX(c *fiber.Ctx) bool {
+	return c.Get("HX-Request") == "true"
+}

@@ -134,4 +134,45 @@ func TestMakeCommand(t *testing.T) {
 			t.Fatalf("expected file %s not to exist during dry-run", path)
 		}
 	})
+
+	t.Run("make view full page", func(t *testing.T) {
+		r := cli.NewRootCmd()
+		out, err := executeMakeCommand(r, "make", "view", "dashboard")
+		if err != nil {
+			t.Fatalf("make view failed: %v, out: %s", err, out)
+		}
+		path := filepath.Join(tempDir, "views/pages/dashboard.templ")
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			t.Fatalf("expected file %s to exist, output: %s", path, out)
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("reading generated view: %v", err)
+		}
+		if !strings.Contains(string(content), "templ Dashboard()") {
+			t.Fatalf("expected templ Dashboard(), got:\n%s", string(content))
+		}
+	})
+
+	t.Run("make view partial component", func(t *testing.T) {
+		r := cli.NewRootCmd()
+		out, err := executeMakeCommand(r, "make", "view", "user_row", "--partial")
+		if err != nil {
+			t.Fatalf("make view --partial failed: %v, out: %s", err, out)
+		}
+		path := filepath.Join(tempDir, "views/components/user_row.templ")
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			t.Fatalf("expected file %s to exist", path)
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("reading generated partial view: %v", err)
+		}
+		if !strings.Contains(string(content), "templ UserRow()") {
+			t.Fatalf("expected templ UserRow(), got:\n%s", string(content))
+		}
+		if !strings.Contains(string(content), "hx-target") {
+			t.Fatalf("expected hx-target, got:\n%s", string(content))
+		}
+	})
 }

@@ -1,0 +1,28 @@
+package pages
+
+import (
+	"{{.ModulePath}}/views/layouts"
+	"{{.ModulePath}}/views/components"
+)
+
+templ Home() {
+	@layouts.Base("Home - Loy Fullstack") {
+		@components.Navbar()
+		<main class="max-w-4xl mx-auto px-4 py-8">
+			<div class="bg-white shadow rounded-lg p-6">
+				<h1 class="text-2xl font-bold text-gray-900 mb-2">Welcome to Loy Fullstack</h1>
+				<p class="text-gray-600 mb-4">Server-Side Rendered with Templ, dynamic with HTMX, and bundled with Vite.</p>
+				@components.Alert("Fullstack integration active!")
+				<div class="mt-6">
+					<button class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+						hx-get="/api/ping"
+						hx-target="#ping-result"
+						hx-swap="innerHTML">
+						Test HTMX Ping
+					</button>
+					<div id="ping-result" class="mt-2 text-sm text-gray-500"></div>
+				</div>
+			</div>
+		</main>
+	}
+}

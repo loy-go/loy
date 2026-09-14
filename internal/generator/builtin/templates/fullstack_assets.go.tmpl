@@ -1,0 +1,58 @@
+package view
+
+import (
+	"encoding/json"
+	"fmt"
+	"io/fs"
+	"sync"
+)
+
+// AssetManifest represents Vite manifest.json structure.
+type AssetManifest map[string]struct {
+	File  string `json:"file"`
+	Src   string `json:"src"`
+	IsCSS bool   `json:"isCss"`
+}
+
+var (
+	manifestCache AssetManifest
+	manifestMu    sync.RWMutex
+)
+
+// LoadManifest parses Vite manifest from static filesystem.
+func LoadManifest(staticFS fs.FS) error {
+	manifestMu.Lock()
+	defer manifestMu.Unlock()
+
+	data, err := fs.ReadFile(staticFS, "dist/.vite/manifest.json")
+	if err != nil {
+		data, err = fs.ReadFile(staticFS, "dist/manifest.json")
+		if err != nil {
+			return err
+		}
+	}
+
+	var m AssetManifest
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+	manifestCache = m
+	return nil
+}
+
+// AssetURL returns the script/stylesheet URL for entrypoint asset.
+// In dev (env != "production"), returns Vite dev server URL.
+// In prod, resolves from loaded manifest.
+func AssetURL(env, entry string) string {
+	if env != "production" {
+		return fmt.Sprintf("http://localhost:5173/%s", entry)
+	}
+	manifestMu.RLock()
+	defer manifestMu.RUnlock()
+	if manifestCache != nil {
+		if chunk, ok := manifestCache[entry]; ok {
+			return fmt.Sprintf("/static/%s", chunk.File)
+		}
+	}
+	return fmt.Sprintf("/static/%s", entry)
+}

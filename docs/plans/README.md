@@ -18,7 +18,7 @@ This directory contains the standard engineering pipeline and detailed implement
 | **06** | [06-Phase-Runtime.md](./06-Phase-Runtime.md) | Composition root, lifecycle states, signal handling, graceful shutdown, health | Completed |
 | **07** | [07-Phase-Integrations.md](./07-Phase-Integrations.md) | Fiber, embedded `goose` migrations, `sqlc`, Valkey, Asynq, OpenTelemetry | Completed |
 | **08** | [08-Phase-Developer-Experience.md](./08-Phase-Developer-Experience.md) | Native `loy dev` supervisor, `loy doctor`, `loy graph`, shell completion | Completed |
-| **09** | [09-Phase-Fullstack.md](./09-Phase-Fullstack.md) | Templ SSR, HTMX patterns, Vite asset pipeline integration | Ready |
+| **09** | [09-Phase-Fullstack.md](./09-Phase-Fullstack.md) | Templ SSR, HTMX patterns, Vite asset pipeline integration | Completed |
 | **10** | [10-Phase-Deployment.md](./10-Phase-Deployment.md) | Multi-stage Dockerfiles, Kubernetes manifests, Helm charts, CI pipelines | Ready |
 
 ---

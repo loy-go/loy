@@ -1,0 +1,22 @@
+package static
+
+import (
+	"embed"
+	"io/fs"
+	"net/http"
+)
+
+// Content holds embedded static assets when built for production.
+// Note: dist is built by Vite ('npm run build') before production binary compilation.
+//
+//go:embed all:dist/*
+var Content embed.FS
+
+// FS returns a sub-filesystem rooted at dist.
+func FS() (http.FileSystem, error) {
+	sub, err := fs.Sub(Content, "dist")
+	if err != nil {
+		return nil, err
+	}
+	return http.FS(sub), nil
+}

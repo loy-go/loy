@@ -38,12 +38,12 @@ func newDevCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 			if apiOnly {
 				var filtered []dev.ProcessTask
 				for _, t := range tasks {
-					if t.Name == "api" {
+					if t.Name == "api" || t.Name == "web" {
 						filtered = append(filtered, t)
 					}
 				}
 				if len(filtered) == 0 {
-					return fmt.Errorf("no API task found in %s (cmd/api directory not found)", rootDir)
+					return fmt.Errorf("no API or Web task found in %s (cmd/api or cmd/web directory not found)", rootDir)
 				}
 				tasks = filtered
 			} else if len(tasks) == 0 {

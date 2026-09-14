@@ -1,0 +1,20 @@
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
+
+export default defineConfig({
+  build: {
+    manifest: true,
+    outDir: 'internal/transport/http/static/dist',
+    rollupOptions: {
+      input: {
+        app: resolve(__dirname, 'assets/js/app.ts'),
+        css: resolve(__dirname, 'assets/css/app.css'),
+      },
+    },
+  },
+  server: {
+    origin: 'http://localhost:5173',
+    port: 5173,
+    strictPort: true,
+  },
+});

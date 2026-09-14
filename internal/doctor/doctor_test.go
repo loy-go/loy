@@ -100,3 +100,42 @@ project:
 		}
 	}
 }
+
+func TestDoctorRun_FullstackValidation(t *testing.T) {
+	memFS := filesystem.NewMemFileSystem()
+	mockProc := process.NewExecRunner()
+	doc := doctor.NewDoctor(memFS, mockProc)
+	ctx := context.Background()
+
+	_ = memFS.MkdirAll("/fullstack/views", 0755)
+	_ = memFS.WriteFile("/fullstack/package.json", []byte(`{"scripts":{"dev":"vite"}}`), 0644)
+	_ = memFS.WriteFile("/fullstack/pnpm-lock.yaml", []byte(""), 0644)
+
+	checks, err := doc.Run(ctx, "/fullstack")
+	if err != nil {
+		t.Fatalf("unexpected doctor error: %v", err)
+	}
+
+	var foundTempl, foundNode, foundPnpm bool
+	for _, c := range checks {
+		if c.Name == "templ CLI" {
+			foundTempl = true
+		}
+		if c.Name == "Node.js" {
+			foundNode = true
+		}
+		if c.Name == "pnpm Package Manager" {
+			foundPnpm = true
+		}
+	}
+
+	if !foundTempl {
+		t.Errorf("expected templ CLI check in fullstack directory")
+	}
+	if !foundNode {
+		t.Errorf("expected Node.js check in fullstack directory")
+	}
+	if !foundPnpm {
+		t.Errorf("expected pnpm Package Manager check with pnpm-lock.yaml")
+	}
+}

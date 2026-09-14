@@ -55,6 +55,57 @@ func TestDiscoverTasks(t *testing.T) {
 	if len(tasks) != 2 {
 		t.Errorf("expected 2 tasks (api, worker), got %d", len(tasks))
 	}
+
+	// 4. cmd/web present
+	memFSWeb := filesystem.NewMemFileSystem()
+	_ = memFSWeb.MkdirAll("/app/cmd/web", 0755)
+	_ = memFSWeb.WriteFile("/app/cmd/web/main.go", []byte("package main"), 0644)
+
+	tasks = dev.DiscoverTasks("/app", memFSWeb)
+	if len(tasks) != 1 || tasks[0].Name != "web" {
+		t.Errorf("expected task 'web', got %+v", tasks)
+	}
+
+	// 5. package.json with dev script and pnpm lockfile
+	_ = memFSWeb.WriteFile("/app/package.json", []byte(`{"scripts":{"dev":"vite"}}`), 0644)
+	_ = memFSWeb.WriteFile("/app/pnpm-lock.yaml", []byte(""), 0644)
+
+	tasks = dev.DiscoverTasks("/app", memFSWeb)
+	var hasVite bool
+	for _, task := range tasks {
+		if task.Name == "vite" {
+			hasVite = true
+			if task.Command != "pnpm" {
+				t.Errorf("expected pnpm command for vite task, got %s", task.Command)
+			}
+		}
+	}
+	if !hasVite {
+		t.Errorf("expected vite task from package.json with dev script")
+	}
+}
+
+func TestResolvePackageManager(t *testing.T) {
+	memFS := filesystem.NewMemFileSystem()
+
+	if pm := dev.ResolvePackageManager("/test", memFS); pm != "npm" {
+		t.Errorf("expected fallback to npm, got %s", pm)
+	}
+
+	_ = memFS.WriteFile("/test/yarn.lock", []byte(""), 0644)
+	if pm := dev.ResolvePackageManager("/test", memFS); pm != "yarn" {
+		t.Errorf("expected yarn, got %s", pm)
+	}
+
+	_ = memFS.WriteFile("/test/bun.lockb", []byte(""), 0644)
+	if pm := dev.ResolvePackageManager("/test", memFS); pm != "bun" {
+		t.Errorf("expected bun, got %s", pm)
+	}
+
+	_ = memFS.WriteFile("/test/pnpm-lock.yaml", []byte(""), 0644)
+	if pm := dev.ResolvePackageManager("/test", memFS); pm != "pnpm" {
+		t.Errorf("expected pnpm, got %s", pm)
+	}
 }
 
 func TestWatcherDebounceAndClose(t *testing.T) {

@@ -88,6 +88,8 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 		return builtin.NewTestGenerator(mod)
 	}, []string{}))
 
+	cmd.AddCommand(newViewCmd(fs, runner, opts))
+
 	cmd.AddCommand(newRuntimeCmd(fs, runner, opts))
 
 	// Composers
@@ -367,4 +369,104 @@ func checkSQLC(cmd *cobra.Command, fs filesystem.FileSystem, runner process.Runn
 	if runner != nil {
 		_, _ = runner.Run(ctx, targetDir, "sqlc", "generate")
 	}
+}
+
+func newViewCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	var partial bool
+	cmd := &cobra.Command{
+		Use:   "view <name>",
+		Short: "Scaffold Templ view component or page",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			ctx := cmd.Context()
+			globalOpts := GetOptions(ctx)
+
+			targetDir, modulePath, err := resolveProjectTarget(ctx, fs, runner, opts.target)
+			if err != nil {
+				return err
+			}
+
+			gen := builtin.NewViewGenerator(modulePath)
+			inputArgs := make(map[string]string)
+			if partial {
+				inputArgs["partial"] = "true"
+			}
+
+			input := generator.Input{
+				Name: name,
+				Args: inputArgs,
+				Options: generator.Options{
+					Force:  opts.force,
+					DryRun: opts.dryRun,
+				},
+			}
+
+			artifacts, err := gen.Generate(ctx, input)
+			if err != nil {
+				return &CommandError{
+					Code: 1,
+					Diagnostics: []*diagnostics.Diagnostic{{
+						Severity: diagnostics.SeverityError,
+						Code:     diagnostics.CodeGenExecutionError,
+						Message:  fmt.Sprintf("generating view %s: %v", name, err),
+						File:     targetDir,
+					}},
+				}
+			}
+
+			planBuilder := plan.NewBuilder(fs)
+			executionPlan, err := planBuilder.Build(ctx, targetDir, artifacts, input.Options)
+			if err != nil {
+				return &CommandError{
+					Code: 1,
+					Diagnostics: []*diagnostics.Diagnostic{{
+						Severity: diagnostics.SeverityError,
+						Code:     diagnostics.CodeGenConflict,
+						Message:  fmt.Sprintf("conflict building plan: %v", err),
+						Hint:     "use --force to overwrite existing files",
+						File:     targetDir,
+					}},
+				}
+			}
+
+			if opts.dryRun {
+				if globalOpts.JSON {
+					enc := json.NewEncoder(cmd.OutOrStdout())
+					enc.SetIndent("", "  ")
+					return enc.Encode(executionPlan)
+				}
+				fmt.Fprintf(cmd.OutOrStdout(), "Plan operations (dry-run) for %s %s:\n", gen.Name(), name)
+				for _, op := range executionPlan.Operations {
+					fmt.Fprintf(cmd.OutOrStdout(), "  [%s] %s\n", op.Type, op.Path)
+				}
+				return nil
+			}
+
+			executor := plan.NewExecutor(fs)
+			if err := executor.Execute(ctx, executionPlan); err != nil {
+				return &CommandError{
+					Code: 1,
+					Diagnostics: []*diagnostics.Diagnostic{{
+						Severity: diagnostics.SeverityError,
+						Code:     diagnostics.CodeGenExecutionError,
+						Message:  fmt.Sprintf("executing plan: %v", err),
+						File:     targetDir,
+					}},
+				}
+			}
+
+			if !globalOpts.Quiet {
+				if globalOpts.JSON {
+					fmt.Fprintf(cmd.OutOrStdout(), `{"status":"generated","artifact":%q,"name":%q,"path":%q}`+"\n", gen.Name(), name, artifacts[0].Path)
+				} else {
+					fmt.Fprintf(cmd.OutOrStdout(), "Generated %s: %s\n", gen.Name(), artifacts[0].Path)
+				}
+			}
+
+			return nil
+		},
+	}
+	cmd.Flags().BoolVar(&partial, "partial", false, "Scaffold as partial UI component instead of full page")
+	return cmd
 }

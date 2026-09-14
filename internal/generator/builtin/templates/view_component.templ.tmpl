@@ -1,0 +1,8 @@
+package {{ .PackageName }}
+
+templ {{ .Pascal }}() {
+	<div id="{{ .Snake }}-component" class="p-4 bg-white rounded-lg shadow border border-gray-200" hx-target="this" hx-swap="outerHTML">
+		<h3 class="text-lg font-medium text-gray-900">{{ .Title }}</h3>
+		<p class="mt-1 text-sm text-gray-500">Partial component rendered with HTMX.</p>
+	</div>
+}

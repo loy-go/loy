@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -63,6 +64,9 @@ func (d *Doctor) Run(ctx context.Context, targetDir string) ([]CheckItem, error)
 
 	// 5. Project Manifest & Module Check
 	results = append(results, d.checkProject(ctx, targetDir)...)
+
+	// 6. Fullstack / Web Tooling Checks (Templ, Node, Package Manager)
+	results = append(results, d.checkFullstackTools(ctx, targetDir)...)
 
 	return results, nil
 }
@@ -263,6 +267,52 @@ func (d *Doctor) checkProject(ctx context.Context, targetDir string) []CheckItem
 				Hint:     "Run 'loy init' to create a standard manifest",
 			},
 		})
+	}
+
+	return items
+}
+
+func (d *Doctor) checkFullstackTools(ctx context.Context, targetDir string) []CheckItem {
+	if targetDir == "" {
+		targetDir, _ = os.Getwd()
+	}
+
+	var items []CheckItem
+
+	hasViews, _ := d.fs.Exists(filepath.Join(targetDir, "views"))
+	hasPkgJson, _ := d.fs.Exists(filepath.Join(targetDir, "package.json"))
+	hasViteConfig, _ := d.fs.Exists(filepath.Join(targetDir, "vite.config.ts"))
+
+	// Also check manifest if available
+	mPath := filepath.Join(targetDir, "loy.yaml")
+	if data, err := d.fs.ReadFile(mPath); err == nil {
+		strData := string(data)
+		if strings.Contains(strData, "template: templ") {
+			hasViews = true
+		}
+		if strings.Contains(strData, "assets: vite") {
+			hasPkgJson = true
+		}
+	}
+
+	if hasViews {
+		items = append(items, d.checkTool(ctx, "templ CLI", "templ version", "LOY806", "run 'go install github.com/a-h/templ/cmd/templ@latest'"))
+	}
+
+	if hasPkgJson || hasViteConfig {
+		items = append(items, d.checkTool(ctx, "Node.js", "node --version", "LOY807", "Install Node.js 18+ from https://nodejs.org/"))
+
+		// Detect package manager
+		pm := "npm"
+		if exists, _ := d.fs.Exists(filepath.Join(targetDir, "pnpm-lock.yaml")); exists {
+			pm = "pnpm"
+		} else if exists, _ := d.fs.Exists(filepath.Join(targetDir, "bun.lockb")); exists {
+			pm = "bun"
+		} else if exists, _ := d.fs.Exists(filepath.Join(targetDir, "yarn.lock")); exists {
+			pm = "yarn"
+		}
+
+		items = append(items, d.checkTool(ctx, pm+" Package Manager", pm+" --version", "LOY808", fmt.Sprintf("Install %s via your system package manager", pm)))
 	}
 
 	return items

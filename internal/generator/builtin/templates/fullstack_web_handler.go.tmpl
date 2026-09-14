@@ -1,0 +1,25 @@
+package handler
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"{{.ModulePath}}/internal/transport/http/view"
+	"{{.ModulePath}}/views/pages"
+)
+
+// WebHandler handles web SSR routes.
+type WebHandler struct{}
+
+// NewWebHandler creates WebHandler.
+func NewWebHandler() *WebHandler {
+	return &WebHandler{}
+}
+
+// Home handles GET / rendering home page.
+func (h *WebHandler) Home(c *fiber.Ctx) error {
+	return view.Render(c, pages.Home())
+}
+
+// Ping handles GET /api/ping for HTMX demo.
+func (h *WebHandler) Ping(c *fiber.Ctx) error {
+	return c.SendString(`<span class="text-green-600 font-semibold">Pong! HTMX swap succeeded.</span>`)
+}

@@ -1,0 +1,11 @@
+package components
+
+templ Alert(message string) {
+	<div id="alert-banner" class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 border border-blue-200 flex justify-between items-center" hx-target="this" hx-swap="outerHTML">
+		<span>{ message }</span>
+		<button class="text-blue-500 hover:text-blue-700 font-bold"
+			hx-on:click="this.closest('#alert-banner').remove()">
+			&times;
+		</button>
+	</div>
+}
