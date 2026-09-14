@@ -1,0 +1,83 @@
+package ws
+
+import (
+	"time"
+
+	"github.com/gofiber/contrib/websocket"
+)
+
+const (
+	writeWait      = 10 * time.Second
+	pongWait       = 60 * time.Second
+	pingPeriod     = (pongWait * 9) / 10
+	maxMessageSize = 512 * 1024
+)
+
+// Client represents a single active WebSocket connection.
+type Client struct {
+	ID   string
+	hub  *Hub
+	conn *websocket.Conn
+	send chan Frame
+}
+
+// NewClient constructs a new WebSocket client session.
+func NewClient(id string, hub *Hub, conn *websocket.Conn) *Client {
+	return &Client{
+		ID:   id,
+		hub:  hub,
+		conn: conn,
+		send: make(chan Frame, 256),
+	}
+}
+
+// ReadPump handles inbound WebSocket messages.
+func (c *Client) ReadPump() {
+	defer func() {
+		c.hub.unregister <- c
+		_ = c.conn.Close()
+	}()
+
+	c.conn.SetReadLimit(maxMessageSize)
+	_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	c.conn.SetPongHandler(func(string) error {
+		_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
+	for {
+		var frame Frame
+		if err := c.conn.ReadJSON(&frame); err != nil {
+			break
+		}
+		// Handle incoming message frame
+	}
+}
+
+// WritePump handles outbound message frame dispatching and heartbeats.
+func (c *Client) WritePump() {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		_ = c.conn.Close()
+	}()
+
+	for {
+		select {
+		case frame, ok := <-c.send:
+			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+			if err := c.conn.WriteJSON(frame); err != nil {
+				return
+			}
+		case <-ticker.C:
+			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		}
+	}
+}

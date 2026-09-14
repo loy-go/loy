@@ -155,8 +155,8 @@ func TestAtomicGenerators(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if len(artifacts) != 1 {
-			t.Fatalf("expected 1 artifact, got %d", len(artifacts))
+		if len(artifacts) != 3 {
+			t.Fatalf("expected 3 artifacts (job file + 2 wiring regions), got %d", len(artifacts))
 		}
 		content := string(artifacts[0].Content)
 		if !strings.Contains(content, "TypeUserSyncProcess") {
@@ -204,6 +204,61 @@ func TestAtomicGenerators(t *testing.T) {
 		}
 		if len(arts) != 1 || !strings.Contains(string(arts[0].Content), "TestInvoiceService_GetByID") {
 			t.Fatalf("unexpected test artifact: %+v", arts)
+		}
+	})
+
+	t.Run("auth generator", func(t *testing.T) {
+		gen := builtin.NewAuthGenerator(mod)
+		arts, err := gen.Generate(ctx, generator.Input{Name: "auth"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(arts) != 4 {
+			t.Fatalf("expected 4 auth artifacts, got %d", len(arts))
+		}
+	})
+
+	t.Run("grpc generator", func(t *testing.T) {
+		gen := builtin.NewGRPCGenerator(mod)
+		arts, err := gen.Generate(ctx, generator.Input{Name: "candidate"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(arts) != 2 {
+			t.Fatalf("expected 2 grpc artifacts, got %d", len(arts))
+		}
+	})
+
+	t.Run("ws generator", func(t *testing.T) {
+		gen := builtin.NewWebSocketGenerator(mod)
+		arts, err := gen.Generate(ctx, generator.Input{Name: "interview"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(arts) != 3 {
+			t.Fatalf("expected 3 ws artifacts, got %d", len(arts))
+		}
+	})
+
+	t.Run("outbox generator", func(t *testing.T) {
+		gen := builtin.NewOutboxGenerator(mod)
+		arts, err := gen.Generate(ctx, generator.Input{Name: "outbox"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(arts) != 3 {
+			t.Fatalf("expected 3 outbox artifacts, got %d", len(arts))
+		}
+	})
+
+	t.Run("seeder generator", func(t *testing.T) {
+		gen := builtin.NewSeederGenerator(mod)
+		arts, err := gen.Generate(ctx, generator.Input{Name: "candidate"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(arts) != 1 {
+			t.Fatalf("expected 1 seeder artifact, got %d", len(arts))
 		}
 	})
 }

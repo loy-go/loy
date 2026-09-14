@@ -29,11 +29,15 @@ defaults:
 - **`version`** (`int`, required): The schema version of the manifest. Must be `1`.
 - **`project`** (`object`, required): Project identity settings.
   - **`name`** (`string`, required): Name of the project or root module.
+- **`multi_tenancy`** (`object`, optional): Multi-tenancy isolation settings:
+  - **`enabled`** (`bool`): Whether multi-tenancy is active.
+  - **`strategy`** (`string`): Data isolation strategy (`rls` for PostgreSQL Row Level Security, or `column`).
+  - **`tenant_key`** (`string`, optional): Name of the tenant column (defaults to `org_id`).
 - **`defaults`** (`object`, optional): Default integration adapters for scaffolding:
-  - **`http`** (`string`): HTTP transport router (`fiber`, `nethttp`).
-  - **`database`** (`string`): Persistence engine (`postgres`, `sqlite`, `none`).
+  - **`http`** (`string`): HTTP transport router (`fiber`, `chi`, `nethttp`, `echo`).
+  - **`database`** (`string`): Persistence engine (`postgres`, `sqlite`, `mysql`, `none`).
   - **`cache`** (`string`): Caching driver (`valkey`, `redis`, `memory`, `none`).
-  - **`queue`** (`string`): Background task engine (`asynq`, `none`).
+  - **`queue`** (`string`): Background task engine (`asynq`, `river`, `none`).
   - **`template`** (`string`): UI templating engine (`templ`, `none`).
   - **`assets`** (`string`): Frontend asset pipeline (`vite`, `tailwind`, `none`).
 

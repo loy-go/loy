@@ -1,6 +1,6 @@
 ---
-title: "ARCH-011–014: Governance & State"
-description: "Rules preventing global mutable state, reflection service locators, and cross-application leakage."
+title: "ARCH-011–015: Governance, State & Platform Purity"
+description: "Rules preventing global mutable state, reflection service locators, cross-application leakage, and impure platform imports."
 ---
 
 ## ARCH-011: Forbidden Service Locators
@@ -32,3 +32,12 @@ description: "Rules preventing global mutable state, reflection service locators
 
 - **Severity**: `WARN`
 - **Rule**: Detects handwritten code placed inside generator-managed comment regions (`// loy:region:...`) that could be overwritten during subsequent scaffolding runs.
+
+---
+
+## ARCH-015: Platform Utility Purity
+
+- **Severity**: `ERROR`
+- **Rule**: Domain and Application layers must never import impure platform or `pkg/*` packages that perform direct IO, network requests, or database driver operations (`net/http`, `database/sql`, `os`, `syscall`).
+- **Why**: Domain logic must remain clean, deterministic, and free of side-effects.
+- **Remediation**: Keep pure helpers (string manipulation, math, hashing) in platform/pkg, and move impure client implementations (mailers, database loggers, HTTP clients) to the Infrastructure layer behind domain-defined interfaces.

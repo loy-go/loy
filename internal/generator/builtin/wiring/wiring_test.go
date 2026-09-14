@@ -42,4 +42,16 @@ func TestWiringManager(t *testing.T) {
 	if len(arts) != 5 {
 		t.Fatalf("expected 5 wiring artifacts, got %d", len(arts))
 	}
+
+	// Check modular wiring artifacts
+	modularArts := wiring.GenerateModularWiringArtifacts("invoice", "github.com/example/app")
+	if len(modularArts) != 2 {
+		t.Fatalf("expected 2 modular wiring artifacts, got %d", len(modularArts))
+	}
+	if modularArts[0].Path != "internal/app/wire_invoice.go" {
+		t.Errorf("expected wire_invoice.go, got %s", modularArts[0].Path)
+	}
+	if !strings.Contains(string(modularArts[0].Content), "func (a *App) wireInvoice() error") {
+		t.Errorf("missing wireInvoice method in modular file")
+	}
 }

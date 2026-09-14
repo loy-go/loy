@@ -121,3 +121,63 @@ func GenerateWiringArtifacts(featureName, modulePath string) []model.Artifact {
 		},
 	}
 }
+
+// GenerateModularWiringArtifacts produces a standalone wire_<domain>.go file and registers it in wiring.go.
+func GenerateModularWiringArtifacts(featureName, modulePath string) []model.Artifact {
+	pascal := naming.ToPascalCase(featureName)
+	pkgName := naming.ToPackageName(featureName)
+
+	modularFileContent := fmt.Sprintf(`package app
+
+import (
+	%sRepo "%s/internal/%s/repository"
+	%sService "%s/internal/%s/service"
+	%sHttp "%s/internal/%s/transport/http"
+)
+
+// wire%s initializes dependencies for the %s bounded context.
+func (a *App) wire%s() error {
+	repo, err := %sRepo.NewPostgresRepository(a.db)
+	if err != nil {
+		return err
+	}
+	svc, err := %sService.NewService(repo)
+	if err != nil {
+		return err
+	}
+	h, err := %sHttp.NewHandler(svc)
+	if err != nil {
+		return err
+	}
+	if a.router != nil {
+		h.RegisterRoutes(a.router.Group("/api/v1"))
+	}
+	return nil
+}
+`, pkgName, modulePath, pkgName,
+		pkgName, modulePath, pkgName,
+		pkgName, modulePath, pkgName,
+		pascal, pkgName,
+		pascal,
+		pkgName,
+		pkgName,
+		pkgName,
+	)
+
+	splicedCall := fmt.Sprintf("\tif err := a.wire%s(); err != nil {\n\t\treturn err\n\t}", pascal)
+
+	return []model.Artifact{
+		{
+			Path:        fmt.Sprintf("internal/app/wire_%s.go", pkgName),
+			Ownership:   model.DeveloperOwned,
+			Permissions: 0644,
+			Content:     []byte(modularFileContent),
+		},
+		{
+			Path:      "internal/app/wiring.go",
+			Ownership: model.MixedOwned,
+			Region:    "services",
+			Content:   []byte(splicedCall),
+		},
+	}
+}

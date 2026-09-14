@@ -1,0 +1,26 @@
+package seeds
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+)
+
+// {{.Pascal}}Seeder populates initial database fixture data for {{.PluralLower}}.
+type {{.Pascal}}Seeder struct{}
+
+// New{{.Pascal}}Seeder constructs {{.Pascal}}Seeder.
+func New{{.Pascal}}Seeder() *{{.Pascal}}Seeder {
+	return &{{.Pascal}}Seeder{}
+}
+
+// Seed executes database seed logic.
+func (s *{{.Pascal}}Seeder) Seed(ctx context.Context, db *sql.DB) error {
+	// Execute seed insertion statements
+	query := `INSERT INTO {{.PluralLower}} (created_at, updated_at) VALUES (NOW(), NOW()) ON CONFLICT DO NOTHING;`
+	_, err := db.ExecContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("seeding {{.PluralLower}}: %w", err)
+	}
+	return nil
+}

@@ -3,7 +3,7 @@ title: "loy make policy"
 description: "Scaffold authorization policy checks"
 slug: reference/cli/loy-make-policy
 sidebar:
-  order: 20
+  order: 26
 ---
 
 
@@ -26,6 +26,7 @@ loy make policy <name> [fields...] [flags]
       --dry-run            Preview generated operations without writing to disk
       --force              Overwrite existing files if developer owned
       --json               Output results in JSON format
+      --modular            Scaffold sub-domain modular wiring file instead of flat wiring
       --no-color           Disable colored ANSI output
   -q, --quiet              Suppress non-essential output
       --target string      Target application module in workspace

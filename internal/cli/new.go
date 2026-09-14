@@ -16,8 +16,15 @@ import (
 )
 
 func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
-	var presetName string
-	var force bool
+	var (
+		presetName     string
+		force          bool
+		httpOpt        string
+		dbOpt          string
+		queueOpt       string
+		cacheOpt       string
+		multiTenantOpt string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "new <project-name>",
@@ -85,6 +92,31 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 				}
 			}
 
+			if httpOpt != "" {
+				p.Defaults.HTTP = httpOpt
+			}
+			if dbOpt != "" {
+				if dbOpt == "none" {
+					p.Defaults.Database = ""
+				} else {
+					p.Defaults.Database = dbOpt
+				}
+			}
+			if queueOpt != "" {
+				if queueOpt == "none" {
+					p.Defaults.Queue = ""
+				} else {
+					p.Defaults.Queue = queueOpt
+				}
+			}
+			if cacheOpt != "" {
+				if cacheOpt == "none" {
+					p.Defaults.Cache = ""
+				} else {
+					p.Defaults.Cache = cacheOpt
+				}
+			}
+
 			if err := fs.MkdirAll(targetDir, 0755); err != nil {
 				return fmt.Errorf("creating project directory: %w", err)
 			}
@@ -95,6 +127,9 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 
 			manifestPath, _ := filesystem.CleanAndValidatePath(targetDir, filepath.Join(targetDir, "loy.yaml"))
 			yamlContent := p.MaterializeYAML(projectName)
+			if multiTenantOpt != "" {
+				yamlContent += fmt.Sprintf("\nmulti_tenancy:\n  enabled: true\n  strategy: %s\n", multiTenantOpt)
+			}
 			if err := fs.WriteFile(manifestPath, []byte(yamlContent), 0644); err != nil {
 				return fmt.Errorf("writing loy.yaml: %w", err)
 			}
@@ -147,6 +182,11 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 
 	cmd.Flags().StringVarP(&presetName, "preset", "p", "api", "Preset template (api, fullstack, minimal, monorepo, web)")
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Overwrite destination directory if exists")
+	cmd.Flags().StringVar(&httpOpt, "http", "", "HTTP adapter (fiber, chi, nethttp, echo)")
+	cmd.Flags().StringVar(&dbOpt, "db", "", "Database adapter (postgres, sqlite, mysql, none)")
+	cmd.Flags().StringVar(&queueOpt, "queue", "", "Queue adapter (asynq, river, none)")
+	cmd.Flags().StringVar(&cacheOpt, "cache", "", "Cache adapter (valkey, redis, memory, none)")
+	cmd.Flags().StringVar(&multiTenantOpt, "multi-tenant", "", "Multi-tenancy strategy (rls, column)")
 
 	return cmd
 }

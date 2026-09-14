@@ -23,5 +23,11 @@ This directory contains the accepted Architectural Decision Records governing th
 | [ADR-015](./ADR-015-database-migration-and-sqlc-pipeline.md) | Database Migration and sqlc Pipeline | Accepted | Persistence |
 | [ADR-016](./ADR-016-two-phase-architecture-enforcement-engine.md) | Two-Phase Architecture Enforcement Engine | Accepted | Static Analysis |
 | [ADR-017](./ADR-017-built-in-process-supervision-for-loy-dev.md) | Built-in Process Supervision for loy dev | Accepted | Developer Experience |
+| [ADR-018](./ADR-018-postgresql-rls-multi-tenancy.md) | PostgreSQL RLS Multi-Tenancy Engine | Accepted | Multi-Tenancy |
+| [ADR-019](./ADR-019-dual-daemon-topography-worker-supervision.md) | Dual-Daemon Topography & Worker Supervision | Accepted | Worker Daemons |
+| [ADR-020](./ADR-020-modular-subdomain-wiring.md) | Modular Sub-Domain Composition Roots | Accepted | Composition Root |
+| [ADR-021](./ADR-021-transport-expansion-grpc-websockets.md) | Transport Seam Expansion (gRPC & WebSockets) | Accepted | Transports |
+| [ADR-022](./ADR-022-baseline-authentication-session-kit.md) | Baseline Authentication & Session Kit | Accepted | Security & Auth |
+| [ADR-023](./ADR-023-platform-layer-and-purity-governance.md) | Platform Layer & Purity Governance | Accepted | Architecture |
 
 [Back to Documentation Index](../00-INDEX.md)

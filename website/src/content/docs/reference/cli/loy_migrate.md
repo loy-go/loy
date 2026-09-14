@@ -3,7 +3,7 @@ title: "loy migrate"
 description: "Manage database schema migrations via embedded goose engine"
 slug: reference/cli/loy-migrate
 sidebar:
-  order: 28
+  order: 36
 ---
 
 

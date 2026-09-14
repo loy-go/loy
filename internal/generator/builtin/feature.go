@@ -74,7 +74,12 @@ func (g *FeatureGenerator) Generate(ctx context.Context, input generator.Input) 
 	artifacts = append(artifacts, arts...)
 
 	// 6. Wiring Splicing
-	wiringArts := wiring.GenerateWiringArtifacts(input.Name, g.modulePath)
+	var wiringArts []model.Artifact
+	if input.Args != nil && input.Args["modular"] == "true" {
+		wiringArts = wiring.GenerateModularWiringArtifacts(input.Name, g.modulePath)
+	} else {
+		wiringArts = wiring.GenerateWiringArtifacts(input.Name, g.modulePath)
+	}
 	artifacts = append(artifacts, wiringArts...)
 
 	return artifacts, nil

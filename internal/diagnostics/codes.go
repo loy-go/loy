@@ -47,6 +47,7 @@ const (
 	CodeArchGlobalMutableState  = "LOY-ARCH-012"
 	CodeArchWorkspaceBoundary   = "LOY-ARCH-013"
 	CodeArchArtifactOwnership   = "LOY-ARCH-014"
+	CodeArchPlatformImpure      = "LOY-ARCH-015"
 	CodeArchSuppressionError    = "LOY-ARCH-099"
 
 	// Doctor & Environment codes

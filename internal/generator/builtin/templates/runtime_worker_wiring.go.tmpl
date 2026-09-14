@@ -1,0 +1,15 @@
+package app
+
+import (
+	"github.com/hibiken/asynq"
+	// loy:region:worker_imports
+	// loy:endregion
+)
+
+// WireWorkerTasks registers all background job handlers with the Asynq ServeMux.
+func (a *App) WireWorkerTasks(mux *asynq.ServeMux) error {
+	// loy:region:tasks
+	// loy:endregion
+
+	return nil
+}

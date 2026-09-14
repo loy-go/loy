@@ -3,7 +3,7 @@ title: "loy init"
 description: "Initialize Loy configuration in an existing Go project"
 slug: reference/cli/loy-init
 sidebar:
-  order: 6
+  order: 9
 ---
 
 

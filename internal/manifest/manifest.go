@@ -5,9 +5,17 @@ type Manifest struct {
 	Version      int                    `yaml:"version"`
 	Project      ProjectConfig          `yaml:"project"`
 	Defaults     DefaultsConfig         `yaml:"defaults,omitempty"`
+	MultiTenancy MultiTenancyConfig     `yaml:"multi_tenancy,omitempty"`
 	Integrations map[string]Integration `yaml:"integrations,omitempty"`
 	Architecture ArchitectureConfig     `yaml:"architecture,omitempty"`
 	Workspace    WorkspaceConfig        `yaml:"workspace,omitempty"`
+}
+
+// MultiTenancyConfig configures tenant isolation strategies.
+type MultiTenancyConfig struct {
+	Enabled   bool   `yaml:"enabled"`
+	Strategy  string `yaml:"strategy,omitempty"` // "rls" | "column"
+	TenantKey string `yaml:"tenant_key,omitempty"`
 }
 
 // ProjectConfig contains metadata about the Loy project.

@@ -26,3 +26,9 @@ Loy adheres to standard architectural governance. Major technical choices and in
 | **[ADR-015](/loy/guides/database-migrations/)** | Embedded Goose & SQLC Pipeline | Single binary migration management and type-safe query generation. |
 | **[ADR-016](/loy/rules/)** | Two-Phase Architecture Engine | Fast AST inspection followed by deep semantic type analysis. |
 | **[ADR-017](/loy/guides/live-reload/)** | Process Supervision for loy dev | Multi-process supervisor with live file watcher and graceful reload. |
+| **ADR-018** | PostgreSQL RLS Multi-Tenancy Engine | Native database-level tenant isolation via PostgreSQL Row Level Security and session variables. |
+| **ADR-019** | Dual-Daemon Topography & Worker Supervision | First-class background worker binary (`cmd/worker`) and supervised multi-process fleet under `loy dev`. |
+| **ADR-020** | Modular Sub-Domain Composition Roots | Modular `wire_<domain>.go` sub-domain wire methods preventing flat monolithic wiring bloat. |
+| **ADR-021** | Transport Seam Expansion (gRPC & WebSockets) | High-performance gRPC Proto services and real-time bidirectional WebSocket hubs. |
+| **ADR-022** | Baseline Authentication & Session Kit | Standard Go JWT token minting/verification, bcrypt password hashing, and auth/RBAC middlewares. |
+| **ADR-023** | Platform Layer & Purity Governance | `pkg/*` mapped to `LayerPlatform` with strict `ARCH-015` IO/network purity checks. |

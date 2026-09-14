@@ -1,0 +1,44 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"{{.ModulePath}}/internal/app"
+	"{{.ModulePath}}/internal/config"
+	"{{.ModulePath}}/internal/platform/logger"
+	"{{.ModulePath}}/internal/platform/queue"
+)
+
+func main() {
+	cfg, err := config.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to load configuration: %v\n", err)
+		os.Exit(1)
+	}
+
+	log := logger.New(cfg.LogLevel, cfg.Environment)
+
+	application, err := app.New(cfg, log)
+	if err != nil {
+		log.Error("failed to initialize application for worker", "error", err)
+		os.Exit(1)
+	}
+
+	srv := queue.NewAsynqServer(queue.AsynqConfig{
+		RedisAddr:   cfg.RedisURL,
+		Concurrency: 10,
+	})
+
+	mux := queue.NewAsynqMux()
+	if err := application.WireWorkerTasks(mux); err != nil {
+		log.Error("failed to wire worker tasks", "error", err)
+		os.Exit(1)
+	}
+
+	log.Info("starting worker daemon...")
+	if err := srv.Run(mux); err != nil {
+		log.Error("worker daemon stopped with error", "error", err)
+		os.Exit(1)
+	}
+}

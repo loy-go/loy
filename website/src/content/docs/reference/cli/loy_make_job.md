@@ -3,7 +3,7 @@ title: "loy make job"
 description: "Scaffold Asynq background job payload & processor"
 slug: reference/cli/loy-make-job
 sidebar:
-  order: 16
+  order: 21
 ---
 
 
@@ -26,6 +26,7 @@ loy make job <name> [fields...] [flags]
       --dry-run            Preview generated operations without writing to disk
       --force              Overwrite existing files if developer owned
       --json               Output results in JSON format
+      --modular            Scaffold sub-domain modular wiring file instead of flat wiring
       --no-color           Disable colored ANSI output
   -q, --quiet              Suppress non-essential output
       --target string      Target application module in workspace

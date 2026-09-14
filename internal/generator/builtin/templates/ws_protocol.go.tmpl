@@ -1,0 +1,17 @@
+package ws
+
+// MessageType identifies typed WebSocket frame payloads.
+type MessageType string
+
+const (
+	MessageTypePing MessageType = "ping"
+	MessageTypePong MessageType = "pong"
+	MessageTypeData MessageType = "data"
+)
+
+// Frame models a bidirectional JSON frame.
+type Frame struct {
+	Type       MessageType `json:"type"`
+	SequenceID int64       `json:"seq,omitempty"`
+	Payload    any         `json:"payload,omitempty"`
+}

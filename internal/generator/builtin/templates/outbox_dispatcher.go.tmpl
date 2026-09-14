@@ -1,0 +1,86 @@
+package outbox
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"time"
+)
+
+// Publisher defines the contract for forwarding outbox events to a broker/queue.
+type Publisher interface {
+	Publish(ctx context.Context, eventType string, payload []byte) error
+}
+
+// Dispatcher polls pending outbox events and pushes them to the publisher.
+type Dispatcher struct {
+	db        *sql.DB
+	publisher Publisher
+	interval  time.Duration
+}
+
+// NewDispatcher constructs a new outbox dispatcher.
+func NewDispatcher(db *sql.DB, publisher Publisher, interval time.Duration) *Dispatcher {
+	if interval <= 0 {
+		interval = 1 * time.Second
+	}
+	return &Dispatcher{
+		db:        db,
+		publisher: publisher,
+		interval:  interval,
+	}
+}
+
+// Run executes the outbox polling loop.
+func (d *Dispatcher) Run(ctx context.Context) error {
+	ticker := time.NewTicker(d.interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			if err := d.dispatchBatch(ctx); err != nil {
+				// Log or handle error without crashing loop
+				_ = err
+			}
+		}
+	}
+}
+
+func (d *Dispatcher) dispatchBatch(ctx context.Context) error {
+	tx, err := d.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	query := `SELECT id, event_type, payload FROM outbox_events WHERE status = 'pending' ORDER BY id ASC LIMIT 50 FOR UPDATE SKIP LOCKED`
+	rows, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var events []Event
+	for rows.Next() {
+		var ev Event
+		if err := rows.Scan(&ev.ID, &ev.EventType, &ev.Payload); err != nil {
+			return err
+		}
+		events = append(events, ev)
+	}
+
+	for _, ev := range events {
+		if err := d.publisher.Publish(ctx, ev.EventType, ev.Payload); err != nil {
+			return fmt.Errorf("publishing outbox event %d: %w", ev.ID, err)
+		}
+		updateQuery := `UPDATE outbox_events SET status = 'published', published_at = NOW() WHERE id = $1`
+		if _, err := tx.ExecContext(ctx, updateQuery, ev.ID); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}

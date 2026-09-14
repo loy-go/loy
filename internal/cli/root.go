@@ -84,6 +84,10 @@ func NewRootCmdWithFS(fs filesystem.FileSystem, runner process.Runner) *cobra.Co
 	rootCmd.AddCommand(newDevCmd(fs, runner))
 	rootCmd.AddCommand(newDoctorCmd(fs, runner))
 	rootCmd.AddCommand(newGraphCmd(fs, runner))
+	rootCmd.AddCommand(newHookCmd(fs, runner))
+	rootCmd.AddCommand(newDocCmd(fs, runner))
+	rootCmd.AddCommand(newRoutesCmd(fs, runner))
+	rootCmd.AddCommand(newSeedCmd(fs, runner))
 	rootCmd.AddCommand(newCompletionCmd())
 
 	return rootCmd

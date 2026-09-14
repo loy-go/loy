@@ -3,7 +3,7 @@ title: "loy make view"
 description: "Scaffold Templ view component or page"
 slug: reference/cli/loy-make-view
 sidebar:
-  order: 27
+  order: 34
 ---
 
 
@@ -27,6 +27,7 @@ loy make view <name> [flags]
       --dry-run            Preview generated operations without writing to disk
       --force              Overwrite existing files if developer owned
       --json               Output results in JSON format
+      --modular            Scaffold sub-domain modular wiring file instead of flat wiring
       --no-color           Disable colored ANSI output
   -q, --quiet              Suppress non-essential output
       --target string      Target application module in workspace

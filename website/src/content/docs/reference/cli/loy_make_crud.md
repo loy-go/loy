@@ -3,7 +3,7 @@ title: "loy make crud"
 description: "Scaffold full vertical CRUD slice (migration, queries, model, repo, service, handler, test, wiring)"
 slug: reference/cli/loy-make-crud
 sidebar:
-  order: 9
+  order: 13
 ---
 
 
@@ -26,6 +26,7 @@ loy make crud <name> [fields...] [flags]
       --dry-run            Preview generated operations without writing to disk
       --force              Overwrite existing files if developer owned
       --json               Output results in JSON format
+      --modular            Scaffold sub-domain modular wiring file instead of flat wiring
       --no-color           Disable colored ANSI output
   -q, --quiet              Suppress non-essential output
       --target string      Target application module in workspace

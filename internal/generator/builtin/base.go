@@ -13,17 +13,19 @@ var templateFS embed.FS
 
 // BaseData holds common template variables for code generation.
 type BaseData struct {
-	ModulePath  string   // e.g. "github.com/example/app"
-	Feature     string   // feature identifier, e.g. "user"
-	FeaturePkg  string   // package safe name, e.g. "user"
-	Pascal      string   // e.g. "User"
-	Camel       string   // e.g. "user"
-	Plural      string   // e.g. "Users"
-	PluralLower string   // e.g. "users"
-	Snake       string   // e.g. "user"
-	Kebab       string   // e.g. "user"
-	Fields      []Field  // parsed fields
-	Imports     []string // extra imports
+	ModulePath     string   // e.g. "github.com/example/app"
+	Feature        string   // feature identifier, e.g. "user"
+	FeaturePkg     string   // package safe name, e.g. "user"
+	Pascal         string   // e.g. "User"
+	Camel          string   // e.g. "user"
+	Plural         string   // e.g. "Users"
+	PluralLower    string   // e.g. "users"
+	Snake          string   // e.g. "user"
+	Kebab          string   // e.g. "user"
+	Fields         []Field  // parsed fields
+	Imports        []string // extra imports
+	MultiTenancy   bool     // whether multi-tenancy is active
+	TenantStrategy string   // "rls" or "column"
 }
 
 // NewBaseData initializes BaseData from feature name and module path.

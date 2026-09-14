@@ -283,6 +283,36 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 			Permissions: 0644,
 			Content:     asynqContent,
 		})
+
+		workerMainTmpl, err := ReadTemplate("runtime_worker_main.go.tmpl")
+		if err != nil {
+			return nil, fmt.Errorf("reading runtime_worker_main template: %w", err)
+		}
+		workerMainContent, err := renderer.RenderGo(ctx, "runtime_worker_main", workerMainTmpl, data)
+		if err != nil {
+			return nil, fmt.Errorf("rendering worker main.go: %w", err)
+		}
+		artifacts = append(artifacts, model.Artifact{
+			Path:        "cmd/worker/main.go",
+			Ownership:   model.DeveloperOwned,
+			Permissions: 0644,
+			Content:     workerMainContent,
+		})
+
+		workerWiringTmpl, err := ReadTemplate("runtime_worker_wiring.go.tmpl")
+		if err != nil {
+			return nil, fmt.Errorf("reading runtime_worker_wiring template: %w", err)
+		}
+		workerWiringContent, err := renderer.RenderGo(ctx, "runtime_worker_wiring", workerWiringTmpl, data)
+		if err != nil {
+			return nil, fmt.Errorf("rendering worker_wiring.go: %w", err)
+		}
+		artifacts = append(artifacts, model.Artifact{
+			Path:        "internal/app/worker_wiring.go",
+			Ownership:   model.MixedOwned,
+			Permissions: 0644,
+			Content:     workerWiringContent,
+		})
 	}
 
 	if g.withTelemetry {

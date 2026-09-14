@@ -3,7 +3,7 @@ title: "loy make runtime"
 description: "Scaffold application runtime lifecycle, composition root, and health checks"
 slug: reference/cli/loy-make-runtime
 sidebar:
-  order: 24
+  order: 30
 ---
 
 
@@ -27,6 +27,7 @@ loy make runtime [flags]
       --dry-run            Preview generated operations without writing to disk
       --force              Overwrite existing files if developer owned
       --json               Output results in JSON format
+      --modular            Scaffold sub-domain modular wiring file instead of flat wiring
       --no-color           Disable colored ANSI output
   -q, --quiet              Suppress non-essential output
       --target string      Target application module in workspace

@@ -14,15 +14,20 @@ func TestLayerClassifier(t *testing.T) {
 		expected   Layer
 	}{
 		{"github.com/example/app/internal/transport/http", LayerTransport},
+		{"github.com/example/app/internal/candidate/api", LayerTransport},
 		{"github.com/example/app/internal/handler/user", LayerTransport},
 		{"github.com/example/app/views/pages", LayerTransport},
 		{"github.com/example/app/internal/views/components", LayerTransport},
 		{"github.com/example/app/internal/service/order", LayerApplication},
+		{"github.com/example/app/internal/worker/cv", LayerApplication},
 		{"github.com/example/app/internal/domain/order", LayerDomain},
 		{"github.com/example/app/internal/repository/postgres", LayerInfrastructure},
-		{"github.com/example/app/internal/platform/cache", LayerInfrastructure},
+		{"github.com/example/app/internal/platform/cache", LayerPlatform},
+		{"github.com/example/app/pkg/mailer", LayerPlatform},
 		{"github.com/example/app/pkg/custom", LayerDomain},
 		{"github.com/gin-gonic/gin", LayerUnknown},
+		{"github.com/redis/go-redis/v9", LayerUnknown},
+		{"google.golang.org/grpc", LayerUnknown},
 	}
 
 	for _, tt := range tests {

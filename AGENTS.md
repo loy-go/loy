@@ -109,7 +109,7 @@ Consult these authoritative documents on demand:
 - **Technical Implementation Plan**: [docs/03-TIP.md](docs/03-TIP.md)
 - **Detailed Phase Plans (1-10)**: [docs/plans/README.md](docs/plans/README.md)
 - **Implementation Pipeline**: [docs/plans/IMPLEMENTATION-PIPELINE.md](docs/plans/IMPLEMENTATION-PIPELINE.md)
-- **Architectural Decision Records (ADR-001 - ADR-017)**: [docs/adrs/README.md](docs/adrs/README.md)
+- **Architectural Decision Records (ADR-001 - ADR-023)**: [docs/adrs/README.md](docs/adrs/README.md)
   - [ADR-001](docs/adrs/ADR-001-seams-over-components.md): Seams over components
   - [ADR-002](docs/adrs/ADR-002-minimal-runtime.md): Minimal runtime
   - [ADR-003](docs/adrs/ADR-003-explicit-wiring.md): Explicit wiring
@@ -119,6 +119,12 @@ Consult these authoritative documents on demand:
   - [ADR-015](docs/adrs/ADR-015-database-migration-and-sqlc-pipeline.md): Database migration and sqlc pipeline (embedded `goose`)
   - [ADR-016](docs/adrs/ADR-016-two-phase-architecture-enforcement-engine.md): Two-phase architecture enforcement engine (`loy check`)
   - [ADR-017](docs/adrs/ADR-017-built-in-process-supervision-for-loy-dev.md): Built-in process supervision (`loy dev`)
+  - [ADR-018](docs/adrs/ADR-018-postgresql-rls-multi-tenancy.md): PostgreSQL RLS multi-tenancy engine
+  - [ADR-019](docs/adrs/ADR-019-dual-daemon-topography-worker-supervision.md): Dual-daemon topography & worker supervision
+  - [ADR-020](docs/adrs/ADR-020-modular-subdomain-wiring.md): Modular sub-domain composition roots
+  - [ADR-021](docs/adrs/ADR-021-transport-expansion-grpc-websockets.md): Transport seam expansion (gRPC & WebSockets)
+  - [ADR-022](docs/adrs/ADR-022-baseline-authentication-session-kit.md): Baseline authentication & session kit
+  - [ADR-023](docs/adrs/ADR-023-platform-layer-and-purity-governance.md): Platform layer & purity governance
 
 ---
 

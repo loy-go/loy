@@ -3,7 +3,7 @@ title: "loy new"
 description: "Create a new Loy project with preset configuration"
 slug: reference/cli/loy-new
 sidebar:
-  order: 36
+  order: 44
 ---
 
 
@@ -16,9 +16,14 @@ loy new <project-name> [flags]
 ### Options
 
 ```
-  -f, --force           Overwrite destination directory if exists
-  -h, --help            help for new
-  -p, --preset string   Preset template (api, fullstack, minimal, monorepo, web) (default "api")
+      --cache string          Cache adapter (valkey, redis, memory, none)
+      --db string             Database adapter (postgres, sqlite, mysql, none)
+  -f, --force                 Overwrite destination directory if exists
+  -h, --help                  help for new
+      --http string           HTTP adapter (fiber, chi, nethttp, echo)
+      --multi-tenant string   Multi-tenancy strategy (rls, column)
+  -p, --preset string         Preset template (api, fullstack, minimal, monorepo, web) (default "api")
+      --queue string          Queue adapter (asynq, river, none)
 ```
 
 ### Options inherited from parent commands

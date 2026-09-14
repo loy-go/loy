@@ -3,7 +3,7 @@ title: "loy make deploy"
 description: "Scaffold production deployment assets (docker, k8s, helm, ci, or all)"
 slug: reference/cli/loy-make-deploy
 sidebar:
-  order: 10
+  order: 14
 ---
 
 
@@ -37,6 +37,7 @@ loy make deploy [type] [flags]
       --dry-run            Preview generated operations without writing to disk
       --force              Overwrite existing files if developer owned
       --json               Output results in JSON format
+      --modular            Scaffold sub-domain modular wiring file instead of flat wiring
       --no-color           Disable colored ANSI output
   -q, --quiet              Suppress non-essential output
       --target string      Target application module in workspace

@@ -1,0 +1,27 @@
+package grpc
+
+import (
+	"context"
+	"fmt"
+
+	"{{.ModulePath}}/internal/{{.FeaturePkg}}/domain"
+	"{{.ModulePath}}/internal/{{.FeaturePkg}}/service"
+)
+
+// Server exposes gRPC transport endpoints for {{.PluralLower}}.
+type Server struct {
+	service *service.Service
+}
+
+// NewServer constructs a new gRPC Server adapter.
+func NewServer(svc *service.Service) (*Server, error) {
+	if svc == nil {
+		return nil, fmt.Errorf("service dependency is required")
+	}
+	return &Server{service: svc}, nil
+}
+
+// GetByID handles retrieval of a {{.Pascal}} by ID.
+func (s *Server) GetByID(ctx context.Context, id int64) (*domain.{{.Pascal}}, error) {
+	return s.service.GetByID(ctx, id)
+}

@@ -39,12 +39,31 @@ func (g *JobGenerator) Generate(ctx context.Context, input generator.Input) ([]m
 		return nil, err
 	}
 
-	return []model.Artifact{
+	jobArtifact := model.Artifact{
+		Path:        fmt.Sprintf("internal/%s/job/%s_job.go", data.FeaturePkg, data.Snake),
+		Content:     rendered,
+		Ownership:   model.DeveloperOwned,
+		Permissions: 0644,
+	}
+
+	importCode := fmt.Sprintf("\t%sJob \"%s/internal/%s/job\"", data.FeaturePkg, g.modulePath, data.FeaturePkg)
+	taskCode := fmt.Sprintf("\tmux.HandleFunc(%sJob.Type%sProcess, %sJob.New%sProcessor().ProcessTask)", data.FeaturePkg, data.Pascal, data.FeaturePkg, data.Pascal)
+
+	artifacts := []model.Artifact{
+		jobArtifact,
 		{
-			Path:        fmt.Sprintf("internal/%s/job/%s_job.go", data.FeaturePkg, data.Snake),
-			Content:     rendered,
-			Ownership:   model.DeveloperOwned,
-			Permissions: 0644,
+			Path:      "internal/app/worker_wiring.go",
+			Ownership: model.MixedOwned,
+			Region:    "worker_imports",
+			Content:   []byte(importCode),
 		},
-	}, nil
+		{
+			Path:      "internal/app/worker_wiring.go",
+			Ownership: model.MixedOwned,
+			Region:    "tasks",
+			Content:   []byte(taskCode),
+		},
+	}
+
+	return artifacts, nil
 }

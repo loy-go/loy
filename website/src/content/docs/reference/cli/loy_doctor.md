@@ -3,7 +3,7 @@ title: "loy doctor"
 description: "Validate development environment, toolchain prerequisites, and project state"
 slug: reference/cli/loy-doctor
 sidebar:
-  order: 4
+  order: 5
 ---
 
 

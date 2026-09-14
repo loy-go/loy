@@ -13,27 +13,35 @@ const (
 )
 
 // AllowedMatrix defines layer-to-layer import permissions per Spec 05.
-// Transport -> Application, Domain, Transport
-// Application -> Domain, Application
-// Domain -> Domain
-// Infrastructure -> Application, Domain, Infrastructure
+// Transport -> Application, Domain, Transport, Platform
+// Application -> Domain, Application, Platform
+// Domain -> Domain, Platform
+// Infrastructure -> Application, Domain, Infrastructure, Platform
+// Platform -> Platform
 var AllowedMatrix = map[Layer]map[Layer]bool{
 	LayerTransport: {
 		LayerTransport:   true,
 		LayerApplication: true,
 		LayerDomain:      true,
+		LayerPlatform:    true,
 	},
 	LayerApplication: {
 		LayerApplication: true,
 		LayerDomain:      true,
+		LayerPlatform:    true,
 	},
 	LayerDomain: {
-		LayerDomain: true,
+		LayerDomain:   true,
+		LayerPlatform: true,
 	},
 	LayerInfrastructure: {
 		LayerInfrastructure: true,
 		LayerApplication:    true,
 		LayerDomain:         true,
+		LayerPlatform:       true,
+	},
+	LayerPlatform: {
+		LayerPlatform: true,
 	},
 }
 

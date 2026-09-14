@@ -3,7 +3,7 @@ title: "loy graph"
 description: "Visualize package dependency hierarchy and architectural layers"
 slug: reference/cli/loy-graph
 sidebar:
-  order: 5
+  order: 6
 ---
 
 

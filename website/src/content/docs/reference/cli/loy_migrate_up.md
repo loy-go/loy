@@ -3,7 +3,7 @@ title: "loy migrate up"
 description: "Apply all pending database migrations"
 slug: reference/cli/loy-migrate-up
 sidebar:
-  order: 34
+  order: 42
 ---
 
 

@@ -26,6 +26,7 @@ export default defineConfig({
           items: [
             { label: 'Installation', slug: 'start/installation' },
             { label: 'Quickstart (60s)', slug: 'start/quickstart' },
+            { label: 'Why Loy? (Comparison)', slug: 'start/comparison' },
             { label: 'Prerequisites & Doctor', slug: 'start/prerequisites' },
           ],
         },
@@ -33,9 +34,23 @@ export default defineConfig({
           label: 'Core Concepts',
           items: [
             { label: 'Layered Architecture', slug: 'concepts/architecture' },
+            { label: 'The Layer Matrix', slug: 'concepts/layer-matrix' },
             { label: 'Explicit Constructor Wiring', slug: 'concepts/explicit-wiring' },
             { label: 'Zero Runtime Invariant', slug: 'concepts/zero-runtime' },
             { label: 'Plan-Based Code Generation', slug: 'concepts/plan-based-generation' },
+          ],
+        },
+        {
+          label: 'Recipes & Cookbooks',
+          items: [
+            { label: 'Overview & Catalog', slug: 'recipes' },
+            { label: 'Multi-Tenant PostgreSQL RLS', slug: 'recipes/multi-tenant-rls' },
+            { label: 'Background Worker Fleet', slug: 'recipes/background-workers' },
+            { label: 'Real-Time WebSocket Streaming', slug: 'recipes/websocket-streaming' },
+            { label: 'gRPC & REST Dual-Listener', slug: 'recipes/grpc-microservices' },
+            { label: 'Transactional Outbox Pattern', slug: 'recipes/transactional-outbox' },
+            { label: 'JWT Auth & Role-Based Access', slug: 'recipes/auth-rbac' },
+            { label: 'Zero-Docker Apps with SQLite', slug: 'recipes/zero-docker-sqlite' },
           ],
         },
         {
@@ -44,7 +59,14 @@ export default defineConfig({
             { label: 'Building Vertical CRUD Slices', slug: 'guides/vertical-slice' },
             { label: 'Database Migrations & SQLC', slug: 'guides/database-migrations' },
             { label: 'Live Hot Reload Supervisor', slug: 'guides/live-reload' },
+            { label: 'Production Readiness Guide', slug: 'guides/production-readiness' },
             { label: 'Docker, K8s & Deployment', slug: 'guides/deployment' },
+          ],
+        },
+        {
+          label: 'Case Studies',
+          items: [
+            { label: 'Building Intivai Enterprise SaaS', slug: 'case-studies/enterprise-saas' },
           ],
         },
         {
@@ -54,7 +76,13 @@ export default defineConfig({
             { label: 'ARCH-001 Dependency Cycles', slug: 'rules/arch001-cycles' },
             { label: 'ARCH-002–006 Layer Boundaries', slug: 'rules/arch002-006-layers' },
             { label: 'ARCH-007–010 Import Restrictions', slug: 'rules/arch007-010-imports' },
-            { label: 'ARCH-011–014 Governance & State', slug: 'rules/arch011-014-governance' },
+            { label: 'ARCH-011–015 Governance & Purity', slug: 'rules/arch011-014-governance' },
+          ],
+        },
+        {
+          label: 'Extending Loy',
+          items: [
+            { label: 'Custom Rules & Templates', slug: 'extending/custom-rules' },
           ],
         },
         {

@@ -106,6 +106,20 @@ func (v *Validator) Validate(filename string, m *Manifest) []*diagnostics.Diagno
 		}
 	}
 
+	// Validate multi-tenancy configuration
+	if m.MultiTenancy.Enabled {
+		strategy := m.MultiTenancy.Strategy
+		if strategy != "" && strategy != "rls" && strategy != "column" {
+			diags = append(diags, &diagnostics.Diagnostic{
+				Severity: diagnostics.SeverityError,
+				Code:     diagnostics.CodeConfigValidationError,
+				Message:  fmt.Sprintf("invalid multi_tenancy strategy %q: must be 'rls' or 'column'", strategy),
+				Hint:     "set 'multi_tenancy: { enabled: true, strategy: rls }' in loy.yaml",
+				File:     filename,
+			})
+		}
+	}
+
 	return diags
 }
 

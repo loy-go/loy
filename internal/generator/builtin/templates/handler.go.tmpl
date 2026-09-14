@@ -34,6 +34,14 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 }
 
 // List handles GET /{{.PluralLower}}.
+// @Summary List {{.PluralLower}}
+// @Description Retrieve a paginated list of {{.PluralLower}}
+// @Tags {{.PluralLower}}
+// @Produce json
+// @Param limit query int false "Pagination limit" default(20)
+// @Param offset query int false "Pagination offset" default(0)
+// @Success 200 {object} map[string]any
+// @Router /api/v1/{{.PluralLower}} [get]
 func (h *Handler) List(c *fiber.Ctx) error {
 	limit := c.QueryInt("limit", 20)
 	offset := c.QueryInt("offset", 0)
@@ -46,6 +54,14 @@ func (h *Handler) List(c *fiber.Ctx) error {
 }
 
 // GetByID handles GET /{{.PluralLower}}/:id.
+// @Summary Get {{.Pascal}} by ID
+// @Description Retrieve a single {{.Pascal}} record by identifier
+// @Tags {{.PluralLower}}
+// @Produce json
+// @Param id path int true "{{.Pascal}} ID"
+// @Success 200 {object} domain.{{.Pascal}}
+// @Failure 404 {object} map[string]string
+// @Router /api/v1/{{.PluralLower}}/{id} [get]
 func (h *Handler) GetByID(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
@@ -60,6 +76,14 @@ func (h *Handler) GetByID(c *fiber.Ctx) error {
 }
 
 // Create handles POST /{{.PluralLower}}.
+// @Summary Create {{.Pascal}}
+// @Description Persist a new {{.Pascal}} record
+// @Tags {{.PluralLower}}
+// @Accept json
+// @Produce json
+// @Param payload body domain.{{.Pascal}} true "Payload"
+// @Success 201 {object} domain.{{.Pascal}}
+// @Router /api/v1/{{.PluralLower}} [post]
 func (h *Handler) Create(c *fiber.Ctx) error {
 	var entity domain.{{.Pascal}}
 	if err := c.BodyParser(&entity); err != nil {
@@ -73,6 +97,15 @@ func (h *Handler) Create(c *fiber.Ctx) error {
 }
 
 // Update handles PUT /{{.PluralLower}}/:id.
+// @Summary Update {{.Pascal}}
+// @Description Update an existing {{.Pascal}} record
+// @Tags {{.PluralLower}}
+// @Accept json
+// @Produce json
+// @Param id path int true "{{.Pascal}} ID"
+// @Param payload body domain.{{.Pascal}} true "Payload"
+// @Success 200 {object} domain.{{.Pascal}}
+// @Router /api/v1/{{.PluralLower}}/{id} [put]
 func (h *Handler) Update(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
@@ -92,6 +125,12 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 }
 
 // Delete handles DELETE /{{.PluralLower}}/:id.
+// @Summary Delete {{.Pascal}}
+// @Description Remove a {{.Pascal}} record by identifier
+// @Tags {{.PluralLower}}
+// @Param id path int true "{{.Pascal}} ID"
+// @Success 204
+// @Router /api/v1/{{.PluralLower}}/{id} [delete]
 func (h *Handler) Delete(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {

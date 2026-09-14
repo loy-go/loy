@@ -1,0 +1,40 @@
+package outbox
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+)
+
+// Event represents an outbox message to be reliably delivered.
+type Event struct {
+	ID        int64
+	EventType string
+	Payload   []byte
+	Status    string
+}
+
+// Store persists outbox events within an existing database transaction.
+type Store struct{}
+
+// NewStore constructs a new Outbox store.
+func NewStore() *Store {
+	return &Store{}
+}
+
+// Save inserts an event into the outbox table within the provided SQL transaction.
+func (s *Store) Save(ctx context.Context, tx *sql.Tx, eventType string, payload any) error {
+	bytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshaling outbox payload: %w", err)
+	}
+
+	query := `INSERT INTO outbox_events (event_type, payload, status) VALUES ($1, $2, 'pending')`
+	_, err = tx.ExecContext(ctx, query, eventType, bytes)
+	if err != nil {
+		return fmt.Errorf("saving outbox event: %w", err)
+	}
+
+	return nil
+}

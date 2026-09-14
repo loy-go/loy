@@ -25,9 +25,10 @@ import (
 )
 
 type makeOptions struct {
-	target string
-	force  bool
-	dryRun bool
+	target  string
+	force   bool
+	dryRun  bool
+	modular bool
 }
 
 func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
@@ -44,6 +45,7 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 	cmd.PersistentFlags().StringVar(&opts.target, "target", "", "Target application module in workspace")
 	cmd.PersistentFlags().BoolVar(&opts.force, "force", false, "Overwrite existing files if developer owned")
 	cmd.PersistentFlags().BoolVar(&opts.dryRun, "dry-run", false, "Preview generated operations without writing to disk")
+	cmd.PersistentFlags().BoolVar(&opts.modular, "modular", false, "Scaffold sub-domain modular wiring file instead of flat wiring")
 
 	// Atomic generators
 	cmd.AddCommand(newArtifactCmd("model", "Scaffold domain entity model", fs, runner, opts, func(mod string) generator.Generator {
@@ -85,6 +87,26 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 	cmd.AddCommand(newArtifactCmd("policy", "Scaffold authorization policy checks", fs, runner, opts, func(mod string) generator.Generator {
 		return builtin.NewPolicyGenerator(mod)
 	}, []string{}))
+
+	cmd.AddCommand(newArtifactCmd("auth", "Scaffold baseline JWT and password authentication kit", fs, runner, opts, func(mod string) generator.Generator {
+		return builtin.NewAuthGenerator(mod)
+	}, []string{}))
+
+	cmd.AddCommand(newArtifactCmd("grpc", "Scaffold Proto contract and gRPC transport server", fs, runner, opts, func(mod string) generator.Generator {
+		return builtin.NewGRPCGenerator(mod)
+	}, []string{}))
+
+	cmd.AddCommand(newArtifactCmd("ws", "Scaffold WebSocket hub, client pumps, and protocol frames", fs, runner, opts, func(mod string) generator.Generator {
+		return builtin.NewWebSocketGenerator(mod)
+	}, []string{"websocket"}))
+
+	cmd.AddCommand(newArtifactCmd("outbox", "Scaffold Transactional Outbox migration, store, and dispatcher", fs, runner, opts, func(mod string) generator.Generator {
+		return builtin.NewOutboxGenerator(mod)
+	}, []string{}))
+
+	cmd.AddCommand(newArtifactCmd("seeder", "Scaffold database seeder fixture", fs, runner, opts, func(mod string) generator.Generator {
+		return builtin.NewSeederGenerator(mod)
+	}, []string{"seed"}))
 
 	cmd.AddCommand(newArtifactCmd("test", "Scaffold unit and integration tests", fs, runner, opts, func(mod string) generator.Generator {
 		return builtin.NewTestGenerator(mod)
@@ -268,12 +290,29 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 	input := generator.Input{
 		Name: name,
 		Args: map[string]string{
-			"fields": fields,
+			"fields":  fields,
+			"modular": fmt.Sprintf("%t", opts.modular),
 		},
 		Options: generator.Options{
 			Force:  opts.force,
 			DryRun: opts.dryRun,
 		},
+	}
+
+	// Inspect loy.yaml in targetDir to populate manifest defaults (e.g. multi-tenancy)
+	manifestPath := filepath.Join(targetDir, "loy.yaml")
+	if mData, err := fs.ReadFile(manifestPath); err == nil {
+		p := manifest.NewParser()
+		if m, diag := p.ParseStrict(manifestPath, mData); diag == nil && m != nil {
+			if m.MultiTenancy.Enabled {
+				input.Args["multi_tenant"] = "true"
+				strategy := m.MultiTenancy.Strategy
+				if strategy == "" {
+					strategy = "rls"
+				}
+				input.Args["tenant_strategy"] = strategy
+			}
+		}
 	}
 
 	artifacts, err := gen.Generate(ctx, input)

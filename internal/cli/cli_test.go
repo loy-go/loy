@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/loy-go/loy/internal/cli"
@@ -153,5 +154,43 @@ func TestNewCmd_Integration(t *testing.T) {
 	cmdBad.SetArgs([]string{"new", "badproj", "--preset", "unknown"})
 	if err := cmdBad.Execute(); err == nil {
 		t.Fatal("expected error with unknown preset in new cmd")
+	}
+
+	// Custom adapters & multi-tenant flags
+	cmdCustom := cli.NewRootCmd()
+	cmdCustom.SetArgs([]string{"new", "customapp", "--http=chi", "--db=sqlite", "--queue=river", "--multi-tenant=rls"})
+	if err := cmdCustom.Execute(); err != nil {
+		t.Fatalf("new command with custom adapters failed: %v", err)
+	}
+
+	customYAML, err := os.ReadFile(filepath.Join(tmpDir, "customapp", "loy.yaml"))
+	if err != nil {
+		t.Fatalf("failed reading custom loy.yaml: %v", err)
+	}
+	if !strings.Contains(string(customYAML), "strategy: rls") {
+		t.Errorf("expected custom loy.yaml to contain multi-tenancy rls strategy, got:\n%s", string(customYAML))
+	}
+}
+
+func TestRoutesCmd(t *testing.T) {
+	cmd := cli.NewRootCmd()
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+	cmd.SetArgs([]string{"routes", "."})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("routes command failed: %v", err)
+	}
+}
+
+func TestSeedCmd(t *testing.T) {
+	tmpDir := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(tmpDir, "internal/platform/database/seeds"), 0755)
+
+	cmd := cli.NewRootCmd()
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+	cmd.SetArgs([]string{"seed", tmpDir})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("seed command failed: %v", err)
 	}
 }

@@ -43,6 +43,14 @@ func (g *CRUDGenerator) Generate(ctx context.Context, input generator.Input) ([]
 	}
 
 	data := NewBaseData(input.Name, g.modulePath, fields)
+	if input.Args != nil && (input.Args["multi_tenant"] == "true" || input.Args["multi-tenant"] == "true") {
+		data.MultiTenancy = true
+		strategy := input.Args["tenant_strategy"]
+		if strategy == "" {
+			strategy = "rls"
+		}
+		data.TenantStrategy = strategy
+	}
 	renderer := GetRenderer()
 
 	// 1. Migration artifact

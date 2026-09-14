@@ -26,7 +26,7 @@ loy check --strict --json
 
 ---
 
-## The 14 Standard Rules Catalog
+## The 15 Standard Rules Catalog
 
 | Rule ID | Category | Severity | Description |
 |---|---|---|---|
@@ -44,3 +44,4 @@ loy check --strict --json
 | **ARCH-012** | Governance | ERROR | Package-level mutable state (`var db *sql.DB`) is prohibited. |
 | **ARCH-013** | Governance | ERROR | Application-to-application cross-boundary imports in monorepos are forbidden. |
 | **ARCH-014** | Governance | WARN | Unmanaged code in generator-managed regions. |
+| **ARCH-015** | Governance | ERROR | Domain and Application layers must not import impure platform packages (IO/network/database). |

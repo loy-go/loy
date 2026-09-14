@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package {{.FeaturePkg}}.v1;
+
+option go_package = "{{.ModulePath}}/proto/{{.FeaturePkg}}/v1;{{.FeaturePkg}}v1";
+
+service {{.Pascal}}Service {
+  rpc Get{{.Pascal}} (Get{{.Pascal}}Request) returns (Get{{.Pascal}}Response);
+  rpc List{{.Plural}} (List{{.Plural}}Request) returns (List{{.Plural}}Response);
+  rpc Create{{.Pascal}} (Create{{.Pascal}}Request) returns (Create{{.Pascal}}Response);
+  rpc Delete{{.Pascal}} (Delete{{.Pascal}}Request) returns (Delete{{.Pascal}}Response);
+}
+
+message {{.Pascal}} {
+  int64 id = 1;
+{{- range $i, $f := .Fields}}
+  string {{$f.SnakeName}} = {{add $i 2}};
+{{- end}}
+}
+
+message Get{{.Pascal}}Request {
+  int64 id = 1;
+}
+
+message Get{{.Pascal}}Response {
+  {{.Pascal}} {{.Snake}} = 1;
+}
+
+message List{{.Plural}}Request {
+  int32 limit = 1;
+  int32 offset = 2;
+}
+
+message List{{.Plural}}Response {
+  repeated {{.Pascal}} items = 1;
+}
+
+message Create{{.Pascal}}Request {
+{{- range $i, $f := .Fields}}
+  string {{$f.SnakeName}} = {{add $i 1}};
+{{- end}}
+}
+
+message Create{{.Pascal}}Response {
+  {{.Pascal}} {{.Snake}} = 1;
+}
+
+message Delete{{.Pascal}}Request {
+  int64 id = 1;
+}
+
+message Delete{{.Pascal}}Response {
+  bool success = 1;
+}

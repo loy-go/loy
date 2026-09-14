@@ -2,12 +2,27 @@
 -- SQL in this section is executed after the migration is applied.
 CREATE TABLE IF NOT EXISTS {{.PluralLower}} (
     id BIGSERIAL PRIMARY KEY,
+{{- if .MultiTenancy}}
+    org_id UUID NOT NULL,
+{{- end}}
 {{- range .Fields}}
     {{.SnakeName}} {{.SQLType}}{{if .IsRequired}} NOT NULL{{end}}{{if .IsUnique}} UNIQUE{{end}}{{if .IsEnum}} CHECK ({{.SnakeName}} IN ({{range $i, $v := .EnumValues}}{{if $i}}, {{end}}'{{$v}}'{{end}})){{end}},
 {{- end}}
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+{{- if .MultiTenancy}}
+CREATE INDEX IF NOT EXISTS idx_{{.PluralLower}}_org_id ON {{.PluralLower}} (org_id);
+{{- if eq .TenantStrategy "rls"}}
+ALTER TABLE {{.PluralLower}} ENABLE ROW LEVEL SECURITY;
+ALTER TABLE {{.PluralLower}} FORCE ROW LEVEL SECURITY;
+CREATE POLICY {{.PluralLower}}_tenant_isolation_policy ON {{.PluralLower}}
+    FOR ALL
+    TO public
+    USING (org_id = NULLIF(current_setting('app.current_tenant_id', true), '')::UUID);
+{{- end}}
+{{- end}}
 
 {{- range .Fields}}
 {{- if and .IsIndexed (not .IsUnique)}}

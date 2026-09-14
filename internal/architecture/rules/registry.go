@@ -4,7 +4,7 @@ import (
 	"github.com/loy-go/loy/internal/architecture"
 )
 
-// DefaultRules returns instances of all 14 standard architecture rules.
+// DefaultRules returns instances of all 15 standard architecture rules.
 func DefaultRules() []architecture.Rule {
 	return []architecture.Rule{
 		&RuleArch001{},
@@ -21,5 +21,6 @@ func DefaultRules() []architecture.Rule {
 		&RuleArch012{},
 		&RuleArch013{},
 		&RuleArch014{},
+		&RuleArch015{},
 	}
 }

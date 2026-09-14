@@ -67,6 +67,12 @@ Detailed rationale is recorded in the [ADR Registry](./adrs/README.md):
 - [ADR-015](./adrs/ADR-015-database-migration-and-sqlc-pipeline.md) — Embedded goose runner + external sqlc generation
 - [ADR-016](./adrs/ADR-016-two-phase-architecture-enforcement-engine.md) — Two-phase architecture enforcement engine
 - [ADR-017](./adrs/ADR-017-built-in-process-supervision-for-loy-dev.md) — Built-in process supervision for loy dev
+- [ADR-018](./adrs/ADR-018-postgresql-rls-multi-tenancy.md) — PostgreSQL RLS multi-tenancy engine
+- [ADR-019](./adrs/ADR-019-dual-daemon-topography-worker-supervision.md) — Dual-daemon topography & worker supervision
+- [ADR-020](./adrs/ADR-020-modular-subdomain-wiring.md) — Modular sub-domain composition roots
+- [ADR-021](./adrs/ADR-021-transport-expansion-grpc-websockets.md) — Transport seam expansion (gRPC & WebSockets)
+- [ADR-022](./adrs/ADR-022-baseline-authentication-session-kit.md) — Baseline authentication & session kit
+- [ADR-023](./adrs/ADR-023-platform-layer-and-purity-governance.md) — Platform layer & purity governance
 
 ## Locked Invariants
 

@@ -1,0 +1,60 @@
+package ws
+
+import (
+	"sync"
+)
+
+// Hub manages active client WebSocket connections for {{.Pascal}}.
+type Hub struct {
+	mu         sync.RWMutex
+	clients    map[string]*Client
+	broadcast  chan Frame
+	register   chan *Client
+	unregister chan *Client
+}
+
+// NewHub constructs a new thread-safe WebSocket connection hub.
+func NewHub() *Hub {
+	return &Hub{
+		clients:    make(map[string]*Client),
+		broadcast:  make(chan Frame, 256),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+	}
+}
+
+// Run executes the hub event dispatch loop.
+func (h *Hub) Run() {
+	for {
+		select {
+		case client := <-h.register:
+			h.mu.Lock()
+			h.clients[client.ID] = client
+			h.mu.Unlock()
+		case client := <-h.unregister:
+			h.mu.Lock()
+			if _, ok := h.clients[client.ID]; ok {
+				delete(h.clients, client.ID)
+				close(client.send)
+			}
+			h.mu.Unlock()
+		case message := <-h.broadcast:
+			h.mu.RLock()
+			for _, client := range h.clients {
+				select {
+				case client.send <- message:
+				default:
+					go func(c *Client) {
+						h.unregister <- c
+					}(client)
+				}
+			}
+			h.mu.RUnlock()
+		}
+	}
+}
+
+// Broadcast sends a typed frame to all connected clients.
+func (h *Hub) Broadcast(frame Frame) {
+	h.broadcast <- frame
+}
