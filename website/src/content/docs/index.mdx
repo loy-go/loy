@@ -1,0 +1,59 @@
+---
+title: "Loy Developer Platform"
+description: "A build-time Go developer platform engineered for clean architecture, typed scaffolding, and zero runtime framework lock-in."
+template: splash
+hero:
+  tagline: "Build Laravel-like developer velocity in Go with ordinary, idiomatic code and zero runtime framework lock-in."
+  image:
+    file: ../../assets/hero.svg
+  actions:
+    - text: Get Started
+      link: /start/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: GitHub Repository
+      link: https://github.com/loy-go/loy
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Why Loy?
+
+<CardGrid stagger>
+  <Card title="Seams Over Components" icon="puzzle">
+    Loy standardizes the architectural wiring between battle-tested Go libraries (`pgx`, `fiber`, `asynq`, `goose`, `sqlc`, `otel`). We never build proprietary ORMs or web frameworks.
+  </Card>
+  <Card title="Zero Runtime Lock-In" icon="rocket">
+    Generated applications are ordinary, compiled Go binaries. Your production apps never import `loy` or depend on proprietary framework runtimes.
+  </Card>
+  <Card title="Explicit Wiring" icon="setting">
+    Zero reflection DI, zero magical runtime service locators. Dependencies are injected via standard Go constructors in `internal/app/wiring.go`.
+  </Card>
+  <Card title="Automated Architecture Guard" icon="approve-check">
+    Enforce strict layer boundaries (`Transport -> Application -> Domain <- Infrastructure`) and prevent circular dependencies using `loy check`.
+  </Card>
+</CardGrid>
+
+---
+
+## 60-Second Quickstart
+
+```bash
+# 1. Install Loy CLI
+go install github.com/loy-go/loy/cmd/loy@latest
+
+# 2. Scaffold a new API service
+loy new myapp --preset api
+cd myapp
+
+# 3. Generate a full vertical CRUD slice
+loy make crud user name:string email:string:unique
+
+# 4. Verify architectural boundaries
+loy check
+
+# 5. Start live hot reload server
+loy dev
+```

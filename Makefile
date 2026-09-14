@@ -54,6 +54,18 @@ check: vet lint test
 golden:
 	$(GO) test -v ./internal/generator/... -update
 
+## docgen: Generate markdown reference pages from Cobra CLI into website/
+docgen:
+	$(GO) run ./cmd/docgen --out website/src/content/docs/reference/cli
+
+## docs-dev: Start local Astro Starlight documentation development server
+docs-dev: docgen
+	cd website && pnpm dev
+
+## docs-build: Build static documentation site with Pagefind search index
+docs-build: docgen
+	cd website && pnpm build
+
 ## clean: Remove built binaries and test coverage files
 clean:
 	rm -rf bin/ coverage/

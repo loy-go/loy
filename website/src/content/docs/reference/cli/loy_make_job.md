@@ -1,0 +1,38 @@
+---
+title: "loy make job"
+description: "Scaffold Asynq background job payload & processor"
+slug: reference/cli/loy-make-job
+sidebar:
+  order: 16
+---
+
+
+Scaffold Asynq background job payload & processor
+
+```
+loy make job <name> [fields...] [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for job
+```
+
+### Options inherited from parent commands
+
+```
+  -C, --directory string   Change execution directory
+      --dry-run            Preview generated operations without writing to disk
+      --force              Overwrite existing files if developer owned
+      --json               Output results in JSON format
+      --no-color           Disable colored ANSI output
+  -q, --quiet              Suppress non-essential output
+      --target string      Target application module in workspace
+  -v, --verbose            Enable verbose/debug output
+```
+
+### SEE ALSO
+
+* [loy make](/reference/cli/loy-make/)	 - Scaffold application components, slices, and vertical features
+
