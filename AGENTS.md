@@ -141,17 +141,19 @@ Never modify codebase invariants or add framework dependencies without an accept
 Before concluding any implementation phase or submitting changes, run these verification commands:
 
 ```bash
-# 1. Code standards & syntax check
-go vet ./...
+# 1. Full pre-commit verification gate (go vet, golangci-lint, short tests with race detector)
+make check
 
-# 2. Concurrency & race detector test suite
-go test -v -race ./...
+# 2. Complete integration test suite
+make test-all
 
 # 3. Coverage validation (target >= 80% on core internal packages)
 go test -cover ./internal/... ./cmd/...
 
 # 4. Binary compilation smoke test
-go build -o bin/loy ./cmd/loy
+make build
+./bin/loy doctor
+./bin/loy version
 
 # 5. Link integrity check across docs
 python3 -c '
