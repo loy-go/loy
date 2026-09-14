@@ -1,0 +1,33 @@
+image: golang:1.23-alpine
+
+stages:
+  - test
+  - build
+
+{{if or .WithDatabase .WithCache}}services:
+  {{if .WithDatabase}}- postgres:16-alpine
+  {{end}}{{if .WithCache}}- valkey/valkey:7-alpine
+  {{end}}
+variables:
+  {{if .WithDatabase}}POSTGRES_USER: loy
+  POSTGRES_PASSWORD: loy_secret
+  POSTGRES_DB: {{.ProjectName}}_test
+  DATABASE_URL: "postgres://loy:loy_secret@postgres:5432/{{.ProjectName}}_test?sslmode=disable"
+  {{end}}{{if .WithCache}}VALKEY_ADDR: "valkey:6379"
+  {{end}}
+{{end}}test:
+  stage: test
+  before_script:
+    - apk add --no-cache git ca-certificates tzdata build-base
+  script:
+    - go mod verify
+    - go vet ./...
+    - go run github.com/uloydev/loy/cmd/loy@latest check
+    - go test -v -race -cover ./...
+
+build:
+  stage: build
+  before_script:
+    - apk add --no-cache git ca-certificates tzdata
+  script:
+    - go build -v ./...

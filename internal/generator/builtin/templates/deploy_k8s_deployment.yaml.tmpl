@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.ProjectName}}
+  labels:
+    app: {{.ProjectName}}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {{.ProjectName}}
+  template:
+    metadata:
+      labels:
+        app: {{.ProjectName}}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: {{.ProjectName}}
+          image: {{.ProjectName}}:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 3
+          envFrom:
+            - configMapRef:
+                name: {{.ProjectName}}-config
+          {{if or .WithDatabase .WithCache}}env:
+            {{if .WithDatabase}}- name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{.ProjectName}}-secret
+                  key: database-url
+            {{end}}{{if .WithCache}}- name: VALKEY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{.ProjectName}}-secret
+                  key: valkey-password
+            {{end}}{{end}}

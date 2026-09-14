@@ -1,0 +1,45 @@
+{{if .WithVite}}# Stage 1: Frontend Asset Builder
+FROM node:20-alpine AS assets
+WORKDIR /app
+COPY package*.json pnpm-lock.yaml* yarn.lock* bun.lockb* ./
+RUN npm install --frozen-lockfile 2>/dev/null || npm install
+COPY . .
+RUN npm run build
+
+{{end}}# Stage {{if .WithVite}}2{{else}}1{{end}}: Go Builder
+FROM golang:1.23-alpine AS builder
+WORKDIR /app
+
+RUN apk add --no-cache git ca-certificates tzdata
+
+{{if .IsWorkspace}}
+COPY go.work go.work.sum* ./
+COPY packages/ ./packages/
+{{end}}
+COPY go.mod go.sum* ./
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+
+COPY . .
+{{if .WithVite}}
+COPY --from=assets /app/internal/transport/http/static/dist ./internal/transport/http/static/dist
+{{end}}
+
+ARG TARGET={{.Target}}
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /bin/app ./cmd/${TARGET}
+
+# Stage {{if .WithVite}}3{{else}}2{{end}}: Production Runtime
+FROM alpine:3.20 AS runner
+RUN apk --no-cache add ca-certificates tzdata \
+    && addgroup -g 10001 -S app \
+    && adduser -u 10001 -S app -G app
+
+USER 10001:10001
+WORKDIR /app
+
+COPY --from=builder /bin/app /app/app
+
+EXPOSE 8080
+
+ENTRYPOINT ["/app/app"]

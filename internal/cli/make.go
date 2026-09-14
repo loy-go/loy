@@ -17,6 +17,7 @@ import (
 	"github.com/uloydev/loy/internal/generator/builtin"
 	"github.com/uloydev/loy/internal/generator/builtin/wiring"
 	"github.com/uloydev/loy/internal/generator/plan"
+	"github.com/uloydev/loy/internal/manifest"
 	"github.com/uloydev/loy/internal/process"
 	"github.com/uloydev/loy/internal/workspace"
 	"golang.org/x/mod/modfile"
@@ -92,9 +93,16 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 
 	cmd.AddCommand(newRuntimeCmd(fs, runner, opts))
 
+	// Deployment & infrastructure generators
+	cmd.AddCommand(newDockerCmd(fs, runner, opts))
+	cmd.AddCommand(newK8sCmd(fs, runner, opts))
+	cmd.AddCommand(newHelmCmd(fs, runner, opts))
+	cmd.AddCommand(newCICmd(fs, runner, opts))
+
 	// Composers
 	cmd.AddCommand(newFeatureCmd(fs, runner, opts))
 	cmd.AddCommand(newCRUDCmd(fs, runner, opts))
+	cmd.AddCommand(newDeployCmd(fs, runner, opts))
 
 	return cmd
 }
@@ -344,6 +352,10 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 		}
 	}
 
+	if runner != nil && !opts.dryRun {
+		_, _ = runner.Run(ctx, targetDir, "go", "mod", "tidy")
+	}
+
 	return nil
 }
 
@@ -469,4 +481,336 @@ func newViewCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptio
 	}
 	cmd.Flags().BoolVar(&partial, "partial", false, "Scaffold as partial UI component instead of full page")
 	return cmd
+}
+
+func newDockerCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	var target string
+	cmd := &cobra.Command{
+		Use:   "docker [name]",
+		Short: "Scaffold production multi-stage Dockerfile and docker-compose.yml",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := "docker"
+			if len(args) > 0 {
+				name = args[0]
+			}
+			return runDeployArtifact(cmd, fs, runner, opts, func(mod string, man *manifest.Manifest) generator.Generator {
+				gen := builtin.NewDockerGenerator(mod)
+				if man != nil {
+					gen.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "", man.Defaults.Assets == "vite")
+					if target != "" {
+						gen.WithTarget(target)
+					} else if man.Defaults.Template != "" || man.Defaults.Assets == "vite" {
+						gen.WithTarget("web")
+					}
+					if len(man.Workspace.Apps) > 0 || man.Workspace.DefaultTarget != "" {
+						gen.WithWorkspace(true)
+					}
+				} else if target != "" {
+					gen.WithTarget(target)
+				}
+				return gen
+			}, name)
+		},
+	}
+	cmd.Flags().StringVar(&target, "target-binary", "", "Target command binary to compile (e.g. api, web, worker)")
+	return cmd
+}
+
+func newK8sCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "k8s [name]",
+		Short: "Scaffold cloud-native Kubernetes manifests (deploy/k8s/)",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := "k8s"
+			if len(args) > 0 {
+				name = args[0]
+			}
+			return runDeployArtifact(cmd, fs, runner, opts, func(mod string, man *manifest.Manifest) generator.Generator {
+				gen := builtin.NewK8sGenerator(mod)
+				if man != nil {
+					gen.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+				}
+				return gen
+			}, name)
+		},
+	}
+	return cmd
+}
+
+func newHelmCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "helm [name]",
+		Short: "Scaffold Helm chart for application (deploy/helm/<name>/)",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := "helm"
+			if len(args) > 0 {
+				name = args[0]
+			}
+			return runDeployArtifact(cmd, fs, runner, opts, func(mod string, man *manifest.Manifest) generator.Generator {
+				gen := builtin.NewHelmGenerator(mod)
+				if man != nil {
+					gen.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+				}
+				return gen
+			}, name)
+		},
+	}
+	return cmd
+}
+
+func newCICmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	var provider string
+	cmd := &cobra.Command{
+		Use:   "ci [name]",
+		Short: "Scaffold CI/CD pipeline workflow (GitHub Actions or GitLab CI)",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := "ci"
+			if len(args) > 0 {
+				name = args[0]
+			}
+			return runDeployArtifact(cmd, fs, runner, opts, func(mod string, man *manifest.Manifest) generator.Generator {
+				gen := builtin.NewCIGenerator(mod).WithProvider(provider)
+				if man != nil {
+					gen.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+				}
+				return gen
+			}, name)
+		},
+	}
+	cmd.Flags().StringVar(&provider, "provider", "github", "CI provider (github or gitlab)")
+	return cmd
+}
+
+func newDeployCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	var (
+		targetBinary string
+		ciProvider   string
+	)
+	cmd := &cobra.Command{
+		Use:   "deploy [type]",
+		Short: "Scaffold production deployment assets (docker, k8s, helm, ci, or all)",
+		Long: `Scaffold deployment and infrastructure assets:
+  - docker: Multi-stage Dockerfile & docker-compose.yml
+  - k8s:    Kubernetes manifests in deploy/k8s/
+  - helm:   Helm chart in deploy/helm/<app>/
+  - ci:     CI pipeline workflow (.github/workflows/ci.yml)
+  - all:    Scaffold all deployment targets together (default)`,
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			deployType := "all"
+			if len(args) > 0 {
+				deployType = strings.ToLower(args[0])
+			}
+
+			var generators []func(mod string, man *manifest.Manifest) generator.Generator
+			var names []string
+
+			switch deployType {
+			case "docker":
+				generators = append(generators, func(mod string, man *manifest.Manifest) generator.Generator {
+					g := builtin.NewDockerGenerator(mod)
+					if man != nil {
+						g.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "", man.Defaults.Assets == "vite")
+						if targetBinary != "" {
+							g.WithTarget(targetBinary)
+						} else if man.Defaults.Template != "" || man.Defaults.Assets == "vite" {
+							g.WithTarget("web")
+						}
+						if len(man.Workspace.Apps) > 0 || man.Workspace.DefaultTarget != "" {
+							g.WithWorkspace(true)
+						}
+					}
+					return g
+				})
+				names = append(names, "docker")
+			case "k8s":
+				generators = append(generators, func(mod string, man *manifest.Manifest) generator.Generator {
+					g := builtin.NewK8sGenerator(mod)
+					if man != nil {
+						g.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+					}
+					return g
+				})
+				names = append(names, "k8s")
+			case "helm":
+				generators = append(generators, func(mod string, man *manifest.Manifest) generator.Generator {
+					g := builtin.NewHelmGenerator(mod)
+					if man != nil {
+						g.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+					}
+					return g
+				})
+				names = append(names, "helm")
+			case "ci":
+				generators = append(generators, func(mod string, man *manifest.Manifest) generator.Generator {
+					g := builtin.NewCIGenerator(mod).WithProvider(ciProvider)
+					if man != nil {
+						g.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+					}
+					return g
+				})
+				names = append(names, "ci")
+			case "all":
+				generators = []func(mod string, man *manifest.Manifest) generator.Generator{
+					func(mod string, man *manifest.Manifest) generator.Generator {
+						g := builtin.NewDockerGenerator(mod)
+						if man != nil {
+							g.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "", man.Defaults.Assets == "vite")
+							if targetBinary != "" {
+								g.WithTarget(targetBinary)
+							} else if man.Defaults.Template != "" || man.Defaults.Assets == "vite" {
+								g.WithTarget("web")
+							}
+								if len(man.Workspace.Apps) > 0 || man.Workspace.DefaultTarget != "" {
+									g.WithWorkspace(true)
+								}
+						}
+						return g
+					},
+					func(mod string, man *manifest.Manifest) generator.Generator {
+						g := builtin.NewK8sGenerator(mod)
+						if man != nil {
+							g.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+						}
+						return g
+					},
+					func(mod string, man *manifest.Manifest) generator.Generator {
+						g := builtin.NewHelmGenerator(mod)
+						if man != nil {
+							g.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+						}
+						return g
+					},
+					func(mod string, man *manifest.Manifest) generator.Generator {
+						g := builtin.NewCIGenerator(mod).WithProvider(ciProvider)
+						if man != nil {
+							g.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+						}
+						return g
+					},
+				}
+				names = []string{"docker", "k8s", "helm", "ci"}
+			default:
+				return fmt.Errorf("unknown deploy target %q: valid targets are all, docker, k8s, helm, ci", deployType)
+			}
+
+			for i, gFn := range generators {
+				if err := runDeployArtifact(cmd, fs, runner, opts, gFn, names[i]); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&targetBinary, "target-binary", "", "Target command binary to compile for Dockerfile")
+	cmd.Flags().StringVar(&ciProvider, "provider", "github", "CI provider (github or gitlab)")
+	return cmd
+}
+
+func runDeployArtifact(cmd *cobra.Command, fs filesystem.FileSystem, runner process.Runner, opts *makeOptions, factory func(mod string, man *manifest.Manifest) generator.Generator, name string) error {
+	ctx := cmd.Context()
+	globalOpts := GetOptions(ctx)
+
+	targetDir, modulePath, err := resolveProjectTarget(ctx, fs, runner, opts.target)
+	if err != nil {
+		return err
+	}
+
+	var man *manifest.Manifest
+	mPath := filepath.Join(targetDir, "loy.yaml")
+	if mData, err := fs.ReadFile(mPath); err == nil {
+		parser := manifest.NewParser()
+		if m, diag := parser.ParseStrict(mPath, mData); diag == nil {
+			man = m
+		}
+	}
+
+	gen := factory(modulePath, man)
+	input := generator.Input{
+		Name: name,
+		Options: generator.Options{
+			Force:  opts.force,
+			DryRun: opts.dryRun,
+		},
+	}
+
+	artifacts, err := gen.Generate(ctx, input)
+	if err != nil {
+		return &CommandError{
+			Code: 1,
+			Diagnostics: []*diagnostics.Diagnostic{{
+				Severity: diagnostics.SeverityError,
+				Code:     diagnostics.CodeGenExecutionError,
+				Message:  fmt.Sprintf("generating %s: %v", gen.Name(), err),
+				File:     targetDir,
+			}},
+		}
+	}
+
+	planBuilder := plan.NewBuilder(fs)
+	executionPlan, err := planBuilder.Build(ctx, targetDir, artifacts, input.Options)
+	if err != nil {
+		return &CommandError{
+			Code: 1,
+			Diagnostics: []*diagnostics.Diagnostic{{
+				Severity: diagnostics.SeverityError,
+				Code:     diagnostics.CodeGenConflict,
+				Message:  fmt.Sprintf("conflict building plan: %v", err),
+				Hint:     "use --force to overwrite existing files",
+				File:     targetDir,
+			}},
+		}
+	}
+
+	if opts.dryRun {
+		if globalOpts.JSON {
+			enc := json.NewEncoder(cmd.OutOrStdout())
+			enc.SetIndent("", "  ")
+			return enc.Encode(executionPlan)
+		}
+		fmt.Fprintf(cmd.OutOrStdout(), "Plan operations (dry-run) for %s:\n", gen.Name())
+		for _, op := range executionPlan.Operations {
+			fmt.Fprintf(cmd.OutOrStdout(), "  [%s] %s\n", op.Type, op.Path)
+		}
+		return nil
+	}
+
+	executor := plan.NewExecutor(fs)
+	if err := executor.Execute(ctx, executionPlan); err != nil {
+		return &CommandError{
+			Code: 1,
+			Diagnostics: []*diagnostics.Diagnostic{{
+				Severity: diagnostics.SeverityError,
+				Code:     diagnostics.CodeGenExecutionError,
+				Message:  fmt.Sprintf("executing plan: %v", err),
+				File:     targetDir,
+			}},
+		}
+	}
+
+	if !globalOpts.Quiet {
+		if globalOpts.JSON {
+			paths := make([]string, len(artifacts))
+			for i, a := range artifacts {
+				paths[i] = a.Path
+			}
+			data, _ := json.Marshal(map[string]any{
+				"status":    "generated",
+				"generator": gen.Name(),
+				"artifacts": paths,
+			})
+			fmt.Fprintln(cmd.OutOrStdout(), string(data))
+		} else {
+			fmt.Fprintf(cmd.OutOrStdout(), "Generated %s (%d files):\n", gen.Name(), len(artifacts))
+			for _, a := range artifacts {
+				fmt.Fprintf(cmd.OutOrStdout(), "  + %s\n", a.Path)
+			}
+		}
+	}
+
+	return nil
 }

@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Test & Architecture Verification
+    runs-on: ubuntu-latest
+    {{if or .WithDatabase .WithCache}}services:
+      {{if .WithDatabase}}postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: loy
+          POSTGRES_PASSWORD: loy_secret
+          POSTGRES_DB: {{.ProjectName}}_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      {{end}}{{if .WithCache}}valkey:
+        image: valkey/valkey:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      {{end}}{{end}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Verify modules
+        run: go mod verify
+
+      - name: Lint and syntax check (go vet)
+        run: go vet ./...
+
+      - name: Verify architecture boundaries (loy check)
+        run: go run github.com/uloydev/loy/cmd/loy@latest check
+
+      - name: Run test suite with race detector
+        env:
+          ENV: test
+          {{if .WithDatabase}}DATABASE_URL: postgres://loy:loy_secret@localhost:5432/{{.ProjectName}}_test?sslmode=disable
+          {{end}}{{if .WithCache}}VALKEY_ADDR: localhost:6379
+          {{end}}run: go test -v -race -cover ./...
+
+      - name: Compile application binary
+        run: go build -v ./...

@@ -175,4 +175,73 @@ func TestMakeCommand(t *testing.T) {
 			t.Fatalf("expected hx-target, got:\n%s", string(content))
 		}
 	})
+
+	t.Run("make docker", func(t *testing.T) {
+		r := cli.NewRootCmd()
+		out, err := executeMakeCommand(r, "make", "docker")
+		if err != nil {
+			t.Fatalf("make docker failed: %v, out: %s", err, out)
+		}
+		if _, err := os.Stat(filepath.Join(tempDir, "Dockerfile")); os.IsNotExist(err) {
+			t.Fatalf("expected Dockerfile to exist")
+		}
+		if _, err := os.Stat(filepath.Join(tempDir, "docker-compose.yml")); os.IsNotExist(err) {
+			t.Fatalf("expected docker-compose.yml to exist")
+		}
+	})
+
+	t.Run("make k8s", func(t *testing.T) {
+		r := cli.NewRootCmd()
+		out, err := executeMakeCommand(r, "make", "k8s")
+		if err != nil {
+			t.Fatalf("make k8s failed: %v, out: %s", err, out)
+		}
+		if _, err := os.Stat(filepath.Join(tempDir, "deploy/k8s/deployment.yaml")); os.IsNotExist(err) {
+			t.Fatalf("expected deploy/k8s/deployment.yaml to exist")
+		}
+		if _, err := os.Stat(filepath.Join(tempDir, "deploy/k8s/service.yaml")); os.IsNotExist(err) {
+			t.Fatalf("expected deploy/k8s/service.yaml to exist")
+		}
+	})
+
+	t.Run("make helm", func(t *testing.T) {
+		r := cli.NewRootCmd()
+		out, err := executeMakeCommand(r, "make", "helm", "testapp")
+		if err != nil {
+			t.Fatalf("make helm failed: %v, out: %s", err, out)
+		}
+		if _, err := os.Stat(filepath.Join(tempDir, "deploy/helm/testapp/Chart.yaml")); os.IsNotExist(err) {
+			t.Fatalf("expected deploy/helm/testapp/Chart.yaml to exist")
+		}
+	})
+
+	t.Run("make ci", func(t *testing.T) {
+		r := cli.NewRootCmd()
+		out, err := executeMakeCommand(r, "make", "ci")
+		if err != nil {
+			t.Fatalf("make ci failed: %v, out: %s", err, out)
+		}
+		if _, err := os.Stat(filepath.Join(tempDir, ".github/workflows/ci.yml")); os.IsNotExist(err) {
+			t.Fatalf("expected .github/workflows/ci.yml to exist")
+		}
+	})
+
+	t.Run("make deploy all", func(t *testing.T) {
+		r := cli.NewRootCmd()
+		out, err := executeMakeCommand(r, "make", "deploy", "--force")
+		if err != nil {
+			t.Fatalf("make deploy failed: %v, out: %s", err, out)
+		}
+		expected := []string{
+			"Dockerfile",
+			"docker-compose.yml",
+			"deploy/k8s/deployment.yaml",
+			".github/workflows/ci.yml",
+		}
+		for _, f := range expected {
+			if _, err := os.Stat(filepath.Join(tempDir, f)); os.IsNotExist(err) {
+				t.Errorf("expected %s to exist after make deploy", f)
+			}
+		}
+	})
 }

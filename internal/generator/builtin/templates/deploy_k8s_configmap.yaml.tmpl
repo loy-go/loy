@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{.ProjectName}}-config
+  labels:
+    app: {{.ProjectName}}
+data:
+  PORT: "8080"
+  ENV: "production"
+  LOG_LEVEL: "info"
+  {{if .WithCache}}VALKEY_ADDR: "{{.ProjectName}}-valkey:6379"
+  {{end}}

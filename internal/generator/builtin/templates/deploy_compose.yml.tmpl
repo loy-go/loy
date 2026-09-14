@@ -1,0 +1,55 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ENV=development
+      - PORT=8080
+      - LOG_LEVEL=debug
+      {{if .WithDatabase}}- DATABASE_URL=postgres://loy:loy_secret@postgres:5432/{{.ProjectName}}_dev?sslmode=disable
+      {{end}}{{if .WithCache}}- VALKEY_ADDR=valkey:6379
+      {{end}}depends_on:
+      {{if .WithDatabase}}postgres:
+        condition: service_healthy
+      {{end}}{{if .WithCache}}valkey:
+        condition: service_healthy
+      {{end}}
+{{if .WithDatabase}}
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=loy
+      - POSTGRES_PASSWORD=loy_secret
+      - POSTGRES_DB={{.ProjectName}}_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loy -d {{.ProjectName}}_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+{{end}}
+{{if .WithCache}}
+  valkey:
+    image: valkey/valkey:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+{{end}}
+{{if or .WithDatabase .WithCache}}
+volumes:
+  {{if .WithDatabase}}postgres_data:
+  {{end}}{{if .WithCache}}valkey_data:
+  {{end}}
+{{end}}
