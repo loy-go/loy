@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"path/filepath"
 	"strings"
 
 	"github.com/uloydev/loy/internal/architecture"
@@ -89,19 +90,42 @@ func (r *RuleArch012) Check(ctx context.Context, a *architecture.Analysis) []arc
 				}
 
 				for _, name := range valSpec.Names {
-					// Disallow exported mutable vars (e.g. VarDB, VarCache)
+					// Disallow package-level mutable vars (e.g. VarDB, VarCache, or unexported state vars)
 					// Exceptions:
-					// - Sentinel errors (Err...)
+					// - Sentinel errors (Err... or err...)
 					// - Injected build metadata (Version, Commit, Date, BuildDate in version package)
-					// - Package-level read-only lookup definitions
-					if token.IsExported(name.Name) &&
-						!strings.HasPrefix(name.Name, "Err") &&
-						name.Name != "Version" &&
-						name.Name != "Commit" &&
-						name.Name != "Date" &&
-						name.Name != "BuildDate" &&
-						name.Name != "AllowedMatrix" &&
-						name.Name != "NonSuppressibleRules" {
+					// - Package-level read-only lookup definitions and regexes
+					isSentinelError := strings.HasPrefix(name.Name, "Err") || strings.HasPrefix(name.Name, "err")
+					isBuildMeta := name.Name == "Version" || name.Name == "Commit" || name.Name == "Date" || name.Name == "BuildDate"
+					isRegex := strings.HasSuffix(name.Name, "Regex") || strings.HasSuffix(name.Name, "Re")
+					isLookupTable := strings.HasSuffix(name.Name, "Matrix") || strings.HasSuffix(name.Name, "Map") || strings.HasSuffix(name.Name, "Rules") || strings.HasSuffix(name.Name, "Plurals") || strings.HasSuffix(name.Name, "Singulars") || strings.HasSuffix(name.Name, "Drivers") || strings.HasSuffix(name.Name, "Imports") || strings.HasSuffix(name.Name, "Markers") || strings.HasSuffix(name.Name, "Packages") || strings.HasSuffix(name.Name, "Colors") || name.Name == "colors"
+					isEmbedFS := false
+					if ident, ok := valSpec.Type.(*ast.Ident); ok && ident.Name == "FS" {
+						isEmbedFS = true
+					} else if sel, ok := valSpec.Type.(*ast.SelectorExpr); ok && sel.Sel.Name == "FS" {
+						isEmbedFS = true
+					}
+
+					if isSentinelError || isBuildMeta || isRegex || isLookupTable || isEmbedFS {
+						continue
+					}
+
+					lower := strings.ToLower(name.Name)
+					isStateVar := strings.Contains(lower, "db") ||
+						strings.Contains(lower, "client") ||
+						strings.Contains(lower, "pool") ||
+						strings.Contains(lower, "conn") ||
+						strings.Contains(lower, "repo") ||
+						strings.Contains(lower, "service") ||
+						strings.Contains(lower, "cache") ||
+						strings.Contains(lower, "instance")
+
+					isStar := false
+					if _, ok := valSpec.Type.(*ast.StarExpr); ok {
+						isStar = true
+					}
+
+					if token.IsExported(name.Name) || isStateVar || isStar {
 						line := 1
 						if file.FileSet != nil {
 							line = file.FileSet.Position(name.Pos()).Line
@@ -109,7 +133,7 @@ func (r *RuleArch012) Check(ctx context.Context, a *architecture.Analysis) []arc
 						violations = append(violations, architecture.Violation{
 							RuleID:       r.ID(),
 							Code:         diagnostics.CodeArchGlobalMutableState,
-							Message:      fmt.Sprintf("exported package-level mutable variable %s declared", name.Name),
+							Message:      fmt.Sprintf("package-level mutable variable %s declared", name.Name),
 							Detail:       "no global mutable state per ADR-003 and AGENTS.md invariant",
 							Hint:         "pass state explicitly via struct fields or context",
 							File:         file.Path,
@@ -196,8 +220,16 @@ func (r *RuleArch014) Check(ctx context.Context, a *architecture.Analysis) []arc
 		}
 
 		if isGenerated {
-			// Generated files should be inside internal/ or pkg/ or cmd/
-			if strings.HasPrefix(file.Path, "domain/") && !strings.Contains(file.Path, "internal/domain") {
+			clean := filepath.ToSlash(file.Path)
+			rel := clean
+			if a.ModuleName != "" && strings.Contains(clean, a.ModuleName) {
+				idx := strings.Index(clean, a.ModuleName) + len(a.ModuleName)
+				rel = clean[idx:]
+			}
+			rel = strings.TrimPrefix(rel, "/")
+
+			// Generated files should be inside internal/, pkg/, or cmd/, not directly in root domain/ or repository/
+			if (strings.HasPrefix(rel, "domain/") || strings.HasPrefix(rel, "repository/") || strings.HasPrefix(rel, "service/")) && !strings.HasPrefix(rel, "internal/") {
 				violations = append(violations, architecture.Violation{
 					RuleID:       r.ID(),
 					Code:         diagnostics.CodeArchArtifactOwnership,

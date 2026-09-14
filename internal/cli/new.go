@@ -135,9 +135,9 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 
 			if !opts.Quiet {
 				if opts.JSON {
-					fmt.Printf(`{"status":"created","project":%q,"directory":%q,"preset":%q}`+"\n", projectName, targetDir, presetName)
+					fmt.Fprintf(cmd.OutOrStdout(), `{"status":"created","project":%q,"directory":%q,"preset":%q}`+"\n", projectName, targetDir, presetName)
 				} else {
-					fmt.Printf("Created new Loy project %q (%s) in %s\n", projectName, presetName, targetDir)
+					fmt.Fprintf(cmd.OutOrStdout(), "Created new Loy project %q (%s) in %s\n", projectName, presetName, targetDir)
 				}
 			}
 

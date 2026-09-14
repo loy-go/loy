@@ -62,6 +62,9 @@ func ParseFields(raw []string) ([]Field, error) {
 		}
 
 		fieldName := parts[0]
+		if !ValidIdentifierRegex.MatchString(fieldName) {
+			return nil, fmt.Errorf("invalid field identifier %q: must match %s", fieldName, ValidIdentifierRegex.String())
+		}
 		rawType := parts[1]
 		modifiers := parts[2:]
 
@@ -83,6 +86,9 @@ func ParseFields(raw []string) ([]Field, error) {
 			for _, v := range vals {
 				v = strings.TrimSpace(v)
 				if v != "" {
+					if !ValidIdentifierRegex.MatchString(v) {
+						return nil, fmt.Errorf("invalid enum value %q: must match %s", v, ValidIdentifierRegex.String())
+					}
 					f.EnumValues = append(f.EnumValues, v)
 				}
 			}
@@ -143,6 +149,9 @@ func mapType(raw string) (goType string, sqlType string) {
 	case "bytes", "[]byte":
 		return "[]byte", "BYTEA"
 	default:
+		if !ValidIdentifierRegex.MatchString(raw) {
+			return "string", "TEXT"
+		}
 		// Return raw type directly as Go type
 		return raw, "TEXT"
 	}

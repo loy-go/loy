@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/uloydev/loy/internal/diagnostics"
 	"github.com/uloydev/loy/internal/doctor"
 	"github.com/uloydev/loy/internal/filesystem"
 	"github.com/uloydev/loy/internal/process"
@@ -61,14 +62,14 @@ func TestDoctorRun_ProjectValidation(t *testing.T) {
 	for _, c := range checks {
 		if c.Name == "Go Module" && !c.Passed {
 			modWarn = true
-			if c.Diagnostic == nil || c.Diagnostic.Code != "LOY804" {
-				t.Errorf("expected LOY804 diagnostic for missing module")
+			if c.Diagnostic == nil || c.Diagnostic.Code != diagnostics.CodeDoctorModuleMissing {
+				t.Errorf("expected %s diagnostic for missing module, got %v", diagnostics.CodeDoctorModuleMissing, c.Diagnostic)
 			}
 		}
 		if c.Name == "Loy Manifest" && !c.Passed {
 			manWarn = true
-			if c.Diagnostic == nil || c.Diagnostic.Code != "LOY805" {
-				t.Errorf("expected LOY805 diagnostic for missing manifest")
+			if c.Diagnostic == nil || c.Diagnostic.Code != diagnostics.CodeDoctorManifestMissing {
+				t.Errorf("expected %s diagnostic for missing manifest, got %v", diagnostics.CodeDoctorManifestMissing, c.Diagnostic)
 			}
 		}
 	}

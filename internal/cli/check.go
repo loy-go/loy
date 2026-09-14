@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/uloydev/loy/internal/architecture"
@@ -119,9 +118,9 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 			}
 
 			if opts.JSON && len(violations) == 0 {
-				_ = (&diagnostics.JSONFormatter{Indent: true}).Format(os.Stdout, []diagnostics.Diagnostic{})
+				_ = (&diagnostics.JSONFormatter{Indent: true}).Format(cmd.OutOrStdout(), []diagnostics.Diagnostic{})
 			} else if !opts.Quiet && !opts.JSON {
-				fmt.Println("All architecture rules passed.")
+				fmt.Fprintln(cmd.OutOrStdout(), "All architecture rules passed.")
 			}
 
 			return nil

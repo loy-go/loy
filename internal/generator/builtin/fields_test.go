@@ -85,6 +85,21 @@ func TestParseFields(t *testing.T) {
 			raw:     []string{"single_token"},
 			wantErr: true,
 		},
+		{
+			name:    "sql injection in field name rejected",
+			raw:     []string{"col; DROP TABLE users;--:string"},
+			wantErr: true,
+		},
+		{
+			name:    "sql injection in enum value rejected",
+			raw:     []string{"status:enum(active', 'injected)"},
+			wantErr: true,
+		},
+		{
+			name:    "field starting with number rejected",
+			raw:     []string{"123num:int"},
+			wantErr: true,
+		},
 	}
 
 	for _, tc := range tests {

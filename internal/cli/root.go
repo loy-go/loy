@@ -102,11 +102,11 @@ func newVersionCmd() *cobra.Command {
 			opts := GetOptions(cmd.Context())
 			info := version.Get()
 			if opts.JSON {
-				enc := json.NewEncoder(os.Stdout)
+				enc := json.NewEncoder(cmd.OutOrStdout())
 				enc.SetIndent("", "  ")
 				return enc.Encode(info)
 			}
-			fmt.Printf("loy version %s (commit: %s, date: %s, %s)\n", info.Version, info.Commit, info.BuildDate, info.Platform)
+			fmt.Fprintf(cmd.OutOrStdout(), "loy version %s (commit: %s, date: %s, %s)\n", info.Version, info.Commit, info.BuildDate, info.Platform)
 			return nil
 		},
 	}

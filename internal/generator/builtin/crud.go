@@ -27,6 +27,9 @@ func (g *CRUDGenerator) Generate(ctx context.Context, input generator.Input) ([]
 	if input.Name == "" {
 		return nil, fmt.Errorf("crud entity name is required")
 	}
+	if !ValidIdentifierRegex.MatchString(input.Name) {
+		return nil, fmt.Errorf("invalid crud entity identifier %q: must match %s", input.Name, ValidIdentifierRegex.String())
+	}
 
 	rawFields := input.Args["fields"]
 	var rawList []string

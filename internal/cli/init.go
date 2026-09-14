@@ -116,9 +116,9 @@ func newInitCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 
 			if !opts.Quiet {
 				if opts.JSON {
-					fmt.Printf(`{"status":"initialized","file":%q,"preset":%q,"project":%q}`+"\n", manifestPath, presetName, projectName)
+					fmt.Fprintf(cmd.OutOrStdout(), `{"status":"initialized","file":%q,"preset":%q,"project":%q}`+"\n", manifestPath, presetName, projectName)
 				} else {
-					fmt.Printf("Initialized Loy project %q using preset %q in %s\n", projectName, presetName, manifestPath)
+					fmt.Fprintf(cmd.OutOrStdout(), "Initialized Loy project %q using preset %q in %s\n", projectName, presetName, manifestPath)
 				}
 			}
 

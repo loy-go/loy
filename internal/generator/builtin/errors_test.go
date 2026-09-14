@@ -63,4 +63,28 @@ func TestGeneratorErrors(t *testing.T) {
 			t.Fatalf("expected error from crudGen")
 		}
 	})
+
+	t.Run("malicious entity names rejected", func(t *testing.T) {
+		badNames := []string{
+			"user; DROP TABLE users;--",
+			"bad name with spaces",
+			"123startwithnumber",
+			"foo-bar-dash",
+		}
+
+		gens := []generator.Generator{
+			builtin.NewModelGenerator("mod"),
+			builtin.NewFeatureGenerator("mod"),
+			builtin.NewCRUDGenerator("mod"),
+		}
+
+		for _, g := range gens {
+			for _, name := range badNames {
+				_, err := g.Generate(ctx, generator.Input{Name: name})
+				if err == nil {
+					t.Fatalf("expected error for malicious entity name %q in %s, got nil", name, g.Name())
+				}
+			}
+		}
+	})
 }

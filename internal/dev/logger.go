@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 )
 
@@ -65,12 +66,18 @@ func (l *PrefixedLogger) LogLine(tag, text string) {
 
 // PipeStream copies an io.Reader line-by-line through the prefixed logger until EOF.
 func (l *PrefixedLogger) PipeStream(tag string, r io.Reader) {
-	scanner := bufio.NewScanner(r)
-	if scanner.Err() != nil {
-		l.LogLine(tag, fmt.Sprintf("Error reading stream: %v", scanner.Err()))
-		return
-	}
-	for scanner.Scan() {
-		l.LogLine(tag, scanner.Text())
+	reader := bufio.NewReader(r)
+	for {
+		line, err := reader.ReadString('\n')
+		if len(line) > 0 {
+			trimmed := strings.TrimRight(line, "\r\n")
+			l.LogLine(tag, trimmed)
+		}
+		if err != nil {
+			if err != io.EOF {
+				l.LogLine(tag, fmt.Sprintf("Error reading stream: %v", err))
+			}
+			return
+		}
 	}
 }

@@ -27,6 +27,9 @@ func (g *FeatureGenerator) Generate(ctx context.Context, input generator.Input) 
 	if input.Name == "" {
 		return nil, fmt.Errorf("feature name is required")
 	}
+	if !ValidIdentifierRegex.MatchString(input.Name) {
+		return nil, fmt.Errorf("invalid feature identifier %q: must match %s", input.Name, ValidIdentifierRegex.String())
+	}
 
 	var artifacts []model.Artifact
 

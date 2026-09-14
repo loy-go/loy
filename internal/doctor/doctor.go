@@ -54,10 +54,10 @@ func (d *Doctor) Run(ctx context.Context, targetDir string) ([]CheckItem, error)
 	results = append(results, d.checkGo(ctx))
 
 	// 2. Git Check
-	results = append(results, d.checkTool(ctx, "git", "git --version", "LOY801", "Install git via your system package manager"))
+	results = append(results, d.checkTool(ctx, "git", "git --version", diagnostics.CodeDoctorGitMissing, "Install git via your system package manager"))
 
 	// 3. sqlc CLI Check
-	results = append(results, d.checkTool(ctx, "sqlc", "sqlc version", "LOY802", "run 'go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest'"))
+	results = append(results, d.checkTool(ctx, "sqlc", "sqlc version", diagnostics.CodeDoctorSqlcMissing, "run 'go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest'"))
 
 	// 4. Docker CLI Check
 	results = append(results, d.checkDocker(ctx))
@@ -80,7 +80,7 @@ func (d *Doctor) checkGo(ctx context.Context) CheckItem {
 			Detail: "Go compiler not found in PATH",
 			Diagnostic: &diagnostics.Diagnostic{
 				Severity: diagnostics.SeverityError,
-				Code:     "LOY800",
+				Code:     diagnostics.CodeDoctorGoMissing,
 				Message:  "Go toolchain is missing",
 				Hint:     "Install Go 1.22+ from https://go.dev/dl/",
 			},
@@ -100,7 +100,7 @@ func (d *Doctor) checkGo(ctx context.Context) CheckItem {
 				Detail: fmt.Sprintf("Unsupported version %s (minimum Go 1.22 required)", versionStr),
 				Diagnostic: &diagnostics.Diagnostic{
 					Severity: diagnostics.SeverityError,
-					Code:     "LOY800",
+					Code:     diagnostics.CodeDoctorGoMissing,
 					Message:  "Go version is older than 1.22",
 					Hint:     "Upgrade Go to 1.22 or higher",
 				},
@@ -162,7 +162,7 @@ func (d *Doctor) checkDocker(ctx context.Context) CheckItem {
 				Detail: "Docker CLI not found in PATH",
 				Diagnostic: &diagnostics.Diagnostic{
 					Severity: diagnostics.SeverityWarning,
-					Code:     "LOY803",
+					Code:     diagnostics.CodeDoctorDockerMissing,
 					Message:  "Docker is not installed",
 					Hint:     "Install Docker from https://docs.docker.com/get-docker/",
 				},
@@ -174,7 +174,7 @@ func (d *Doctor) checkDocker(ctx context.Context) CheckItem {
 			Detail: "Docker daemon is not running",
 			Diagnostic: &diagnostics.Diagnostic{
 				Severity: diagnostics.SeverityWarning,
-				Code:     "LOY803",
+				Code:     diagnostics.CodeDoctorDockerMissing,
 				Message:  "Docker daemon is not reachable",
 				Hint:     "Start the Docker service or daemon",
 			},
@@ -208,7 +208,7 @@ func (d *Doctor) checkProject(ctx context.Context, targetDir string) []CheckItem
 			Detail: "go.mod not found in project or parent directories",
 			Diagnostic: &diagnostics.Diagnostic{
 				Severity: diagnostics.SeverityWarning,
-				Code:     "LOY804",
+				Code:     diagnostics.CodeDoctorModuleMissing,
 				Message:  "Current directory is not inside a Go module",
 				Hint:     "Run 'go mod init <module>' or 'loy new <app>'",
 			},
@@ -231,7 +231,7 @@ func (d *Doctor) checkProject(ctx context.Context, targetDir string) []CheckItem
 				Detail: fmt.Sprintf("Failed reading %s: %v", mPath, err),
 				Diagnostic: &diagnostics.Diagnostic{
 					Severity: diagnostics.SeverityError,
-					Code:     "LOY805",
+					Code:     diagnostics.CodeDoctorManifestMissing,
 					Message:  fmt.Sprintf("Failed reading manifest %s: %v", mPath, err),
 					Hint:     "Check file permissions or reinitialize with 'loy init'",
 					File:     mPath,
@@ -262,7 +262,7 @@ func (d *Doctor) checkProject(ctx context.Context, targetDir string) []CheckItem
 			Detail: "loy.yaml not found",
 			Diagnostic: &diagnostics.Diagnostic{
 				Severity: diagnostics.SeverityWarning,
-				Code:     "LOY805",
+				Code:     diagnostics.CodeDoctorManifestMissing,
 				Message:  "Project missing loy.yaml configuration",
 				Hint:     "Run 'loy init' to create a standard manifest",
 			},
@@ -296,11 +296,11 @@ func (d *Doctor) checkFullstackTools(ctx context.Context, targetDir string) []Ch
 	}
 
 	if hasViews {
-		items = append(items, d.checkTool(ctx, "templ CLI", "templ version", "LOY806", "run 'go install github.com/a-h/templ/cmd/templ@latest'"))
+		items = append(items, d.checkTool(ctx, "templ CLI", "templ version", diagnostics.CodeDoctorTemplMissing, "run 'go install github.com/a-h/templ/cmd/templ@latest'"))
 	}
 
 	if hasPkgJson || hasViteConfig {
-		items = append(items, d.checkTool(ctx, "Node.js", "node --version", "LOY807", "Install Node.js 18+ from https://nodejs.org/"))
+		items = append(items, d.checkTool(ctx, "Node.js", "node --version", diagnostics.CodeDoctorNodeMissing, "Install Node.js 18+ from https://nodejs.org/"))
 
 		// Detect package manager
 		pm := "npm"
@@ -312,7 +312,7 @@ func (d *Doctor) checkFullstackTools(ctx context.Context, targetDir string) []Ch
 			pm = "yarn"
 		}
 
-		items = append(items, d.checkTool(ctx, pm+" Package Manager", pm+" --version", "LOY808", fmt.Sprintf("Install %s via your system package manager", pm)))
+		items = append(items, d.checkTool(ctx, pm+" Package Manager", pm+" --version", diagnostics.CodeDoctorPackageMgrMissing, fmt.Sprintf("Install %s via your system package manager", pm)))
 	}
 
 	return items

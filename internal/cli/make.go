@@ -16,6 +16,7 @@ import (
 	"github.com/uloydev/loy/internal/generator"
 	"github.com/uloydev/loy/internal/generator/builtin"
 	"github.com/uloydev/loy/internal/generator/builtin/wiring"
+	"github.com/uloydev/loy/internal/generator/model"
 	"github.com/uloydev/loy/internal/generator/plan"
 	"github.com/uloydev/loy/internal/manifest"
 	"github.com/uloydev/loy/internal/process"
@@ -263,14 +264,6 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 		return err
 	}
 
-	// If requires wiring, ensure wiring.go exists
-	if requiresWiring && !opts.dryRun {
-		splicerMgr := wiring.NewSplicerManager(fs)
-		if err := splicerMgr.EnsureWiringFile(ctx, targetDir); err != nil {
-			return fmt.Errorf("ensuring wiring.go: %w", err)
-		}
-	}
-
 	gen := factory(modulePath)
 	input := generator.Input{
 		Name: name,
@@ -293,6 +286,24 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 				Message:  fmt.Sprintf("generating %s %s: %v", gen.Name(), name, err),
 				File:     targetDir,
 			}},
+		}
+	}
+
+	// If feature requires wiring and wiring.go does not exist, include initial template artifact in plan
+	if requiresWiring {
+		wiringRel := "internal/app/wiring.go"
+		wiringFull, pErr := plan.ResolveTargetPath(targetDir, wiringRel)
+		if pErr == nil {
+			exists, _ := fs.Exists(wiringFull)
+			if !exists {
+				initArtifact := model.Artifact{
+					Path:        wiringRel,
+					Content:     []byte(wiring.DefaultWiringTemplate),
+					Ownership:   model.DeveloperOwned,
+					Permissions: 0644,
+				}
+				artifacts = append([]model.Artifact{initArtifact}, artifacts...)
+			}
 		}
 	}
 
@@ -698,12 +709,46 @@ func newDeployCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOpt
 				return fmt.Errorf("unknown deploy target %q: valid targets are all, docker, k8s, helm, ci", deployType)
 			}
 
-			for i, gFn := range generators {
-				if err := runDeployArtifact(cmd, fs, runner, opts, gFn, names[i]); err != nil {
-					return err
+			targetDir, modulePath, err := resolveProjectTarget(cmd.Context(), fs, runner, opts.target)
+			if err != nil {
+				return err
+			}
+
+			var man *manifest.Manifest
+			mPath := filepath.Join(targetDir, "loy.yaml")
+			if mData, err := fs.ReadFile(mPath); err == nil {
+				parser := manifest.NewParser()
+				if m, diag := parser.ParseStrict(mPath, mData); diag == nil {
+					man = m
 				}
 			}
-			return nil
+
+			var allArtifacts []model.Artifact
+			for i, gFn := range generators {
+				gen := gFn(modulePath, man)
+				input := generator.Input{
+					Name: names[i],
+					Options: generator.Options{
+						Force:  opts.force,
+						DryRun: opts.dryRun,
+					},
+				}
+				arts, err := gen.Generate(cmd.Context(), input)
+				if err != nil {
+					return &CommandError{
+						Code: 1,
+						Diagnostics: []*diagnostics.Diagnostic{{
+							Severity: diagnostics.SeverityError,
+							Code:     diagnostics.CodeGenExecutionError,
+							Message:  fmt.Sprintf("generating %s: %v", gen.Name(), err),
+							File:     targetDir,
+						}},
+					}
+				}
+				allArtifacts = append(allArtifacts, arts...)
+			}
+
+			return executeDeployPlan(cmd, fs, opts, targetDir, allArtifacts, deployType)
 		},
 	}
 	cmd.Flags().StringVar(&targetBinary, "target-binary", "", "Target command binary to compile for Dockerfile")
@@ -713,7 +758,6 @@ func newDeployCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOpt
 
 func runDeployArtifact(cmd *cobra.Command, fs filesystem.FileSystem, runner process.Runner, opts *makeOptions, factory func(mod string, man *manifest.Manifest) generator.Generator, name string) error {
 	ctx := cmd.Context()
-	globalOpts := GetOptions(ctx)
 
 	targetDir, modulePath, err := resolveProjectTarget(ctx, fs, runner, opts.target)
 	if err != nil {
@@ -751,8 +795,18 @@ func runDeployArtifact(cmd *cobra.Command, fs filesystem.FileSystem, runner proc
 		}
 	}
 
+	return executeDeployPlan(cmd, fs, opts, targetDir, artifacts, gen.Name())
+}
+
+func executeDeployPlan(cmd *cobra.Command, fs filesystem.FileSystem, opts *makeOptions, targetDir string, artifacts []model.Artifact, title string) error {
+	ctx := cmd.Context()
+	globalOpts := GetOptions(ctx)
+
 	planBuilder := plan.NewBuilder(fs)
-	executionPlan, err := planBuilder.Build(ctx, targetDir, artifacts, input.Options)
+	executionPlan, err := planBuilder.Build(ctx, targetDir, artifacts, generator.Options{
+		Force:  opts.force,
+		DryRun: opts.dryRun,
+	})
 	if err != nil {
 		return &CommandError{
 			Code: 1,
@@ -772,7 +826,7 @@ func runDeployArtifact(cmd *cobra.Command, fs filesystem.FileSystem, runner proc
 			enc.SetIndent("", "  ")
 			return enc.Encode(executionPlan)
 		}
-		fmt.Fprintf(cmd.OutOrStdout(), "Plan operations (dry-run) for %s:\n", gen.Name())
+		fmt.Fprintf(cmd.OutOrStdout(), "Plan operations (dry-run) for %s:\n", title)
 		for _, op := range executionPlan.Operations {
 			fmt.Fprintf(cmd.OutOrStdout(), "  [%s] %s\n", op.Type, op.Path)
 		}
@@ -800,12 +854,12 @@ func runDeployArtifact(cmd *cobra.Command, fs filesystem.FileSystem, runner proc
 			}
 			data, _ := json.Marshal(map[string]any{
 				"status":    "generated",
-				"generator": gen.Name(),
+				"deploy":    title,
 				"artifacts": paths,
 			})
 			fmt.Fprintln(cmd.OutOrStdout(), string(data))
 		} else {
-			fmt.Fprintf(cmd.OutOrStdout(), "Generated %s (%d files):\n", gen.Name(), len(artifacts))
+			fmt.Fprintf(cmd.OutOrStdout(), "Generated %s (%d files):\n", title, len(artifacts))
 			for _, a := range artifacts {
 				fmt.Fprintf(cmd.OutOrStdout(), "  + %s\n", a.Path)
 			}

@@ -1,7 +1,6 @@
 package splicer
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"go/format"
@@ -33,12 +32,11 @@ func (s *Splicer) ParseRegions(content []byte) (map[string]RegionInfo, error) {
 	regions := make(map[string]RegionInfo)
 	var activeRegion *RegionInfo
 
-	scanner := bufio.NewScanner(bytes.NewReader(content))
-	lineNum := 0
+	rawLines := bytes.Split(content, []byte("\n"))
 
-	for scanner.Scan() {
-		lineNum++
-		line := strings.TrimSpace(scanner.Text())
+	for i, rawLine := range rawLines {
+		lineNum := i + 1
+		line := strings.TrimSpace(string(rawLine))
 
 		// Check both Go comment style (// loy:region:) and hash comment style (# loy:region:)
 		markerPrefix := ""

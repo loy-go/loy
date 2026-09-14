@@ -49,6 +49,17 @@ const (
 	CodeArchArtifactOwnership   = "LOY-ARCH-014"
 	CodeArchSuppressionError    = "LOY-ARCH-099"
 
+	// Doctor & Environment codes
+	CodeDoctorGoMissing         = "LOY-DOC-001"
+	CodeDoctorGitMissing        = "LOY-DOC-002"
+	CodeDoctorSqlcMissing       = "LOY-DOC-003"
+	CodeDoctorDockerMissing     = "LOY-DOC-004"
+	CodeDoctorModuleMissing     = "LOY-DOC-005"
+	CodeDoctorManifestMissing   = "LOY-DOC-006"
+	CodeDoctorTemplMissing      = "LOY-DOC-007"
+	CodeDoctorNodeMissing       = "LOY-DOC-008"
+	CodeDoctorPackageMgrMissing = "LOY-DOC-009"
+
 	// Internal system error
 	CodeInternalError = "LOY-SYS-999"
 )

@@ -268,3 +268,36 @@ func TestPlan_AtomicRollbackOnFailure(t *testing.T) {
 		t.Errorf("restored content mismatch: got %q, want %q", string(restoredContent), string(origContent))
 	}
 }
+
+func TestPlan_IntraPlanCollision(t *testing.T) {
+	ctx := context.Background()
+	fs := filesystem.NewMemFileSystem()
+	builder := plan.NewBuilder(fs)
+
+	artifacts := []model.Artifact{
+		{
+			Path:      "service.go",
+			Content:   []byte("package first"),
+			Ownership: model.DeveloperOwned,
+		},
+		{
+			Path:      "service.go",
+			Content:   []byte("package second"),
+			Ownership: model.DeveloperOwned,
+		},
+	}
+
+	_, err := builder.Build(ctx, "", artifacts, generator.Options{})
+	if err == nil {
+		t.Fatal("expected intra-plan collision error, got nil")
+	}
+
+	diag, ok := err.(*diagnostics.Diagnostic)
+	if !ok || diag.Code != diagnostics.CodeGenConflict {
+		t.Fatalf("expected CodeGenConflict, got %v", err)
+	}
+	if !strings.Contains(diag.Message, "intra-plan collision") {
+		t.Errorf("unexpected error message: %s", diag.Message)
+	}
+}
+

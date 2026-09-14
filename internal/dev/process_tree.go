@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"sync"
-	"syscall"
 	"time"
 )
 
@@ -52,18 +51,8 @@ func (p *ManagedProcess) Start(ctx context.Context) error {
 		cmd.Env = append(os.Environ(), p.task.Env...)
 	}
 
-	// Create new process group so child processes can be killed together
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-	}
-
-	// Terminate the entire process group on context cancellation with graceful SIGTERM
-	cmd.Cancel = func() error {
-		if cmd.Process != nil && cmd.Process.Pid > 1 {
-			return syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)
-		}
-		return nil
-	}
+	// Configure process group for clean subtree termination
+	configureProcessGroup(cmd)
 	cmd.WaitDelay = 3 * time.Second
 
 	stdout, err := cmd.StdoutPipe()
@@ -115,15 +104,11 @@ func (p *ManagedProcess) Stop(gracePeriod time.Duration) error {
 		return nil
 	}
 
-	pgid, err := syscall.Getpgid(pid)
-	if err != nil || pgid <= 1 {
-		pgid = pid
-	}
 	exited := p.exited
 	p.mu.Unlock()
 
-	// Send SIGTERM to the process group (negative pgid)
-	_ = syscall.Kill(-pgid, syscall.SIGTERM)
+	// Send graceful termination to process group
+	_ = killProcessGroup(pid, false)
 
 	select {
 	case <-exited:
@@ -132,7 +117,7 @@ func (p *ManagedProcess) Stop(gracePeriod time.Duration) error {
 	}
 
 	// Forced SIGKILL fallback
-	_ = syscall.Kill(-pgid, syscall.SIGKILL)
+	_ = killProcessGroup(pid, true)
 	select {
 	case <-exited:
 	case <-time.After(1 * time.Second):

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pressly/goose/v3"
@@ -52,6 +53,7 @@ type MigrationStatusItem struct {
 
 // GooseRunner encapsulates embedded goose migration operations.
 type GooseRunner struct {
+	mu             sync.Mutex
 	fs             filesystem.FileSystem
 	driverRegistry *DriverRegistry
 }
@@ -125,6 +127,9 @@ func (r *GooseRunner) openDB(opts MigrationOptions) (*sql.DB, error) {
 
 // Up runs all pending migrations.
 func (r *GooseRunner) Up(ctx context.Context, opts MigrationOptions) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if err := r.configureGoose(opts); err != nil {
 		return err
 	}
@@ -147,6 +152,9 @@ func (r *GooseRunner) Up(ctx context.Context, opts MigrationOptions) error {
 
 // Down rolls back the latest migration batch.
 func (r *GooseRunner) Down(ctx context.Context, opts MigrationOptions) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if err := r.configureGoose(opts); err != nil {
 		return err
 	}
@@ -169,6 +177,9 @@ func (r *GooseRunner) Down(ctx context.Context, opts MigrationOptions) error {
 
 // DownTo rolls back migrations down to a specific version.
 func (r *GooseRunner) DownTo(ctx context.Context, opts MigrationOptions, version int64) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if err := r.configureGoose(opts); err != nil {
 		return err
 	}
@@ -191,6 +202,9 @@ func (r *GooseRunner) DownTo(ctx context.Context, opts MigrationOptions, version
 
 // Redo rolls back the latest migration and runs it again.
 func (r *GooseRunner) Redo(ctx context.Context, opts MigrationOptions) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if err := r.configureGoose(opts); err != nil {
 		return err
 	}
@@ -213,6 +227,9 @@ func (r *GooseRunner) Redo(ctx context.Context, opts MigrationOptions) error {
 
 // Reset rolls back all migrations.
 func (r *GooseRunner) Reset(ctx context.Context, opts MigrationOptions) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if err := r.configureGoose(opts); err != nil {
 		return err
 	}
@@ -235,6 +252,9 @@ func (r *GooseRunner) Reset(ctx context.Context, opts MigrationOptions) error {
 
 // Status outputs the status of all migrations.
 func (r *GooseRunner) Status(ctx context.Context, opts MigrationOptions) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if err := r.configureGoose(opts); err != nil {
 		return err
 	}
@@ -257,6 +277,9 @@ func (r *GooseRunner) Status(ctx context.Context, opts MigrationOptions) error {
 
 // Version prints the current database version.
 func (r *GooseRunner) Version(ctx context.Context, opts MigrationOptions) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if err := r.configureGoose(opts); err != nil {
 		return 0, err
 	}
