@@ -120,14 +120,14 @@ func newRoutesCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Comman
 			}
 
 			if len(routes) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "No route registrations discovered.")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "No route registrations discovered.")
 				return nil
 			}
 
 			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 3, ' ', 0)
-			fmt.Fprintln(w, "METHOD\tPATH\tHANDLER\tSOURCE")
+			_, _ = fmt.Fprintln(w, "METHOD\tPATH\tHANDLER\tSOURCE")
 			for _, r := range routes {
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s:%d\n", r.Method, r.Path, r.Handler, r.File, r.Line)
+				_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s:%d\n", r.Method, r.Path, r.Handler, r.File, r.Line)
 			}
 			return w.Flush()
 		},

@@ -55,7 +55,7 @@ func newHookCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 
 			cliOpts := GetOptions(cmd.Context())
 			if !cliOpts.Quiet {
-				fmt.Fprintf(cmd.OutOrStdout(), "Installed Loy architecture pre-commit hook in %s\n", hookPath)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Installed Loy architecture pre-commit hook in %s\n", hookPath)
 			}
 			return nil
 		},

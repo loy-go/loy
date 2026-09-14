@@ -34,11 +34,11 @@ func newSeedCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 			cliOpts := GetOptions(cmd.Context())
 			if !cliOpts.Quiet {
 				if fake {
-					fmt.Fprintf(cmd.OutOrStdout(), "Running database seeders with fake data fixtures in %s...\n", rootDir)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Running database seeders with fake data fixtures in %s...\n", rootDir)
 				} else {
-					fmt.Fprintf(cmd.OutOrStdout(), "Running database seeders in %s...\n", rootDir)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Running database seeders in %s...\n", rootDir)
 				}
-				fmt.Fprintln(cmd.OutOrStdout(), "Database seeding completed successfully.")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Database seeding completed successfully.")
 			}
 			return nil
 		},

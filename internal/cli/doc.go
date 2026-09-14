@@ -54,7 +54,7 @@ func newDocCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 
 			cliOpts := GetOptions(cmd.Context())
 			if !cliOpts.Quiet {
-				fmt.Fprintf(cmd.OutOrStdout(), "Successfully generated OpenAPI documentation in %s/\n", outputDir)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Successfully generated OpenAPI documentation in %s/\n", outputDir)
 			}
 			return nil
 		},
