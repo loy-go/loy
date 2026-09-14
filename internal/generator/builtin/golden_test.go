@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/loy-go/loy/internal/generator"
@@ -17,6 +18,10 @@ func TestGoldenGenerators(t *testing.T) {
 
 	goldenDir := filepath.Join("..", "..", "..", "testdata", "golden", "generators")
 	_ = os.MkdirAll(goldenDir, 0755)
+
+	normalize := func(s string) string {
+		return strings.ReplaceAll(s, "\r\n", "\n")
+	}
 
 	t.Run("model golden comparison", func(t *testing.T) {
 		gen := builtin.NewModelGenerator(mod)
@@ -41,7 +46,7 @@ func TestGoldenGenerators(t *testing.T) {
 		}
 
 		if data, err := os.ReadFile(goldenFile); err == nil {
-			if string(data) != actual {
+			if normalize(string(data)) != normalize(actual) {
 				t.Fatalf("golden file mismatch: want %s, got %s", string(data), actual)
 			}
 		} else {
@@ -69,7 +74,7 @@ func TestGoldenGenerators(t *testing.T) {
 		}
 
 		if data, err := os.ReadFile(goldenFile); err == nil {
-			if string(data) != actual {
+			if normalize(string(data)) != normalize(actual) {
 				t.Fatalf("golden file mismatch: want %s, got %s", string(data), actual)
 			}
 		} else {

@@ -87,7 +87,11 @@ type {{ pascal .EntityName }} struct {
 		t.Fatalf("reading golden file: %v", err)
 	}
 
-	if string(got) != string(goldenBytes) {
+	normalize := func(s string) string {
+		return strings.ReplaceAll(s, "\r\n", "\n")
+	}
+
+	if normalize(string(got)) != normalize(string(goldenBytes)) {
 		t.Errorf("Golden mismatch!\nGot:\n%s\nWant:\n%s", string(got), string(goldenBytes))
 	}
 }

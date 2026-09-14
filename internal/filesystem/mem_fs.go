@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -34,7 +35,11 @@ func NewMemFileSystem() *MemFileSystem {
 }
 
 func cleanPath(p string) string {
-	cleaned := filepath.Clean(p)
+	p = filepath.ToSlash(p)
+	if vol := filepath.VolumeName(p); vol != "" {
+		p = strings.TrimPrefix(p, vol)
+	}
+	cleaned := path.Clean(p)
 	if !strings.HasPrefix(cleaned, "/") {
 		cleaned = "/" + cleaned
 	}
@@ -64,7 +69,7 @@ func (m *MemFileSystem) WriteFile(name string, data []byte, perm os.FileMode) er
 		return errors.New("cannot overwrite existing directory with file: " + p)
 	}
 
-	dir := filepath.Dir(p)
+	dir := path.Dir(p)
 
 	// Ensure parent directories exist
 	if err := m.mkdirAllLocked(dir, 0755); err != nil {
@@ -181,7 +186,7 @@ func (m *MemFileSystem) Stat(name string) (os.FileInfo, error) {
 		return nil, os.ErrNotExist
 	}
 	return memFileInfo{
-		name:    filepath.Base(p),
+		name:    path.Base(p),
 		size:    int64(len(f.data)),
 		mode:    f.perm,
 		modTime: f.modTime,

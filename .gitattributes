@@ -1,0 +1,12 @@
+# Set default behavior to automatically normalize line endings to LF
+* text=auto eol=lf
+
+# Explicitly ensure Go and golden test files use LF
+*.go text eol=lf
+*.golden text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.sql text eol=lf
+*.tmpl text eol=lf
