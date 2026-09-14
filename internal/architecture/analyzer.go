@@ -38,10 +38,25 @@ func NewAnalyzer(fs filesystem.FileSystem, cfg AnalyzerConfig) *Analyzer {
 	}
 }
 
+// BuildGraph executes discovery and returns the package Graph, Layer mappings, and unsuppressed violations.
+func (a *Analyzer) BuildGraph(ctx context.Context) (*graph.Graph, map[string]Layer, []Violation, error) {
+	analysis, layers, violations, err := a.analyze(ctx)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return analysis.Graph, layers, violations, nil
+}
+
 // Run executes the two-phase analysis and returns all unsuppressed violations.
 func (a *Analyzer) Run(ctx context.Context) ([]Violation, error) {
+	_, _, violations, err := a.analyze(ctx)
+	return violations, err
+}
+
+func (a *Analyzer) analyze(ctx context.Context) (*Analysis, map[string]Layer, []Violation, error) {
 	classifier := NewClassifier(a.cfg.ModuleName, a.cfg.LayerMap)
 	g := graph.New()
+	layers := make(map[string]Layer)
 	fset := token.NewFileSet()
 
 	var files []*FileAST
@@ -87,6 +102,7 @@ func (a *Analyzer) Run(ctx context.Context) ([]Violation, error) {
 		}
 
 		lyr := classifier.Classify(pkgImport)
+		layers[pkgImport] = lyr
 
 		// Register package node in graph
 		g.AddNode(pkgImport, string(lyr), []string{path})
@@ -121,7 +137,7 @@ func (a *Analyzer) Run(ctx context.Context) ([]Violation, error) {
 	}
 
 	if err := a.fs.Walk(a.cfg.RootDir, walkFn); err != nil {
-		return nil, fmt.Errorf("walking project root: %w", err)
+		return nil, nil, nil, fmt.Errorf("walking project root: %w", err)
 	}
 
 	analysis := &Analysis{
@@ -155,5 +171,5 @@ func (a *Analyzer) Run(ctx context.Context) ([]Violation, error) {
 
 	// Step 4: Apply suppression filtering
 	finalViolations := FilterViolations(rawViolations, allSuppressions)
-	return finalViolations, nil
+	return analysis, layers, finalViolations, nil
 }
