@@ -37,6 +37,12 @@ func TestK8sGenerator(t *testing.T) {
 	if !strings.Contains(dep, "runAsNonRoot: true") {
 		t.Errorf("missing runAsNonRoot in deployment:\n%s", dep)
 	}
+	if !strings.Contains(dep, "readOnlyRootFilesystem: true") {
+		t.Errorf("missing readOnlyRootFilesystem in deployment:\n%s", dep)
+	}
+	if !strings.Contains(dep, "preStop:") {
+		t.Errorf("missing preStop in deployment:\n%s", dep)
+	}
 	if !strings.Contains(dep, "path: /health/live") {
 		t.Errorf("missing livenessProbe in deployment:\n%s", dep)
 	}

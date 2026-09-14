@@ -23,8 +23,8 @@ func TestDockerGenerator(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if len(artifacts) != 2 {
-			t.Fatalf("expected 2 artifacts, got %d", len(artifacts))
+		if len(artifacts) != 3 {
+			t.Fatalf("expected 3 artifacts, got %d", len(artifacts))
 		}
 
 		// Dockerfile checks
@@ -42,8 +42,14 @@ func TestDockerGenerator(t *testing.T) {
 			t.Errorf("missing ARG TARGET=api in Dockerfile:\n%s", df)
 		}
 
+		// .dockerignore checks
+		di := string(artifacts[1].Content)
+		if !strings.Contains(di, ".git") || !strings.Contains(di, ".env*") {
+			t.Errorf("missing secret/git exclusion in .dockerignore:\n%s", di)
+		}
+
 		// Compose checks
-		dc := string(artifacts[1].Content)
+		dc := string(artifacts[2].Content)
 		if !strings.Contains(dc, "postgres:16-alpine") {
 			t.Errorf("missing postgres in docker-compose.yml:\n%s", dc)
 		}

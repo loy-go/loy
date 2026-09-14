@@ -78,6 +78,7 @@ func TestCanonicalEndToEndLoop(t *testing.T) {
 	// Verify deployment artifacts
 	expectedDeploy := []string{
 		"Dockerfile",
+		".dockerignore",
 		"docker-compose.yml",
 		"deploy/k8s/deployment.yaml",
 		"deploy/k8s/service.yaml",

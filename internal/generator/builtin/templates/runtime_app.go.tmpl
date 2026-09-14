@@ -93,6 +93,10 @@ func (a *App) init() error {
 {{if eq .HTTPFramework "fiber"}}
 	a.router = fiber.New(fiber.Config{
 		DisableStartupMessage: true,
+		ReadTimeout:           10 * time.Second,
+		WriteTimeout:          15 * time.Second,
+		IdleTimeout:           120 * time.Second,
+		BodyLimit:             4 * 1024 * 1024,
 	})
 
 	// Register health probes
@@ -104,6 +108,9 @@ func (a *App) init() error {
 		Addr:              fmt.Sprintf(":%d", a.cfg.Port),
 		Handler:           a.mux,
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	// Register health probes

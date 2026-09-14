@@ -19,10 +19,21 @@ spec:
         runAsUser: 10001
         runAsGroup: 10001
         fsGroup: 10001
+      terminationGracePeriodSeconds: 30
       containers:
         - name: {{.ProjectName}}
           image: {{.ProjectName}}:latest
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sleep", "5"]
           ports:
             - name: http
               containerPort: 8080
@@ -48,6 +59,9 @@ spec:
             initialDelaySeconds: 2
             periodSeconds: 5
             timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           envFrom:
             - configMapRef:
                 name: {{.ProjectName}}-config
@@ -63,3 +77,6 @@ spec:
                   name: {{.ProjectName}}-secret
                   key: valkey-password
             {{end}}{{end}}
+      volumes:
+        - name: tmp
+          emptyDir: {}

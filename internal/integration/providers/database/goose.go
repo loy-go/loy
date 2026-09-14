@@ -125,6 +125,8 @@ func (r *GooseRunner) openDB(opts MigrationOptions) (*sql.DB, error) {
 	return adapter.Open(opts.DSN)
 }
 
+const pgMigrationAdvisoryLockID = 8592318491204812
+
 // Up runs all pending migrations.
 func (r *GooseRunner) Up(ctx context.Context, opts MigrationOptions) error {
 	r.mu.Lock()
@@ -146,6 +148,16 @@ func (r *GooseRunner) Up(ctx context.Context, opts MigrationOptions) error {
 	}
 	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
+
+	driver := strings.ToLower(opts.Driver)
+	if driver == "postgres" || driver == "pgx" || driver == "postgresql" {
+		if _, err := db.ExecContext(runCtx, "SELECT pg_advisory_lock($1)", pgMigrationAdvisoryLockID); err != nil {
+			return fmt.Errorf("acquiring distributed migration advisory lock: %w", err)
+		}
+		defer func() {
+			_, _ = db.ExecContext(context.Background(), "SELECT pg_advisory_unlock($1)", pgMigrationAdvisoryLockID)
+		}()
+	}
 
 	return goose.UpContext(runCtx, db, opts.Directory)
 }

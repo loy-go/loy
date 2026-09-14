@@ -138,6 +138,23 @@ func (g *DockerGenerator) Generate(ctx context.Context, input generator.Input) (
 			Content:     dfContent,
 		},
 		{
+			Path:        ".dockerignore",
+			Ownership:   model.DeveloperOwned,
+			Permissions: 0644,
+			Content: []byte(`.git
+.gitignore
+.env*
+*.pem
+*.key
+tmp/
+dist/
+bin/
+.idea/
+.vscode/
+node_modules/
+`),
+		},
+		{
 			Path:        "docker-compose.yml",
 			Ownership:   model.DeveloperOwned,
 			Permissions: 0644,
