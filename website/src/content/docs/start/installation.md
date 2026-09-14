@@ -7,21 +7,6 @@ Loy is distributed as a single static binary with zero external runtime dependen
 
 ## Installation Methods
 
-### Homebrew (macOS & Linux)
-
-The recommended installation channel for macOS and Linux users:
-
-```bash
-brew install loy-go/tap/loy
-```
-
-Verify the installation:
-```bash
-loy version
-```
-
----
-
 ### Go Toolchain (`go install`)
 
 If you have Go 1.24+ installed on your system:
@@ -40,7 +25,7 @@ export PATH="$HOME/go/bin:$PATH"
 
 ### Precompiled Binary Releases
 
-Download precompiled tarballs from the [GitHub Releases](https://github.com/loy-go/loy/releases) page. Every release includes SHA256 checksums and Cosign keyless signatures:
+Download precompiled, stripped binaries from the [GitHub Releases](https://github.com/loy-go/loy/releases) page. Every release includes SHA256 checksums and Cosign keyless signatures:
 
 | Platform | Architecture | Binary Format |
 |---|---|---|

@@ -56,25 +56,6 @@ changelog:
       - "^chore:"
       - "^merge:"
 
-brews:
-  - name: loy
-    repository:
-      owner: loy-go
-      name: homebrew-tap
-      branch: main
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    commit_author:
-      name: loy-bot
-      email: bot@loy.dev
-    description: "Build-time Go developer platform for typed architecture and scaffolding"
-    homepage: "https://loy.dev"
-    license: "Apache-2.0"
-    install: |
-      bin.install "loy"
-      generate_completions_from_executable(bin/"loy", "completion")
-    test: |
-      system "#{bin}/loy version"
-
 dockers:
   - image_templates:
       - "ghcr.io/loy-go/loy:{{ .Version }}-amd64"
