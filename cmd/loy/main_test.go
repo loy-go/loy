@@ -3,12 +3,17 @@ package main_test
 import (
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
 
 func buildBinary(t *testing.T) string {
-	binPath := filepath.Join(t.TempDir(), "loy")
+	binName := "loy"
+	if runtime.GOOS == "windows" {
+		binName = "loy.exe"
+	}
+	binPath := filepath.Join(t.TempDir(), binName)
 	cmd := exec.Command("go", "build", "-o", binPath, ".")
 	out, err := cmd.CombinedOutput()
 	if err != nil {

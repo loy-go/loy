@@ -26,6 +26,10 @@ func CleanAndValidatePath(rootDir, targetPath string) (string, error) {
 	var candidate string
 	if filepath.IsAbs(targetPath) {
 		candidate = filepath.Clean(targetPath)
+	} else if strings.HasPrefix(targetPath, "/") || strings.HasPrefix(targetPath, "\\") {
+		// Rooted path on Windows or Unix without volume name
+		vol := filepath.VolumeName(absRoot)
+		candidate = filepath.Clean(vol + filepath.FromSlash(targetPath))
 	} else {
 		candidate = filepath.Clean(filepath.Join(absRoot, targetPath))
 	}

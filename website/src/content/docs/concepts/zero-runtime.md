@@ -5,7 +5,7 @@ description: "How Loy delivers high developer velocity without introducing runti
 
 Most web frameworks (Ruby on Rails, Laravel, Django, Spring) act as heavy runtime dependencies. When you write applications with them, your code is tightly coupled to the framework's internal classes, base controllers, and ORM abstractions.
 
-Loy takes the opposite approach: **Build-Time First, Zero Runtime Lock-In** ([ADR-002](/adrs/)).
+Loy takes the opposite approach: **Build-Time First, Zero Runtime Lock-In** ([ADR-002](/loy/adrs/)).
 
 ## Ordinary Go Output
 

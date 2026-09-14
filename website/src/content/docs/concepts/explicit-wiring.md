@@ -5,7 +5,7 @@ description: "Why Loy chooses explicit Go constructors in internal/app/wiring.go
 
 In the broader Go ecosystem, framework abstractions often introduce heavy reflection dependency injection (e.g. `uber-go/dig`, `facebookgo/inject`) or compile-time codegen locators (`google/wire`).
 
-Loy rejects runtime reflection DI and service locators in favor of **standard, explicit Go constructors** ([ADR-003](/adrs/)).
+Loy rejects runtime reflection DI and service locators in favor of **standard, explicit Go constructors** ([ADR-003](/loy/adrs/)).
 
 ## The Composition Root
 

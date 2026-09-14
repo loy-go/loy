@@ -36,5 +36,5 @@ loy migrate create <name> [flags]
 
 ### SEE ALSO
 
-* [loy migrate](/reference/cli/loy-migrate/)	 - Manage database schema migrations via embedded goose engine
+* [loy migrate](/loy/reference/cli/loy-migrate/)	 - Manage database schema migrations via embedded goose engine
 

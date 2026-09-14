@@ -5,7 +5,7 @@ description: "Static architecture validation, boundary checks, and CI enforcemen
 
 Architecture erosion occurs when developers under deadline pressure take shortcuts: importing infrastructure drivers into domain logic, introducing circular package dependencies, or scattering database queries across transport handlers.
 
-Loy's **Architecture Engine** (`loy check`) runs static analysis against your project's AST and package dependency graph ([ADR-016](/adrs/)), catching violations in milliseconds.
+Loy's **Architecture Engine** (`loy check`) runs static analysis against your project's AST and package dependency graph ([ADR-016](/loy/adrs/)), catching violations in milliseconds.
 
 ## Running the Architecture Validator
 

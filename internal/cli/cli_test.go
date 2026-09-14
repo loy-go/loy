@@ -41,7 +41,7 @@ func TestDirectoryFlag(t *testing.T) {
 	})
 
 	cmd := cli.NewRootCmd()
-	cmd.SetArgs([]string{"--directory", "/tmp", "version"})
+	cmd.SetArgs([]string{"--directory", os.TempDir(), "version"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("unexpected error with --directory flag: %v", err)

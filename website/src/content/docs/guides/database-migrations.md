@@ -3,7 +3,7 @@ title: "Database Migrations & SQLC"
 description: "Managing database schemas using Loy's embedded Goose migration engine and SQLC queries."
 ---
 
-Loy embeds the battle-tested [Goose](https://github.com/pressly/goose) migration engine directly into the CLI binary ([ADR-015](/adrs/)). You do not need to install an external migration binary.
+Loy embeds the battle-tested [Goose](https://github.com/pressly/goose) migration engine directly into the CLI binary ([ADR-015](/loy/adrs/)). You do not need to install an external migration binary.
 
 ## Migration Commands
 

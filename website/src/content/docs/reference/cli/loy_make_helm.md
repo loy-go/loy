@@ -34,5 +34,5 @@ loy make helm [name] [flags]
 
 ### SEE ALSO
 
-* [loy make](/reference/cli/loy-make/)	 - Scaffold application components, slices, and vertical features
+* [loy make](/loy/reference/cli/loy-make/)	 - Scaffold application components, slices, and vertical features
 

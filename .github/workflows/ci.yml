@@ -28,7 +28,7 @@ jobs:
         run: go vet ./...
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v2.10.1
           args: --timeout=5m
@@ -43,7 +43,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version: 'stable'
           cache: true
 
       - name: Install govulncheck

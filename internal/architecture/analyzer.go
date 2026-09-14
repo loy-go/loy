@@ -90,15 +90,17 @@ func (a *Analyzer) analyze(ctx context.Context) (*Analysis, map[string]Layer, []
 		}
 
 		// Compute import path for this file
-		relPath := path
-		if strings.HasPrefix(path, a.cfg.RootDir) {
-			relPath = strings.TrimPrefix(path, a.cfg.RootDir)
+		normRoot := filepath.ToSlash(a.cfg.RootDir)
+		normPath := filepath.ToSlash(path)
+		relPath := normPath
+		if strings.HasPrefix(normPath, normRoot) {
+			relPath = strings.TrimPrefix(normPath, normRoot)
 			relPath = strings.TrimPrefix(relPath, "/")
 		}
-		dir := filepath.Dir(relPath)
+		dir := filepath.ToSlash(filepath.Dir(relPath))
 		pkgImport := a.cfg.ModuleName
 		if dir != "." && dir != "" {
-			pkgImport = a.cfg.ModuleName + "/" + filepath.ToSlash(dir)
+			pkgImport = a.cfg.ModuleName + "/" + dir
 		}
 
 		lyr := classifier.Classify(pkgImport)

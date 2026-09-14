@@ -5,7 +5,7 @@ description: "Multi-process orchestration, filesystem watching, and instantaneou
 
 Modern full-stack and microservice development requires running multiple processes concurrently: the Go application server, a background queue worker, and optionally a frontend asset bundler (Vite or Tailwind).
 
-Loy provides native process supervision through `loy dev` ([ADR-017](/adrs/)) without requiring external tools like `air` or `foreman`.
+Loy provides native process supervision through `loy dev` ([ADR-017](/loy/adrs/)) without requiring external tools like `air` or `foreman`.
 
 ## Starting the Dev Supervisor
 

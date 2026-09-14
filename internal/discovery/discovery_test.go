@@ -2,6 +2,7 @@ package discovery_test
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 
 	"github.com/loy-go/loy/internal/diagnostics"
@@ -26,7 +27,7 @@ func TestDiscoverer_FindsLoyManifest(t *testing.T) {
 		t.Fatalf("unexpected diagnostic: %+v", diag)
 	}
 
-	if res.RootDir != "/repo" {
+	if filepath.ToSlash(res.RootDir) != "/repo" {
 		t.Errorf("expected root /repo, got %s", res.RootDir)
 	}
 	if !res.HasManifest || !res.HasGoMod {
@@ -51,13 +52,13 @@ func TestDiscoverer_FindsGoWork(t *testing.T) {
 		t.Fatalf("unexpected diagnostic: %+v", diag)
 	}
 
-	if res.RootDir != "/workspace/apps/web" {
+	if filepath.ToSlash(res.RootDir) != "/workspace/apps/web" {
 		t.Errorf("expected project root /workspace/apps/web, got %s", res.RootDir)
 	}
 	if !res.IsWorkspace || !res.HasGoWork {
 		t.Errorf("expected workspace detected, got: %+v", res)
 	}
-	if res.GoWorkPath != "/workspace/go.work" {
+	if filepath.ToSlash(res.GoWorkPath) != "/workspace/go.work" {
 		t.Errorf("expected go.work path /workspace/go.work, got %s", res.GoWorkPath)
 	}
 }

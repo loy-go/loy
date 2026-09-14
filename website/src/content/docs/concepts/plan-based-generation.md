@@ -5,7 +5,7 @@ description: "How Loy achieves safe, deterministic, atomic file generation and r
 
 Traditional CLI generators execute immediate filesystem mutations (`os.WriteFile`), leaving projects half-written or corrupt when a generation error occurs halfway through.
 
-Loy enforces **Plan-Based Atomic Generation** ([ADR-007](/adrs/)).
+Loy enforces **Plan-Based Atomic Generation** ([ADR-007](/loy/adrs/)).
 
 ## The Three-Phase Pipeline
 

@@ -38,5 +38,5 @@ loy dev [path] [flags]
 
 ### SEE ALSO
 
-* [loy](/reference/cli/loy/)	 - Loy — Go developer platform with Laravel-like DX
+* [loy](/loy/reference/cli/loy/)	 - Loy — Go developer platform with Laravel-like DX
 

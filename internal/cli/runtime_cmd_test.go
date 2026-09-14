@@ -3,6 +3,7 @@ package cli_test
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -50,16 +51,16 @@ func TestNewProjectGeneratesRuntime(t *testing.T) {
 
 func TestMakeRuntimeCommand(t *testing.T) {
 	origDir, err := os.Getwd()
-	if err == nil {
-		t.Cleanup(func() {
-			_ = os.Chdir(origDir)
-		})
+	if err != nil {
+		t.Fatal(err)
 	}
+	defer func() { _ = os.Chdir(origDir) }()
+
 	tmpDir := t.TempDir()
 	memFS := filesystem.NewOSFileSystem()
 	_ = memFS.MkdirAll(tmpDir, 0755)
-	_ = memFS.WriteFile(tmpDir+"/go.mod", []byte("module github.com/test/workspace\n\ngo 1.22\n"), 0644)
-	_ = memFS.WriteFile(tmpDir+"/loy.yaml", []byte("version: 1\nproject:\n  name: workspace\n"), 0644)
+	_ = memFS.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte("module github.com/test/workspace\n\ngo 1.22\n"), 0644)
+	_ = memFS.WriteFile(filepath.Join(tmpDir, "loy.yaml"), []byte("version: 1\nproject:\n  name: workspace\n"), 0644)
 
 	rootCmd := cli.NewRootCmdWithFS(memFS, nil)
 	rootCmd.SetArgs([]string{"make", "runtime", "--http", "nethttp", "-C", tmpDir})
@@ -68,12 +69,13 @@ func TestMakeRuntimeCommand(t *testing.T) {
 		t.Fatalf("loy make runtime failed: %v", err)
 	}
 
-	exists, _ := memFS.Exists(tmpDir + "/internal/app/app.go")
+	appFile := filepath.Join(tmpDir, "internal", "app", "app.go")
+	exists, _ := memFS.Exists(appFile)
 	if !exists {
 		t.Fatalf("expected internal/app/app.go to be generated")
 	}
 
-	content, _ := memFS.ReadFile(tmpDir + "/internal/app/app.go")
+	content, _ := memFS.ReadFile(appFile)
 	if !strings.Contains(string(content), "http.ServeMux") {
 		t.Errorf("expected net/http server in app.go")
 	}

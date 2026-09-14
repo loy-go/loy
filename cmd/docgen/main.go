@@ -72,10 +72,19 @@ func GenerateDocsWithRoot(rootCmd *cobra.Command, rootDir, outDir string) error 
 			cmdPath, shortDesc, slug, order)
 	}
 
+	basePath := os.Getenv("DOCS_BASE")
+	if basePath == "" {
+		basePath = "/loy"
+	}
+	basePath = strings.TrimSuffix(basePath, "/")
+
 	linkHandler := func(name string) string {
 		base := strings.TrimSuffix(name, ".md")
 		kebab := strings.ReplaceAll(base, "_", "-")
-		return fmt.Sprintf("/reference/cli/%s/", kebab)
+		if basePath == "" {
+			return fmt.Sprintf("/reference/cli/%s/", kebab)
+		}
+		return fmt.Sprintf("%s/reference/cli/%s/", basePath, kebab)
 	}
 
 	if err := doc.GenMarkdownTreeCustom(rootCmd, cleanOut, filePrepender, linkHandler); err != nil {

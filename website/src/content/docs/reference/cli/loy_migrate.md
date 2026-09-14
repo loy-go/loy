@@ -36,12 +36,12 @@ loy migrate provides zero-install database schema evolution powered by an embedd
 
 ### SEE ALSO
 
-* [loy](/reference/cli/loy/)	 - Loy — Go developer platform with Laravel-like DX
-* [loy migrate create](/reference/cli/loy-migrate-create/)	 - Create a new timestamped SQL migration file
-* [loy migrate down](/reference/cli/loy-migrate-down/)	 - Roll back the latest database migration batch (or to specific version)
-* [loy migrate redo](/reference/cli/loy-migrate-redo/)	 - Roll back the most recent migration and re-apply it
-* [loy migrate reset](/reference/cli/loy-migrate-reset/)	 - Roll back all database migrations
-* [loy migrate status](/reference/cli/loy-migrate-status/)	 - Dump the status of all migrations
-* [loy migrate up](/reference/cli/loy-migrate-up/)	 - Apply all pending database migrations
-* [loy migrate version](/reference/cli/loy-migrate-version/)	 - Print the current database migration version
+* [loy](/loy/reference/cli/loy/)	 - Loy — Go developer platform with Laravel-like DX
+* [loy migrate create](/loy/reference/cli/loy-migrate-create/)	 - Create a new timestamped SQL migration file
+* [loy migrate down](/loy/reference/cli/loy-migrate-down/)	 - Roll back the latest database migration batch (or to specific version)
+* [loy migrate redo](/loy/reference/cli/loy-migrate-redo/)	 - Roll back the most recent migration and re-apply it
+* [loy migrate reset](/loy/reference/cli/loy-migrate-reset/)	 - Roll back all database migrations
+* [loy migrate status](/loy/reference/cli/loy-migrate-status/)	 - Dump the status of all migrations
+* [loy migrate up](/loy/reference/cli/loy-migrate-up/)	 - Apply all pending database migrations
+* [loy migrate version](/loy/reference/cli/loy-migrate-version/)	 - Print the current database migration version
 

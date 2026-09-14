@@ -42,8 +42,8 @@ func (g *ViewGenerator) Generate(ctx context.Context, input generator.Input) ([]
 		return nil, fmt.Errorf("view name is required")
 	}
 
-	clean := filepath.Clean(filepath.ToSlash(rawName))
-	if strings.HasPrefix(clean, "/") || strings.HasPrefix(clean, "../") || clean == ".." {
+	clean := filepath.ToSlash(filepath.Clean(rawName))
+	if strings.HasPrefix(clean, "/") || strings.HasPrefix(clean, "../") || clean == ".." || strings.Contains(clean, "/../") {
 		return nil, fmt.Errorf("view path %q escapes views directory", rawName)
 	}
 

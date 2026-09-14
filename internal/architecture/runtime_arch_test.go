@@ -2,6 +2,7 @@ package architecture_test
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -12,13 +13,19 @@ import (
 )
 
 func TestArchitectureCheckOnRuntimeScaffold(t *testing.T) {
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(origDir) }()
+
 	tmpDir := t.TempDir()
 	fs := filesystem.NewOSFileSystem()
 
 	// 1. Create a project with api preset
 	rootCmd := cli.NewRootCmdWithFS(fs, nil)
 	rootCmd.SetArgs([]string{"new", "sampleapp", "--preset", "minimal", "-C", tmpDir})
-	err := rootCmd.ExecuteContext(context.Background())
+	err = rootCmd.ExecuteContext(context.Background())
 	if err != nil {
 		t.Fatalf("loy new failed: %v", err)
 	}
