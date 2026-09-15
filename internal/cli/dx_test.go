@@ -20,7 +20,7 @@ func TestDXCommandsTree(t *testing.T) {
 
 	rootCmd := cli.NewRootCmdWithFS(memFS, execRunner)
 
-	expectedCmds := []string{"dev", "doctor", "graph", "completion"}
+	expectedCmds := []string{"dev", "doctor", "graph", "completion", "upgrade"}
 	foundMap := make(map[string]bool)
 	for _, cmd := range rootCmd.Commands() {
 		foundMap[cmd.Name()] = true
