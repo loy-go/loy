@@ -28,6 +28,7 @@ var impurePackageMarkers = []string{
 	"github.com/gofiber/fiber",
 	"github.com/gin-gonic/gin",
 	"github.com/labstack/echo",
+	"github.com/go-chi/chi",
 	"google.golang.org/grpc",
 	"gorm.io/gorm",
 	"github.com/redis/go-redis",

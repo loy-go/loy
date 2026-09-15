@@ -1,7 +1,7 @@
 package app
 
 import (
-{{if eq .Template "templ"}}
+{{if and (eq .Template "templ") (eq .HTTPFramework "fiber")}}
 	"{{.ModulePath}}/internal/transport/http/handler"
 {{end}}
 	// loy:region:imports
@@ -16,13 +16,13 @@ func (a *App) wireDependencies() error {
 	// loy:region:services
 	// loy:endregion
 
-{{if eq .Template "templ"}}
+{{if and (eq .Template "templ") (eq .HTTPFramework "fiber")}}
 	webHandler := handler.NewWebHandler()
 {{end}}
 	// loy:region:handlers
 	// loy:endregion
 
-{{if eq .Template "templ"}}
+{{if and (eq .Template "templ") (eq .HTTPFramework "fiber")}}
 	if a.router != nil {
 		a.router.Get("/", webHandler.Home)
 		a.router.Get("/api/ping", webHandler.Ping)

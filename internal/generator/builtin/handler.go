@@ -10,12 +10,21 @@ import (
 
 // HandlerGenerator creates HTTP transport handler and routes.
 type HandlerGenerator struct {
-	modulePath string
+	modulePath    string
+	httpFramework string
 }
 
 // NewHandlerGenerator constructs HandlerGenerator.
 func NewHandlerGenerator(modulePath string) *HandlerGenerator {
-	return &HandlerGenerator{modulePath: modulePath}
+	return &HandlerGenerator{modulePath: modulePath, httpFramework: "fiber"}
+}
+
+// WithHTTPFramework sets the HTTP framework.
+func (g *HandlerGenerator) WithHTTPFramework(framework string) *HandlerGenerator {
+	if framework != "" {
+		g.httpFramework = framework
+	}
+	return g
 }
 
 func (g *HandlerGenerator) Name() string {
@@ -27,14 +36,34 @@ func (g *HandlerGenerator) Generate(ctx context.Context, input generator.Input) 
 		return nil, fmt.Errorf("handler name is required")
 	}
 
+	httpFw := g.httpFramework
+	if input.Args != nil && input.Args["http"] != "" {
+		httpFw = input.Args["http"]
+	}
+	if httpFw == "" {
+		httpFw = "fiber"
+	}
+
 	data := NewBaseData(input.Name, g.modulePath, nil)
-	tmpl, err := ReadTemplate("handler.go.tmpl")
+	var tmplName string
+	switch httpFw {
+	case "chi":
+		tmplName = "handler_chi.go.tmpl"
+	case "gin":
+		tmplName = "handler_gin.go.tmpl"
+	case "nethttp":
+		tmplName = "handler_nethttp.go.tmpl"
+	default:
+		tmplName = "handler.go.tmpl"
+	}
+
+	tmpl, err := ReadTemplate(tmplName)
 	if err != nil {
 		return nil, err
 	}
 
 	renderer := GetRenderer()
-	rendered, err := renderer.RenderGo(ctx, "handler.go.tmpl", tmpl, data)
+	rendered, err := renderer.RenderGo(ctx, tmplName, tmpl, data)
 	if err != nil {
 		return nil, err
 	}

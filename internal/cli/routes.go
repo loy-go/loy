@@ -76,20 +76,43 @@ func newRoutesCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Comman
 					var httpMethod string
 
 					switch methodName {
-					case "Get":
+					case "Get", "GET":
 						isHTTPMethod, httpMethod = true, "GET"
-					case "Post":
+					case "Post", "POST":
 						isHTTPMethod, httpMethod = true, "POST"
-					case "Put":
+					case "Put", "PUT":
 						isHTTPMethod, httpMethod = true, "PUT"
-					case "Delete":
+					case "Delete", "DELETE":
 						isHTTPMethod, httpMethod = true, "DELETE"
-					case "Patch":
+					case "Patch", "PATCH":
 						isHTTPMethod, httpMethod = true, "PATCH"
-					case "Options":
+					case "Options", "OPTIONS":
 						isHTTPMethod, httpMethod = true, "OPTIONS"
-					case "Head":
+					case "Head", "HEAD":
 						isHTTPMethod, httpMethod = true, "HEAD"
+					case "HandleFunc":
+						if len(call.Args) >= 2 {
+							lit, ok := call.Args[0].(*ast.BasicLit)
+							if ok && lit.Kind == token.STRING {
+								pattern := strings.Trim(lit.Value, `"`)
+								parts := strings.SplitN(pattern, " ", 2)
+								routePath := pattern
+								m := "ALL"
+								if len(parts) == 2 {
+									m = parts[0]
+									routePath = parts[1]
+								}
+								handlerName := exprToString(call.Args[len(call.Args)-1])
+								pos := fset.Position(call.Pos())
+								routes = append(routes, RouteInfo{
+									Method:  m,
+									Path:    routePath,
+									Handler: handlerName,
+									File:    pos.Filename,
+									Line:    pos.Line,
+								})
+							}
+						}
 					}
 
 					if isHTTPMethod && len(call.Args) >= 2 {

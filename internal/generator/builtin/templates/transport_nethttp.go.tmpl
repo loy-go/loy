@@ -1,0 +1,156 @@
+package http
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"runtime/debug"
+	"time"
+
+	"github.com/google/uuid"
+)
+
+// Server wraps the standard library HTTP server instance.
+type Server struct {
+	Mux    *http.ServeMux
+	Server *http.Server
+	Logger *slog.Logger
+	Addr   string
+}
+
+// Config provides setup parameters for standard library HTTP transport.
+type Config struct {
+	Addr         string
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	AppName      string
+}
+
+type contextKey string
+
+const requestIDKey contextKey = "request_id"
+
+type responseWriterInterceptor struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriterInterceptor) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
+// NewServer initializes standard library HTTP server with Loy middleware.
+func NewServer(cfg Config, logger *slog.Logger) *Server {
+	if logger == nil {
+		logger = slog.Default()
+	}
+
+	mux := http.NewServeMux()
+
+	addr := cfg.Addr
+	if addr == "" {
+		addr = ":8080"
+	}
+
+	readTimeout := cfg.ReadTimeout
+	if readTimeout <= 0 {
+		readTimeout = 10 * time.Second
+	}
+	writeTimeout := cfg.WriteTimeout
+	if writeTimeout <= 0 {
+		writeTimeout = 15 * time.Second
+	}
+
+	corsMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+			w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token, X-Request-ID")
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	loggingMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			wrapped := &responseWriterInterceptor{ResponseWriter: w, statusCode: http.StatusOK}
+
+			next.ServeHTTP(wrapped, r)
+
+			reqID, _ := r.Context().Value(requestIDKey).(string)
+			logger.Info("HTTP request",
+				slog.String("method", r.Method),
+				slog.String("path", r.URL.Path),
+				slog.Int("status", wrapped.statusCode),
+				slog.Duration("latency", time.Since(start)),
+				slog.String("request_id", reqID),
+			)
+		})
+	}
+
+	requestIDMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			reqID := r.Header.Get("X-Request-ID")
+			if reqID == "" {
+				reqID = uuid.New().String()
+			}
+			w.Header().Set("X-Request-ID", reqID)
+			ctx := context.WithValue(r.Context(), requestIDKey, reqID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+
+	recoveryMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				if rec := recover(); rec != nil {
+					logger.Error("panic recovered in HTTP handler",
+						slog.Any("recover", rec),
+						slog.String("stack", string(debug.Stack())),
+						slog.String("path", r.URL.Path),
+					)
+					http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
+				}
+			}()
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	handler := recoveryMiddleware(requestIDMiddleware(loggingMiddleware(corsMiddleware(mux))))
+
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       120 * time.Second,
+	}
+
+	return &Server{
+		Mux:    mux,
+		Server: srv,
+		Logger: logger,
+		Addr:   addr,
+	}
+}
+
+// Start runs the HTTP server listener.
+func (s *Server) Start() error {
+	s.Logger.Info("starting net/http server", "addr", s.Addr)
+	if err := s.Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return fmt.Errorf("http server error: %w", err)
+	}
+	return nil
+}
+
+// Shutdown gracefully shuts down the HTTP server.
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.Server.Shutdown(ctx)
+}

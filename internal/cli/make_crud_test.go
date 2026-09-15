@@ -3,6 +3,7 @@ package cli_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/loy-go/loy/internal/cli"
@@ -61,6 +62,110 @@ func TestMakeCRUDAndJSON(t *testing.T) {
 		out, err := executeMakeCommand(root, "make", "crud", "product", "title:string", "--force")
 		if err != nil {
 			t.Fatalf("expected make crud --force to succeed, got %v (out: %s)", err, out)
+		}
+	})
+}
+
+func TestMakeCRUD_WithChiAndNetHTTP(t *testing.T) {
+	t.Run("chi handler generation", func(t *testing.T) {
+		tempDir := t.TempDir()
+		origDir, _ := os.Getwd()
+		_ = os.Chdir(tempDir)
+		t.Cleanup(func() { _ = os.Chdir(origDir) })
+
+		_ = os.WriteFile("go.mod", []byte("module github.com/example/chi-app\n\ngo 1.22\n"), 0644)
+		_ = os.WriteFile("loy.yaml", []byte("version: 1\nproject:\n  name: chi-app\ndefaults:\n  http: chi\n"), 0644)
+
+		root := cli.NewRootCmd()
+		out, err := executeMakeCommand(root, "make", "crud", "order", "code:string")
+		if err != nil {
+			t.Fatalf("make crud in chi project failed: %v, out: %s", err, out)
+		}
+
+		handlerBytes, err := os.ReadFile(filepath.Join(tempDir, "internal/order/transport/http/handler.go"))
+		if err != nil {
+			t.Fatalf("reading order handler: %v", err)
+		}
+		if !strings.Contains(string(handlerBytes), "RegisterRoutes(router chi.Router)") {
+			t.Errorf("expected chi.Router in generated handler:\n%s", string(handlerBytes))
+		}
+
+		// Verify route discovery
+		routesOut, routesErr := executeMakeCommand(root, "routes")
+		if routesErr != nil {
+			t.Fatalf("routes command failed: %v, out: %s", routesErr, routesOut)
+		}
+		if !strings.Contains(routesOut, "GET") {
+			t.Errorf("expected routes in routes output: %s", routesOut)
+		}
+	})
+
+	t.Run("nethttp handler generation", func(t *testing.T) {
+		tempDir := t.TempDir()
+		origDir, _ := os.Getwd()
+		_ = os.Chdir(tempDir)
+		t.Cleanup(func() { _ = os.Chdir(origDir) })
+
+		_ = os.WriteFile("go.mod", []byte("module github.com/example/net-app\n\ngo 1.22\n"), 0644)
+		_ = os.WriteFile("loy.yaml", []byte("version: 1\nproject:\n  name: net-app\ndefaults:\n  http: nethttp\n"), 0644)
+
+		root := cli.NewRootCmd()
+		out, err := executeMakeCommand(root, "make", "crud", "customer", "name:string")
+		if err != nil {
+			t.Fatalf("make crud in nethttp project failed: %v, out: %s", err, out)
+		}
+
+		handlerBytes, err := os.ReadFile(filepath.Join(tempDir, "internal/customer/transport/http/handler.go"))
+		if err != nil {
+			t.Fatalf("reading customer handler: %v", err)
+		}
+		if !strings.Contains(string(handlerBytes), "RegisterRoutes(mux *http.ServeMux)") {
+			t.Errorf("expected *http.ServeMux in generated handler:\n%s", string(handlerBytes))
+		}
+
+		// Verify route discovery
+		routesOut, routesErr := executeMakeCommand(root, "routes")
+		if routesErr != nil {
+			t.Fatalf("routes command failed: %v, out: %s", routesErr, routesOut)
+		}
+		if !strings.Contains(routesOut, "GET") {
+			t.Errorf("expected routes in routes output: %s", routesOut)
+		}
+	})
+
+	t.Run("gin handler generation", func(t *testing.T) {
+		tempDir := t.TempDir()
+		origDir, _ := os.Getwd()
+		_ = os.Chdir(tempDir)
+		t.Cleanup(func() { _ = os.Chdir(origDir) })
+
+		_ = os.WriteFile("go.mod", []byte("module github.com/example/gin-app\n\ngo 1.22\n"), 0644)
+		_ = os.WriteFile("loy.yaml", []byte("version: 1\nproject:\n  name: gin-app\ndefaults:\n  http: gin\n"), 0644)
+
+		root := cli.NewRootCmd()
+		out, err := executeMakeCommand(root, "make", "crud", "invoice", "number:string")
+		if err != nil {
+			t.Fatalf("make crud in gin project failed: %v, out: %s", err, out)
+		}
+
+		handlerBytes, err := os.ReadFile(filepath.Join(tempDir, "internal/invoice/transport/http/handler.go"))
+		if err != nil {
+			t.Fatalf("reading invoice handler: %v", err)
+		}
+		if !strings.Contains(string(handlerBytes), "RegisterRoutes(router *gin.RouterGroup)") {
+			t.Errorf("expected *gin.RouterGroup in generated handler:\n%s", string(handlerBytes))
+		}
+		if !strings.Contains(string(handlerBytes), "c.Param(\"id\")") {
+			t.Errorf("expected c.Param in generated handler:\n%s", string(handlerBytes))
+		}
+
+		// Verify route discovery
+		routesOut, routesErr := executeMakeCommand(root, "routes")
+		if routesErr != nil {
+			t.Fatalf("routes command failed: %v, out: %s", routesErr, routesOut)
+		}
+		if !strings.Contains(routesOut, "GET") {
+			t.Errorf("expected routes in routes output: %s", routesOut)
 		}
 	})
 }

@@ -121,6 +121,7 @@ func (r *RuleArch009) Check(ctx context.Context, a *architecture.Analysis) []arc
 		"github.com/gofiber/fiber",
 		"github.com/gin-gonic/gin",
 		"github.com/labstack/echo",
+		"github.com/go-chi/chi",
 	}
 
 	for _, file := range a.Files {

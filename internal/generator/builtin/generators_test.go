@@ -109,6 +109,60 @@ func TestAtomicGenerators(t *testing.T) {
 		}
 	})
 
+	t.Run("handler generator chi", func(t *testing.T) {
+		gen := builtin.NewHandlerGenerator(mod).WithHTTPFramework("chi")
+		artifacts, err := gen.Generate(ctx, generator.Input{Name: "user"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(artifacts) != 1 {
+			t.Fatalf("expected 1 artifact, got %d", len(artifacts))
+		}
+		content := string(artifacts[0].Content)
+		if !strings.Contains(content, "RegisterRoutes(router chi.Router)") {
+			t.Fatalf("missing Chi RegisterRoutes in %s", content)
+		}
+		if !strings.Contains(content, "chi.URLParam(r, \"id\")") {
+			t.Fatalf("missing chi.URLParam in %s", content)
+		}
+	})
+
+	t.Run("handler generator nethttp", func(t *testing.T) {
+		gen := builtin.NewHandlerGenerator(mod).WithHTTPFramework("nethttp")
+		artifacts, err := gen.Generate(ctx, generator.Input{Name: "user"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(artifacts) != 1 {
+			t.Fatalf("expected 1 artifact, got %d", len(artifacts))
+		}
+		content := string(artifacts[0].Content)
+		if !strings.Contains(content, "RegisterRoutes(mux *http.ServeMux)") {
+			t.Fatalf("missing nethttp RegisterRoutes in %s", content)
+		}
+		if !strings.Contains(content, "r.PathValue(\"id\")") {
+			t.Fatalf("missing r.PathValue in %s", content)
+		}
+	})
+
+	t.Run("handler generator gin", func(t *testing.T) {
+		gen := builtin.NewHandlerGenerator(mod).WithHTTPFramework("gin")
+		artifacts, err := gen.Generate(ctx, generator.Input{Name: "user"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(artifacts) != 1 {
+			t.Fatalf("expected 1 artifact, got %d", len(artifacts))
+		}
+		content := string(artifacts[0].Content)
+		if !strings.Contains(content, "RegisterRoutes(router *gin.RouterGroup)") {
+			t.Fatalf("missing gin RegisterRoutes in %s", content)
+		}
+		if !strings.Contains(content, "c.Param(\"id\")") {
+			t.Fatalf("missing c.Param in %s", content)
+		}
+	})
+
 	t.Run("request generator", func(t *testing.T) {
 		gen := builtin.NewRequestGenerator(mod)
 		artifacts, err := gen.Generate(ctx, generator.Input{

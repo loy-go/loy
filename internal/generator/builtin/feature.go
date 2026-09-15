@@ -57,8 +57,13 @@ func (g *FeatureGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 	artifacts = append(artifacts, arts...)
 
+	httpFw := "fiber"
+	if input.Args != nil && input.Args["http"] != "" {
+		httpFw = input.Args["http"]
+	}
+
 	// 4. Handler
-	handlerGen := NewHandlerGenerator(g.modulePath)
+	handlerGen := NewHandlerGenerator(g.modulePath).WithHTTPFramework(httpFw)
 	arts, err = handlerGen.Generate(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("generating handler: %w", err)
@@ -76,9 +81,9 @@ func (g *FeatureGenerator) Generate(ctx context.Context, input generator.Input) 
 	// 6. Wiring Splicing
 	var wiringArts []model.Artifact
 	if input.Args != nil && input.Args["modular"] == "true" {
-		wiringArts = wiring.GenerateModularWiringArtifacts(input.Name, g.modulePath)
+		wiringArts = wiring.GenerateModularWiringArtifactsWithHTTP(input.Name, g.modulePath, httpFw)
 	} else {
-		wiringArts = wiring.GenerateWiringArtifacts(input.Name, g.modulePath)
+		wiringArts = wiring.GenerateWiringArtifactsWithHTTP(input.Name, g.modulePath, httpFw)
 	}
 	artifacts = append(artifacts, wiringArts...)
 

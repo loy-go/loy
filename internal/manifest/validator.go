@@ -11,7 +11,7 @@ var (
 	validNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 	validDrivers = map[string]map[string]bool{
-		"http":     {"fiber": true, "chi": true, "echo": true, "nethttp": true},
+		"http":     {"fiber": true, "chi": true, "gin": true, "echo": true, "nethttp": true},
 		"database": {"postgres": true, "mysql": true, "sqlite": true, "none": true},
 		"cache":    {"valkey": true, "redis": true, "memory": true, "none": true},
 		"queue":    {"asynq": true, "river": true, "none": true},

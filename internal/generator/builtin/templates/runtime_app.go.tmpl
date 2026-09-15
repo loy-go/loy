@@ -16,6 +16,11 @@ import (
 {{if eq .HTTPFramework "fiber"}}
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
+{{else if eq .HTTPFramework "chi"}}
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+{{else if eq .HTTPFramework "gin"}}
+	"github.com/gin-gonic/gin"
 {{end}}
 
 	"{{.ModulePath}}/internal/config"
@@ -46,6 +51,12 @@ type App struct {
 
 {{if eq .HTTPFramework "fiber"}}
 	router      *fiber.App
+{{else if eq .HTTPFramework "chi"}}
+	router      *chi.Mux
+	server      *http.Server
+{{else if eq .HTTPFramework "gin"}}
+	router      *gin.Engine
+	server      *http.Server
 {{else}}
 	mux         *http.ServeMux
 	server      *http.Server
@@ -102,6 +113,40 @@ func (a *App) init() error {
 	// Register health probes
 	a.router.Get("/health/live", adaptor.HTTPHandlerFunc(a.healthReg.LiveHandler()))
 	a.router.Get("/health/ready", adaptor.HTTPHandlerFunc(a.healthReg.ReadyHandler()))
+{{else if eq .HTTPFramework "chi"}}
+	a.router = chi.NewRouter()
+	a.router.Use(middleware.RequestID)
+	a.router.Use(middleware.Recoverer)
+
+	// Register health probes
+	a.router.Get("/health/live", a.healthReg.LiveHandler())
+	a.router.Get("/health/ready", a.healthReg.ReadyHandler())
+
+	a.server = &http.Server{
+		Addr:              fmt.Sprintf(":%d", a.cfg.Port),
+		Handler:           a.router,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+{{else if eq .HTTPFramework "gin"}}
+	gin.SetMode(gin.ReleaseMode)
+	a.router = gin.New()
+	a.router.Use(gin.Recovery())
+
+	// Register health probes
+	a.router.GET("/health/live", gin.WrapH(a.healthReg.LiveHandler()))
+	a.router.GET("/health/ready", gin.WrapH(a.healthReg.ReadyHandler()))
+
+	a.server = &http.Server{
+		Addr:              fmt.Sprintf(":%d", a.cfg.Port),
+		Handler:           a.router,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
 {{else}}
 	a.mux = http.NewServeMux()
 	a.server = &http.Server{
@@ -152,6 +197,16 @@ func (a *App) Run(ctx context.Context) error {
 		addr := fmt.Sprintf(":%d", a.cfg.Port)
 		a.log.Info("http server listening", "addr", addr, "framework", "fiber")
 		if err := a.router.Listen(addr); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErr <- err
+		}
+{{else if eq .HTTPFramework "chi"}}
+		a.log.Info("http server listening", "addr", a.server.Addr, "framework", "chi")
+		if err := a.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErr <- err
+		}
+{{else if eq .HTTPFramework "gin"}}
+		a.log.Info("http server listening", "addr", a.server.Addr, "framework", "gin")
+		if err := a.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			serverErr <- err
 		}
 {{else}}

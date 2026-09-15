@@ -72,8 +72,13 @@ func (m *SplicerManager) EnsureWiringFile(ctx context.Context, rootDir string) e
 	return nil
 }
 
-// GenerateWiringArtifacts produces managed region artifacts for a feature.
+// GenerateWiringArtifacts produces managed region artifacts for a feature with default (fiber) HTTP.
 func GenerateWiringArtifacts(featureName, modulePath string) []model.Artifact {
+	return GenerateWiringArtifactsWithHTTP(featureName, modulePath, "fiber")
+}
+
+// GenerateWiringArtifactsWithHTTP produces managed region artifacts for a feature matching the HTTP framework.
+func GenerateWiringArtifactsWithHTTP(featureName, modulePath, httpFramework string) []model.Artifact {
 	camel := naming.ToCamelCase(featureName)
 	pkgName := naming.ToPackageName(featureName)
 
@@ -86,7 +91,16 @@ func GenerateWiringArtifacts(featureName, modulePath string) []model.Artifact {
 	repoCode := fmt.Sprintf("\t%sRepo, _ := %sRepo.NewPostgresRepository(a.db)\n\t_ = %sRepo", camel, pkgName, camel)
 	serviceCode := fmt.Sprintf("\t%sSvc, _ := %sService.NewService(%sRepo)\n\t_ = %sSvc", camel, pkgName, camel, camel)
 	handlerCode := fmt.Sprintf("\t%sHandler, _ := %sHttp.NewHandler(%sSvc)", camel, pkgName, camel)
-	routeCode := fmt.Sprintf("\t%sHandler.RegisterRoutes(a.router.Group(\"/api/v1\"))", camel)
+
+	var routeCode string
+	switch httpFramework {
+	case "chi":
+		routeCode = fmt.Sprintf("\tif a.router != nil {\n\t\ta.router.Route(\"/api/v1\", %sHandler.RegisterRoutes)\n\t}", camel)
+	case "nethttp":
+		routeCode = fmt.Sprintf("\tif a.mux != nil {\n\t\t%sHandler.RegisterRoutes(a.mux)\n\t}", camel)
+	default:
+		routeCode = fmt.Sprintf("\tif a.router != nil {\n\t\t%sHandler.RegisterRoutes(a.router.Group(\"/api/v1\"))\n\t}", camel)
+	}
 
 	return []model.Artifact{
 		{
@@ -122,10 +136,31 @@ func GenerateWiringArtifacts(featureName, modulePath string) []model.Artifact {
 	}
 }
 
-// GenerateModularWiringArtifacts produces a standalone wire_<domain>.go file and registers it in wiring.go.
+// GenerateModularWiringArtifacts produces a standalone wire_<domain>.go file with default (fiber) HTTP.
 func GenerateModularWiringArtifacts(featureName, modulePath string) []model.Artifact {
+	return GenerateModularWiringArtifactsWithHTTP(featureName, modulePath, "fiber")
+}
+
+// GenerateModularWiringArtifactsWithHTTP produces a standalone wire_<domain>.go file matching the HTTP framework.
+func GenerateModularWiringArtifactsWithHTTP(featureName, modulePath, httpFramework string) []model.Artifact {
 	pascal := naming.ToPascalCase(featureName)
 	pkgName := naming.ToPackageName(featureName)
+
+	var routeRegisterCode string
+	switch httpFramework {
+	case "chi":
+		routeRegisterCode = `	if a.router != nil {
+		a.router.Route("/api/v1", h.RegisterRoutes)
+	}`
+	case "nethttp":
+		routeRegisterCode = `	if a.mux != nil {
+		h.RegisterRoutes(a.mux)
+	}`
+	default:
+		routeRegisterCode = `	if a.router != nil {
+		h.RegisterRoutes(a.router.Group("/api/v1"))
+	}`
+	}
 
 	modularFileContent := fmt.Sprintf(`package app
 
@@ -149,9 +184,7 @@ func (a *App) wire%s() error {
 	if err != nil {
 		return err
 	}
-	if a.router != nil {
-		h.RegisterRoutes(a.router.Group("/api/v1"))
-	}
+%s
 	return nil
 }
 `, pkgName, modulePath, pkgName,
@@ -162,6 +195,7 @@ func (a *App) wire%s() error {
 		pkgName,
 		pkgName,
 		pkgName,
+		routeRegisterCode,
 	)
 
 	splicedCall := fmt.Sprintf("\tif err := a.wire%s(); err != nil {\n\t\treturn err\n\t}", pascal)

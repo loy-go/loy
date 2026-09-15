@@ -1,0 +1,119 @@
+package http
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+)
+
+// Server wraps the Chi HTTP server instance.
+type Server struct {
+	Router *chi.Mux
+	Server *http.Server
+	Logger *slog.Logger
+	Addr   string
+}
+
+// Config provides setup parameters for Chi HTTP transport.
+type Config struct {
+	Addr         string
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	AppName      string
+}
+
+// NewServer initializes Chi application with standard Loy middleware.
+func NewServer(cfg Config, logger *slog.Logger) *Server {
+	if logger == nil {
+		logger = slog.Default()
+	}
+
+	r := chi.NewRouter()
+
+	// 1. Request ID middleware
+	r.Use(middleware.RequestID)
+
+	// 2. Structured logging middleware using slog
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			start := time.Now()
+			ww := middleware.NewWrapResponseWriter(w, req.ProtoMajor)
+
+			next.ServeHTTP(ww, req)
+
+			logger.Info("HTTP request",
+				slog.String("method", req.Method),
+				slog.String("path", req.URL.Path),
+				slog.Int("status", ww.Status()),
+				slog.Duration("latency", time.Since(start)),
+				slog.String("request_id", middleware.GetReqID(req.Context())),
+			)
+		})
+	})
+
+	// 3. Panic recovery middleware
+	r.Use(middleware.Recoverer)
+
+	// 4. Default CORS middleware
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+			w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token, X-Request-ID")
+			if req.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			next.ServeHTTP(w, req)
+		})
+	})
+
+	addr := cfg.Addr
+	if addr == "" {
+		addr = ":8080"
+	}
+
+	readTimeout := cfg.ReadTimeout
+	if readTimeout <= 0 {
+		readTimeout = 10 * time.Second
+	}
+	writeTimeout := cfg.WriteTimeout
+	if writeTimeout <= 0 {
+		writeTimeout = 15 * time.Second
+	}
+
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       120 * time.Second,
+	}
+
+	return &Server{
+		Router: r,
+		Server: srv,
+		Logger: logger,
+		Addr:   addr,
+	}
+}
+
+// Start runs the HTTP server listener.
+func (s *Server) Start() error {
+	s.Logger.Info("starting chi http server", "addr", s.Addr)
+	if err := s.Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return fmt.Errorf("http server error: %w", err)
+	}
+	return nil
+}
+
+// Shutdown gracefully shuts down the HTTP server.
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.Server.Shutdown(ctx)
+}

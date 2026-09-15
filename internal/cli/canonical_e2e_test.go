@@ -129,3 +129,225 @@ func TestCanonicalEndToEndLoop(t *testing.T) {
 		t.Fatalf("go build failed on generated app: %v\nOutput:\n%s", err, string(out))
 	}
 }
+
+func TestCanonicalEndToEndLoop_Chi(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping canonical end-to-end integration test in short mode")
+	}
+
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+	})
+
+	tmpDir := t.TempDir()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("chdir tmpDir: %v", err)
+	}
+
+	// 1. loy new chiapp --preset api --http chi --db sqlite
+	root := cli.NewRootCmd()
+	buf := new(bytes.Buffer)
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs([]string{"new", "chiapp", "--preset", "api", "--http", "chi", "--db", "sqlite"})
+	if err := root.ExecuteContext(context.Background()); err != nil {
+		t.Fatalf("loy new failed: %v, output: %s", err, buf.String())
+	}
+
+	appDir := filepath.Join(tmpDir, "chiapp")
+	if err := os.Chdir(appDir); err != nil {
+		t.Fatalf("chdir appDir: %v", err)
+	}
+
+	// 2. loy make crud tasks
+	buf.Reset()
+	root = cli.NewRootCmd()
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs([]string{"make", "crud", "tasks", "name:string:required"})
+	if err := root.ExecuteContext(context.Background()); err != nil {
+		t.Fatalf("loy make crud failed: %v, output: %s", err, buf.String())
+	}
+
+	// 3. loy check
+	buf.Reset()
+	root = cli.NewRootCmd()
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs([]string{"check"})
+	if err := root.ExecuteContext(context.Background()); err != nil {
+		t.Fatalf("loy check failed on generated app: %v, output: %s", err, buf.String())
+	}
+
+	// 4. go mod tidy & go test ./...
+	cmdTidy := exec.Command("go", "mod", "tidy")
+	cmdTidy.Dir = appDir
+	if out, err := cmdTidy.CombinedOutput(); err != nil {
+		t.Fatalf("go mod tidy failed on generated app: %v\nOutput:\n%s", err, string(out))
+	}
+
+	cmdTest := exec.Command("go", "test", "./...")
+	cmdTest.Dir = appDir
+	if out, err := cmdTest.CombinedOutput(); err != nil {
+		t.Fatalf("go test failed on generated app: %v\nOutput:\n%s", err, string(out))
+	}
+
+	// 5. go build ./...
+	cmdBuild := exec.Command("go", "build", "./...")
+	cmdBuild.Dir = appDir
+	if out, err := cmdBuild.CombinedOutput(); err != nil {
+		t.Fatalf("go build failed on generated app: %v\nOutput:\n%s", err, string(out))
+	}
+}
+
+func TestCanonicalEndToEndLoop_NetHTTP(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping canonical end-to-end integration test in short mode")
+	}
+
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+	})
+
+	tmpDir := t.TempDir()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("chdir tmpDir: %v", err)
+	}
+
+	// 1. loy new netapp --preset api --http nethttp --db sqlite
+	root := cli.NewRootCmd()
+	buf := new(bytes.Buffer)
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs([]string{"new", "netapp", "--preset", "api", "--http", "nethttp", "--db", "sqlite"})
+	if err := root.ExecuteContext(context.Background()); err != nil {
+		t.Fatalf("loy new failed: %v, output: %s", err, buf.String())
+	}
+
+	appDir := filepath.Join(tmpDir, "netapp")
+	if err := os.Chdir(appDir); err != nil {
+		t.Fatalf("chdir appDir: %v", err)
+	}
+
+	// 2. loy make crud notes
+	buf.Reset()
+	root = cli.NewRootCmd()
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs([]string{"make", "crud", "notes", "title:string:required"})
+	if err := root.ExecuteContext(context.Background()); err != nil {
+		t.Fatalf("loy make crud failed: %v, output: %s", err, buf.String())
+	}
+
+	// 3. loy check
+	buf.Reset()
+	root = cli.NewRootCmd()
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs([]string{"check"})
+	if err := root.ExecuteContext(context.Background()); err != nil {
+		t.Fatalf("loy check failed on generated app: %v, output: %s", err, buf.String())
+	}
+
+	// 4. go mod tidy & go test ./...
+	cmdTidy := exec.Command("go", "mod", "tidy")
+	cmdTidy.Dir = appDir
+	if out, err := cmdTidy.CombinedOutput(); err != nil {
+		t.Fatalf("go mod tidy failed on generated app: %v\nOutput:\n%s", err, string(out))
+	}
+
+	cmdTest := exec.Command("go", "test", "./...")
+	cmdTest.Dir = appDir
+	if out, err := cmdTest.CombinedOutput(); err != nil {
+		t.Fatalf("go test failed on generated app: %v\nOutput:\n%s", err, string(out))
+	}
+
+	// 5. go build ./...
+	cmdBuild := exec.Command("go", "build", "./...")
+	cmdBuild.Dir = appDir
+	if out, err := cmdBuild.CombinedOutput(); err != nil {
+		t.Fatalf("go build failed on generated app: %v\nOutput:\n%s", err, string(out))
+	}
+}
+
+func TestCanonicalEndToEndLoop_Gin(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping canonical end-to-end integration test in short mode")
+	}
+
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+	})
+
+	tmpDir := t.TempDir()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("chdir tmpDir: %v", err)
+	}
+
+	// 1. loy new ginapp --preset api --http gin --db sqlite
+	root := cli.NewRootCmd()
+	buf := new(bytes.Buffer)
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs([]string{"new", "ginapp", "--preset", "api", "--http", "gin", "--db", "sqlite"})
+	if err := root.ExecuteContext(context.Background()); err != nil {
+		t.Fatalf("loy new failed: %v, output: %s", err, buf.String())
+	}
+
+	appDir := filepath.Join(tmpDir, "ginapp")
+	if err := os.Chdir(appDir); err != nil {
+		t.Fatalf("chdir appDir: %v", err)
+	}
+
+	// 2. loy make crud articles
+	buf.Reset()
+	root = cli.NewRootCmd()
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs([]string{"make", "crud", "articles", "title:string:required"})
+	if err := root.ExecuteContext(context.Background()); err != nil {
+		t.Fatalf("loy make crud failed: %v, output: %s", err, buf.String())
+	}
+
+	// 3. loy check
+	buf.Reset()
+	root = cli.NewRootCmd()
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs([]string{"check"})
+	if err := root.ExecuteContext(context.Background()); err != nil {
+		t.Fatalf("loy check failed on generated app: %v, output: %s", err, buf.String())
+	}
+
+	// 4. go mod tidy & go test ./...
+	cmdTidy := exec.Command("go", "mod", "tidy")
+	cmdTidy.Dir = appDir
+	if out, err := cmdTidy.CombinedOutput(); err != nil {
+		t.Fatalf("go mod tidy failed on generated app: %v\nOutput:\n%s", err, string(out))
+	}
+
+	cmdTest := exec.Command("go", "test", "./...")
+	cmdTest.Dir = appDir
+	if out, err := cmdTest.CombinedOutput(); err != nil {
+		t.Fatalf("go test failed on generated app: %v\nOutput:\n%s", err, string(out))
+	}
+
+	// 5. go build ./...
+	cmdBuild := exec.Command("go", "build", "./...")
+	cmdBuild.Dir = appDir
+	if out, err := cmdBuild.CombinedOutput(); err != nil {
+		t.Fatalf("go build failed on generated app: %v\nOutput:\n%s", err, string(out))
+	}
+}

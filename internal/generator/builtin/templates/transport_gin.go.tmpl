@@ -1,0 +1,124 @@
+package http
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+// Server wraps the Gin HTTP server instance.
+type Server struct {
+	Engine *gin.Engine
+	Server *http.Server
+	Logger *slog.Logger
+	Addr   string
+}
+
+// Config provides setup parameters for Gin HTTP transport.
+type Config struct {
+	Addr         string
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	AppName      string
+}
+
+// NewServer initializes Gin application with standard Loy middleware.
+func NewServer(cfg Config, logger *slog.Logger) *Server {
+	if logger == nil {
+		logger = slog.Default()
+	}
+
+	gin.SetMode(gin.ReleaseMode)
+	engine := gin.New()
+
+	// 1. Panic recovery middleware
+	engine.Use(gin.Recovery())
+
+	// 2. Request ID middleware
+	engine.Use(func(c *gin.Context) {
+		reqID := c.GetHeader("X-Request-ID")
+		if reqID == "" {
+			reqID = uuid.New().String()
+		}
+		c.Header("X-Request-ID", reqID)
+		c.Set("request_id", reqID)
+		c.Next()
+	})
+
+	// 3. Structured logging middleware using slog
+	engine.Use(func(c *gin.Context) {
+		start := time.Now()
+		c.Next()
+		duration := time.Since(start)
+
+		reqID, _ := c.Get("request_id")
+		logger.Info("HTTP request",
+			slog.String("method", c.Request.Method),
+			slog.String("path", c.Request.URL.Path),
+			slog.Int("status", c.Writer.Status()),
+			slog.Duration("latency", duration),
+			slog.Any("request_id", reqID),
+		)
+	})
+
+	// 4. Default CORS headers middleware
+	engine.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+		c.Header("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token, X-Request-ID")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusOK)
+			return
+		}
+		c.Next()
+	})
+
+	addr := cfg.Addr
+	if addr == "" {
+		addr = ":8080"
+	}
+
+	readTimeout := cfg.ReadTimeout
+	if readTimeout <= 0 {
+		readTimeout = 10 * time.Second
+	}
+	writeTimeout := cfg.WriteTimeout
+	if writeTimeout <= 0 {
+		writeTimeout = 15 * time.Second
+	}
+
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           engine,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       120 * time.Second,
+	}
+
+	return &Server{
+		Engine: engine,
+		Server: srv,
+		Logger: logger,
+		Addr:   addr,
+	}
+}
+
+// Start runs the HTTP server listener.
+func (s *Server) Start() error {
+	s.Logger.Info("starting gin http server", "addr", s.Addr)
+	if err := s.Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return fmt.Errorf("http server error: %w", err)
+	}
+	return nil
+}
+
+// Shutdown gracefully shuts down the HTTP server.
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.Server.Shutdown(ctx)
+}

@@ -1,0 +1,160 @@
+package http
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	"{{.ModulePath}}/internal/{{.FeaturePkg}}/domain"
+	"{{.ModulePath}}/internal/{{.FeaturePkg}}/service"
+)
+
+// Handler exposes HTTP transport endpoints for {{.PluralLower}}.
+type Handler struct {
+	service *service.Service
+}
+
+// NewHandler constructs a new Handler.
+func NewHandler(svc *service.Service) (*Handler, error) {
+	if svc == nil {
+		return nil, fmt.Errorf("service dependency is required")
+	}
+	return &Handler{service: svc}, nil
+}
+
+// RegisterRoutes attaches {{.FeaturePkg}} routes to the provided Chi router.
+func (h *Handler) RegisterRoutes(router chi.Router) {
+	router.Route("/{{.PluralLower}}", func(r chi.Router) {
+		r.Get("/", h.List)
+		r.Get("/{id}", h.GetByID)
+		r.Post("/", h.Create)
+		r.Put("/{id}", h.Update)
+		r.Delete("/{id}", h.Delete)
+	})
+}
+
+// List handles GET /{{.PluralLower}}.
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	limit := 20
+	offset := 0
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if val, err := strconv.Atoi(l); err == nil && val > 0 {
+			limit = val
+		}
+	}
+	if o := r.URL.Query().Get("offset"); o != "" {
+		if val, err := strconv.Atoi(o); err == nil && val >= 0 {
+			offset = val
+		}
+	}
+
+	items, err := h.service.List(r.Context(), limit, offset)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"data": items})
+}
+
+// GetByID handles GET /{{.PluralLower}}/{id}.
+func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "invalid ID format"})
+		return
+	}
+
+	item, err := h.service.GetByID(r.Context(), id)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"data": item})
+}
+
+// Create handles POST /{{.PluralLower}}.
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
+	var entity domain.{{.Pascal}}
+	if err := json.NewDecoder(r.Body).Decode(&entity); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "malformed request body"})
+		return
+	}
+
+	if err := h.service.Create(r.Context(), &entity); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(map[string]any{"data": entity})
+}
+
+// Update handles PUT /{{.PluralLower}}/{id}.
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "invalid ID format"})
+		return
+	}
+
+	var entity domain.{{.Pascal}}
+	if err := json.NewDecoder(r.Body).Decode(&entity); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "malformed request body"})
+		return
+	}
+	entity.ID = id
+
+	if err := h.service.Update(r.Context(), &entity); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"data": entity})
+}
+
+// Delete handles DELETE /{{.PluralLower}}/{id}.
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "invalid ID format"})
+		return
+	}
+
+	if err := h.service.Delete(r.Context(), id); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
