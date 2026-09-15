@@ -1,0 +1,18 @@
+---
+description: Loy Clean Architecture and Managed Splicing Invariants
+globs: **/*.go
+---
+# Cursor Rules for {{.ProjectName}}
+
+## Clean Architecture Invariants
+- Enforce strict 4-layer flow: Transport -> Application -> Domain <- Infrastructure.
+- Domain layer must remain pure Go; no database or transport imports.
+- Application layer depends on interfaces, never concrete infrastructure adapters.
+- Handlers in Transport must not execute direct database queries.
+
+## Comment Regions & Splicing Safety
+- When editing managed files, only insert code between `// loy:region:<name>` and `// loy:endregion`.
+- Never delete or corrupt comment region tags.
+
+## Self-Healing Loop
+- If architectural violations occur, run `loy check --format agent` to receive structured correction prompts.

@@ -277,4 +277,25 @@ func TestMakeCommand(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("make agent-rules all", func(t *testing.T) {
+		r := cli.NewRootCmd()
+		out, err := executeMakeCommand(r, "make", "agent-rules", "--force")
+		if err != nil {
+			t.Fatalf("make agent-rules failed: %v, out: %s", err, out)
+		}
+		expected := []string{
+			"AGENTS.md",
+			"CLAUDE.md",
+			".cursor/rules/loy.mdc",
+			".cursorrules",
+			".github/copilot-instructions.md",
+			".windsurfrules",
+		}
+		for _, f := range expected {
+			if _, err := os.Stat(filepath.Join(tempDir, f)); os.IsNotExist(err) {
+				t.Errorf("expected %s to exist after make agent-rules", f)
+			}
+		}
+	})
 }

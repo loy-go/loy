@@ -1,0 +1,66 @@
+# AI Agent Engineering Guide — {{.ProjectName}}
+
+> **Authoritative Substrate:**
+> This codebase adheres strictly to Loy Clean Architecture invariants and deterministic scaffolding rules.
+> Every AI agent (Claude Code, Cursor, Copilot, Windsurf) MUST follow these instructions.
+
+---
+
+## 1. Clean Architecture Layer Boundaries (Non-Negotiable)
+
+Layer dependency direction is strictly:
+```text
+Transport -> Application -> Domain <- Infrastructure
+```
+
+- **Domain Layer (`internal/.../domain`)**:
+  - Contains pure Go business entities, domain errors, and consumer-owned repository interfaces.
+  - NEVER import `database/sql`, ORMs (`gorm`), HTTP libraries (`net/http`, `fiber`, `gin`), or transport protocols.
+  - NEVER import Infrastructure or Transport layers.
+- **Application Layer (`internal/.../service`)**:
+  - Contains business use cases and orchestrates domain logic.
+  - Consumes repository interfaces defined in Domain or Application.
+  - NEVER import concrete database adapters or transport frameworks.
+- **Infrastructure Layer (`internal/.../repository`, `internal/platform`)**:
+  - Implements repository interfaces using SQL/driver libraries (`sqlc`, `pgx`, `database/sql`).
+  - NEVER import Transport.
+- **Transport Layer (`internal/.../transport`)**:
+  - Handles incoming HTTP, gRPC, and WebSocket requests.
+  - Translates transport DTOs into domain entities and invokes Application services.
+  - NEVER execute direct database queries in handlers.
+
+---
+
+## 2. Guarded Comment Regions & Code Splicing
+
+Loy isolates generated scaffolding and developer-owned logic using managed comment regions:
+```go
+// loy:region:<name>
+// Edits must stay within this block
+// loy:endregion
+```
+
+- **DO NOT** delete, corrupt, or rename `// loy:region:...` or `// loy:endregion` markers.
+- **DO NOT** nest comment regions.
+- If comment regions are corrupted, run `loy upgrade` or `loy check --format agent` to diagnose and repair.
+
+---
+
+## 3. Explicit Dependency Wiring
+
+- Loy strictly prohibits dynamic reflection DI containers (`uber/dig`, `google/wire`).
+- All dependencies must be wired explicitly using Go constructors (`New...`) in `internal/app/wiring.go`.
+- Package-level mutable variables (`var DB *sql.DB`) are forbidden.
+
+---
+
+## 4. Verification & Quality Gates
+
+Before finishing any task, external agents MUST execute:
+```bash
+# Verify architectural boundaries and obtain self-healing prompts
+loy check --format agent
+
+# Run standard verification suite
+make check || go test -v -race ./...
+```

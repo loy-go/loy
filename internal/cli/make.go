@@ -132,6 +132,7 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 	cmd.AddCommand(newFeatureCmd(fs, runner, opts))
 	cmd.AddCommand(newCRUDCmd(fs, runner, opts))
 	cmd.AddCommand(newDeployCmd(fs, runner, opts))
+	cmd.AddCommand(newAgentRulesCmd(fs, runner, opts))
 
 	return cmd
 }
@@ -241,6 +242,31 @@ func newCRUDCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptio
 			return nil
 		},
 	}
+}
+
+func newAgentRulesCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	var targetAI string
+	cmd := &cobra.Command{
+		Use:     "agent-rules [name]",
+		Aliases: []string{"rules"},
+		Short:   "Scaffold authoritative AI agent rules (Cursor, Claude, Copilot, Windsurf)",
+		Long: `loy make agent-rules scaffolds authoritative AI agent instruction documents
+enforcing Clean Architecture layer boundaries, managed comment region safety, and verification gates.`,
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := "agent-rules"
+			if len(args) > 0 {
+				name = args[0]
+			}
+			return runGenerator(cmd, fs, runner, opts, func(mod string) generator.Generator {
+				return builtin.NewAgentRulesGenerator(mod).WithTarget(targetAI)
+			}, name, targetAI, false)
+		},
+	}
+	cmd.Flags().StringVar(&targetAI, "target", "all", "Target AI assistant (all, cursor, claude, copilot, windsurf)")
+	cmd.Flags().StringVar(&targetAI, "for", "all", "Alias for --target")
+	cmd.Flags().StringVar(&targetAI, "client", "all", "Alias for --target")
+	return cmd
 }
 
 func resolveProjectTarget(ctx context.Context, fs filesystem.FileSystem, runner process.Runner, requestedTarget string) (targetDir string, modulePath string, err error) {

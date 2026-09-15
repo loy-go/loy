@@ -1,0 +1,7 @@
+# Windsurf Cascade Rules for {{.ProjectName}}
+
+- **Clean Architecture**: Strictly enforce Transport -> Application -> Domain <- Infrastructure.
+- **Domain Purity**: Domain entities must never import database drivers or transport packages.
+- **Explicit Wiring**: Wire constructors in `internal/app/wiring.go`. No reflection DI.
+- **Comment Regions**: Preserve `// loy:region:...` and `// loy:endregion` comment blocks.
+- **Verification**: Run `loy check --format agent` to diagnose and self-heal layer violations.

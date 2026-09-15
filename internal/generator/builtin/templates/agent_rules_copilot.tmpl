@@ -1,0 +1,10 @@
+# GitHub Copilot Instructions for {{.ProjectName}}
+
+This repository uses the Loy Go developer platform with strict Clean Architecture rules.
+When generating or modifying code:
+1. Adhere to layer direction: Transport -> Application -> Domain <- Infrastructure.
+2. Invert dependencies: define interfaces in Domain or Application, implement them in Infrastructure.
+3. Keep Domain pure Go: no `database/sql`, ORMs, or HTTP framework packages.
+4. Only modify code inside `// loy:region:<name>` and `// loy:endregion` blocks in managed files.
+5. Avoid package-level mutable variables. Use explicit constructor injection.
+6. Verify changes with `loy check --format agent`.
