@@ -19,6 +19,7 @@ type RuntimeData struct {
 	WithCache       bool
 	WithQueue       bool
 	WithTelemetry   bool
+	WithGRPC        bool
 	Template        string // e.g. "templ"
 	Assets          string // e.g. "vite"
 	Entrypoint      string // "api" or "web"
@@ -33,6 +34,7 @@ type RuntimeGenerator struct {
 	withCache       bool
 	withQueue       bool
 	withTelemetry   bool
+	withGRPC        bool
 	template        string
 	assets          string
 	entrypoint      string
@@ -51,8 +53,15 @@ func NewRuntimeGenerator(modulePath, httpFramework string) *RuntimeGenerator {
 		withCache:       true,
 		withQueue:       true,
 		withTelemetry:   true,
+		withGRPC:        false,
 		entrypoint:      "api",
 	}
+}
+
+// WithGRPC configures simultaneous dual-listener gRPC transport support.
+func (g *RuntimeGenerator) WithGRPC(grpcEnabled bool) *RuntimeGenerator {
+	g.withGRPC = grpcEnabled
+	return g
 }
 
 // WithDatabaseDialect configures the database dialect (e.g. "postgres", "sqlite", "mysql", "none").
@@ -120,6 +129,9 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 				g.withDatabase = false
 			}
 		}
+		if grpcArg := input.Args["grpc"]; grpcArg == "true" || grpcArg == "1" {
+			g.withGRPC = true
+		}
 	}
 
 	if g.databaseDialect == "none" {
@@ -150,6 +162,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 		WithCache:       g.withCache,
 		WithQueue:       g.withQueue,
 		WithTelemetry:   g.withTelemetry,
+		WithGRPC:        g.withGRPC,
 		Template:        g.template,
 		Assets:          g.assets,
 		Entrypoint:      entrypoint,

@@ -250,3 +250,41 @@ func TestRuntimeGenerator_DatabaseNone(t *testing.T) {
 		}
 	}
 }
+
+func TestRuntimeGenerator_DualListenerGRPC(t *testing.T) {
+	gen := builtin.NewRuntimeGenerator("github.com/example/demo", "fiber").
+		WithGRPC(true)
+
+	artifacts, err := gen.Generate(context.Background(), generator.Input{Name: "runtime"})
+	if err != nil {
+		t.Fatalf("generation failed: %v", err)
+	}
+
+	var hasApp, hasConfig bool
+	for _, art := range artifacts {
+		if art.Path == "internal/app/app.go" {
+			hasApp = true
+			content := string(art.Content)
+			if !strings.Contains(content, "google.golang.org/grpc") {
+				t.Errorf("expected grpc import in app.go:\n%s", content)
+			}
+			if !strings.Contains(content, "grpcServer   *grpc.Server") {
+				t.Errorf("expected grpcServer field in app.go:\n%s", content)
+			}
+			if !strings.Contains(content, "a.grpcServer.GracefulStop()") {
+				t.Errorf("expected GracefulStop in app.go:\n%s", content)
+			}
+		}
+		if art.Path == "internal/config/config.go" {
+			hasConfig = true
+			content := string(art.Content)
+			if !strings.Contains(content, "GRPCPort") || !strings.Contains(content, `envDefault:"9090"`) {
+				t.Errorf("expected GRPCPort in config.go:\n%s", content)
+			}
+		}
+	}
+
+	if !hasApp || !hasConfig {
+		t.Errorf("missing app or config artifact with grpc")
+	}
+}

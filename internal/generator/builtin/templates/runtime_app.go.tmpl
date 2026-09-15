@@ -22,6 +22,10 @@ import (
 {{else if eq .HTTPFramework "gin"}}
 	"github.com/gin-gonic/gin"
 {{end}}
+{{if .WithGRPC}}
+	"net"
+	"google.golang.org/grpc"
+{{end}}
 
 	"{{.ModulePath}}/internal/config"
 	"{{.ModulePath}}/internal/platform/health"
@@ -60,6 +64,10 @@ type App struct {
 {{else}}
 	mux         *http.ServeMux
 	server      *http.Server
+{{end}}
+{{if .WithGRPC}}
+	grpcServer   *grpc.Server
+	grpcListener net.Listener
 {{end}}
 	db          *sql.DB
 }
@@ -163,6 +171,10 @@ func (a *App) init() error {
 	a.mux.HandleFunc("/health/ready", a.healthReg.ReadyHandler())
 {{end}}
 
+{{if .WithGRPC}}
+	a.grpcServer = grpc.NewServer()
+{{end}}
+
 	// Wire application dependencies
 	if err := a.wireDependencies(); err != nil {
 		return fmt.Errorf("wiring dependencies: %w", err)
@@ -190,7 +202,39 @@ func (a *App) Run(ctx context.Context) error {
 	sigCtx, stopSignals := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stopSignals()
 
+{{if .WithGRPC}}
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", a.cfg.GRPCPort))
+	if err != nil {
+		return fmt.Errorf("binding grpc port %d: %w", a.cfg.GRPCPort, err)
+	}
+	a.grpcListener = lis
+
+	// Register gRPC shutdown hook with timeout protection
+	a.coordinator.Register(shutdown.PhaseTransport, func(ctx context.Context) error {
+		if a.grpcServer != nil {
+			stopped := make(chan struct{})
+			go func() {
+				a.grpcServer.GracefulStop()
+				close(stopped)
+			}()
+			select {
+			case <-ctx.Done():
+				a.grpcServer.Stop()
+				return ctx.Err()
+			case <-stopped:
+				return nil
+			}
+		}
+		if a.grpcListener != nil {
+			return a.grpcListener.Close()
+		}
+		return nil
+	})
+
+	serverErr := make(chan error, 2)
+{{else}}
 	serverErr := make(chan error, 1)
+{{end}}
 
 	go func() {
 {{if eq .HTTPFramework "fiber"}}
@@ -216,6 +260,16 @@ func (a *App) Run(ctx context.Context) error {
 		}
 {{end}}
 	}()
+
+{{if .WithGRPC}}
+	go func() {
+		addr := fmt.Sprintf(":%d", a.cfg.GRPCPort)
+		a.log.Info("grpc server listening", "addr", addr)
+		if err := a.grpcServer.Serve(a.grpcListener); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+			serverErr <- err
+		}
+	}()
+{{end}}
 
 	shutdownTimeout := a.cfg.ShutdownTimeout
 	if shutdownTimeout <= 0 {

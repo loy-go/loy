@@ -12,6 +12,9 @@ import (
 type Config struct {
 	Environment     string        `env:"APP_ENV" envDefault:"development"`
 	Port            int           `env:"PORT" envDefault:"8080"`
+{{if .WithGRPC}}
+	GRPCPort        int           `env:"GRPC_PORT" envDefault:"9090"`
+{{end}}
 	LogLevel        string        `env:"LOG_LEVEL" envDefault:"info"`
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"15s"`
 
