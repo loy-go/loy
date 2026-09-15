@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/loy-go/loy/internal/architecture"
@@ -130,7 +129,7 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 						Diagnostics: nil,
 					}
 				}
-				if format == "github" && os.Getenv("GITHUB_ACTIONS") != "true" {
+				if format == "github" {
 					var concrete []diagnostics.Diagnostic
 					for _, d := range cmdDiags {
 						if d != nil {
@@ -138,6 +137,10 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 						}
 					}
 					_ = (&diagnostics.GitHubWorkflowFormatter{}).Format(cmd.OutOrStdout(), concrete)
+					return &CommandError{
+						Code:        1,
+						Diagnostics: nil,
+					}
 				}
 				return &CommandError{
 					Code:        1,
