@@ -2,7 +2,10 @@ package cli_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -164,5 +167,76 @@ func TestDoctorStrictFailure(t *testing.T) {
 		t.Errorf("expected *cli.CommandError, got: %T (%v)", err, err)
 	} else if cmdErr.Code != 1 {
 		t.Errorf("expected exit code 1, got: %d", cmdErr.Code)
+	}
+}
+
+func TestGraphDiffCommand(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping git-based graph diff test in short mode")
+	}
+
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(origDir) }()
+
+	tmpDir := t.TempDir()
+	_ = os.Chdir(tmpDir)
+
+	execRunner := process.NewExecRunner()
+	ctx := context.Background()
+
+	// Init git repo
+	_, err = execRunner.Run(ctx, tmpDir, "git", "init", "-b", "main")
+	if err != nil {
+		t.Fatalf("git init: %v", err)
+	}
+	_, _ = execRunner.Run(ctx, tmpDir, "git", "config", "user.name", "Test")
+	_, _ = execRunner.Run(ctx, tmpDir, "git", "config", "user.email", "test@example.com")
+
+	// Base commit
+	_ = os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte("module github.com/test/diffapp\n\ngo 1.22\n"), 0644)
+	_ = os.MkdirAll(filepath.Join(tmpDir, "internal/domain"), 0755)
+	_ = os.WriteFile(filepath.Join(tmpDir, "internal/domain/user.go"), []byte("package domain\ntype User struct{}\n"), 0644)
+
+	_, _ = execRunner.Run(ctx, tmpDir, "git", "add", ".")
+	_, _ = execRunner.Run(ctx, tmpDir, "git", "commit", "-m", "initial commit")
+
+	// Now add a new service package that imports domain
+	_ = os.MkdirAll(filepath.Join(tmpDir, "internal/service"), 0755)
+	_ = os.WriteFile(filepath.Join(tmpDir, "internal/service/user.go"), []byte(`package service
+import "github.com/test/diffapp/internal/domain"
+type Svc struct { U domain.User }
+`), 0644)
+
+	// Test graph --diff main in ascii format
+	buf := new(bytes.Buffer)
+	rootCmd := cli.NewRootCmdWithFS(filesystem.NewOSFileSystem(), execRunner)
+	rootCmd.SetOut(buf)
+	rootCmd.SetArgs([]string{"graph", tmpDir, "--diff", "main", "--format", "ascii"})
+
+	if err := rootCmd.Execute(); err != nil {
+		t.Fatalf("graph --diff main failed: %v", err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "Added Packages:") || !strings.Contains(out, "internal/service") {
+		t.Errorf("expected added internal/service in diff output:\n%s", out)
+	}
+
+	// Test graph --diff main in markdown format
+	mdBuf := new(bytes.Buffer)
+	mdCmd := cli.NewRootCmdWithFS(filesystem.NewOSFileSystem(), execRunner)
+	mdCmd.SetOut(mdBuf)
+	mdCmd.SetArgs([]string{"graph", tmpDir, "--diff", "main", "--format", "markdown"})
+
+	if err := mdCmd.Execute(); err != nil {
+		t.Fatalf("graph --diff main markdown failed: %v", err)
+	}
+
+	mdOut := mdBuf.String()
+	if !strings.Contains(mdOut, "Architecture Drift Report") || !strings.Contains(mdOut, "No new architectural violations introduced") {
+		t.Errorf("expected clean architecture report in markdown:\n%s", mdOut)
 	}
 }
