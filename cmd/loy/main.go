@@ -98,6 +98,9 @@ func outputDiagnostics(opts *cli.GlobalOptions, diags []*diagnostics.Diagnostic)
 	if opts.JSON {
 		formatter := &diagnostics.JSONFormatter{Indent: true}
 		_ = formatter.Format(os.Stderr, concrete)
+	} else if os.Getenv("GITHUB_ACTIONS") == "true" {
+		formatter := &diagnostics.GitHubWorkflowFormatter{}
+		_ = formatter.Format(os.Stderr, concrete)
 	} else {
 		formatter := &diagnostics.HumanFormatter{Color: !opts.NoColor}
 		_ = formatter.Format(os.Stderr, concrete)

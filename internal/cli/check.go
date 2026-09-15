@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/loy-go/loy/internal/architecture"
@@ -18,6 +19,7 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 	var (
 		deep   bool
 		strict bool
+		format string
 	)
 
 	cmd := &cobra.Command{
@@ -104,6 +106,10 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 				}
 			}
 
+			if format == "json" {
+				opts.JSON = true
+			}
+
 			var cmdDiags []*diagnostics.Diagnostic
 			for _, v := range violations {
 				d := v.ToDiagnostic()
@@ -111,6 +117,15 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 			}
 
 			if len(violations) > 0 {
+				if format == "github" && os.Getenv("GITHUB_ACTIONS") != "true" {
+					var concrete []diagnostics.Diagnostic
+					for _, d := range cmdDiags {
+						if d != nil {
+							concrete = append(concrete, *d)
+						}
+					}
+					_ = (&diagnostics.GitHubWorkflowFormatter{}).Format(cmd.OutOrStdout(), concrete)
+				}
 				return &CommandError{
 					Code:        1,
 					Diagnostics: cmdDiags,
@@ -119,6 +134,8 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 
 			if opts.JSON && len(violations) == 0 {
 				_ = (&diagnostics.JSONFormatter{Indent: true}).Format(cmd.OutOrStdout(), []diagnostics.Diagnostic{})
+			} else if format == "github" {
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "::notice::All architecture rules passed.")
 			} else if !opts.Quiet && !opts.JSON {
 				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "All architecture rules passed.")
 			}
@@ -129,6 +146,7 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 
 	cmd.Flags().BoolVar(&deep, "deep", false, "Run deep type analysis via go/packages")
 	cmd.Flags().BoolVar(&strict, "strict", false, "Treat all architectural warnings as fatal errors")
+	cmd.Flags().StringVar(&format, "format", "text", "Output format (text, json, github)")
 
 	return cmd
 }

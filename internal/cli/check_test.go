@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/loy-go/loy/internal/filesystem"
@@ -68,6 +70,36 @@ type User struct { R pg.Repo }
 		cmdErr, ok := err.(*CommandError)
 		if !ok || cmdErr.Code != 1 {
 			t.Fatalf("expected CommandError with exit code 1, got %v", err)
+		}
+	})
+
+	t.Run("check with format github outputs annotations", func(t *testing.T) {
+		memFS := filesystem.NewMemFileSystem()
+		runner := &dummyRunner{}
+
+		_ = memFS.MkdirAll("/ghproj/internal/domain/user", 0755)
+		_ = memFS.WriteFile("/ghproj/go.mod", []byte("module github.com/test/gh\n\ngo 1.22\n"), 0644)
+		_ = memFS.WriteFile("/ghproj/internal/domain/user/user.go", []byte(`package user
+import "github.com/test/gh/internal/repository/pg"
+type User struct { R pg.Repo }
+`), 0644)
+		_ = memFS.MkdirAll("/ghproj/internal/repository/pg", 0755)
+		_ = memFS.WriteFile("/ghproj/internal/repository/pg/pg.go", []byte("package pg\ntype Repo struct{}\n"), 0644)
+
+		outBuf := new(bytes.Buffer)
+		cmd := newCheckCmd(memFS, runner)
+		cmd.SetOut(outBuf)
+		cmd.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: false}))
+		cmd.SetArgs([]string{"/ghproj", "--format", "github"})
+
+		err := cmd.Execute()
+		if err == nil {
+			t.Fatalf("expected check to fail")
+		}
+
+		out := outBuf.String()
+		if !strings.Contains(out, "::error") || !strings.Contains(out, "title=LOY-ARCH-002") {
+			t.Errorf("expected ::error annotation with title in output, got: %s", out)
 		}
 	})
 }

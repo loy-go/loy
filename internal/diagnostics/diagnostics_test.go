@@ -98,6 +98,46 @@ func TestDiagnosticFormatting_HumanWithColor(t *testing.T) {
 	}
 }
 
+func TestDiagnosticFormatting_GitHubWorkflow(t *testing.T) {
+	d1 := diagnostics.NewError("LOY-ARCH-002", "domain imports infrastructure")
+	d1.File = "internal/domain/user.go"
+	d1.Line = 12
+	d1.Hint = "use interface inversion"
+
+	d2 := diagnostics.NewWarning("LOY-ARCH-009", "application imports web framework")
+
+	diags := []diagnostics.Diagnostic{d1, d2}
+	formatter := &diagnostics.GitHubWorkflowFormatter{}
+	var buf bytes.Buffer
+	if err := formatter.Format(&buf, diags); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	expectedErrLine := "::error file=internal/domain/user.go,line=12,title=LOY-ARCH-002::domain imports infrastructure (Hint: use interface inversion)\n"
+	expectedWarnLine := "::warning title=LOY-ARCH-009::application imports web framework\n"
+
+	if !strings.Contains(out, expectedErrLine) {
+		t.Errorf("expected:\n%s\ngot:\n%s", expectedErrLine, out)
+	}
+	if !strings.Contains(out, expectedWarnLine) {
+		t.Errorf("expected:\n%s\ngot:\n%s", expectedWarnLine, out)
+	}
+
+	// Test character escaping: newlines, %, colons, commas
+	dEscaped := diagnostics.NewError("CODE:1,2", "multiline\nmessage with % percent")
+	dEscaped.File = "path/to,file:name.go"
+	buf.Reset()
+	if err := formatter.Format(&buf, []diagnostics.Diagnostic{dEscaped}); err != nil {
+		t.Fatal(err)
+	}
+	escapedOut := buf.String()
+	expectedEscaped := "::error file=path/to%2Cfile%3Aname.go,title=CODE%3A1%2C2::multiline%0Amessage with %25 percent\n"
+	if !strings.Contains(escapedOut, expectedEscaped) {
+		t.Errorf("expected escaped line:\n%s\ngot:\n%s", expectedEscaped, escapedOut)
+	}
+}
+
 func TestDiagnostic_ErrorString(t *testing.T) {
 	dWithLoc := diagnostics.Diagnostic{
 		Code:    "E01",

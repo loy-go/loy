@@ -21,6 +21,59 @@ type Formatter interface {
 	Format(w io.Writer, diags []Diagnostic) error
 }
 
+// GitHubWorkflowFormatter renders GitHub Actions workflow commands (annotations).
+type GitHubWorkflowFormatter struct{}
+
+func escapeWorkflowData(s string) string {
+	s = strings.ReplaceAll(s, "%", "%25")
+	s = strings.ReplaceAll(s, "\r", "%0D")
+	return strings.ReplaceAll(s, "\n", "%0A")
+}
+
+func escapeWorkflowProperty(s string) string {
+	s = escapeWorkflowData(s)
+	s = strings.ReplaceAll(s, ":", "%3A")
+	return strings.ReplaceAll(s, ",", "%2C")
+}
+
+func (f *GitHubWorkflowFormatter) Format(w io.Writer, diags []Diagnostic) error {
+	for _, d := range diags {
+		cmdType := "error"
+		switch d.Severity {
+		case SeverityWarning:
+			cmdType = "warning"
+		case SeverityInfo:
+			cmdType = "notice"
+		}
+
+		var params []string
+		if d.File != "" {
+			params = append(params, fmt.Sprintf("file=%s", escapeWorkflowProperty(d.File)))
+		}
+		if d.Line > 0 {
+			params = append(params, fmt.Sprintf("line=%d", d.Line))
+		}
+		if d.Code != "" {
+			params = append(params, fmt.Sprintf("title=%s", escapeWorkflowProperty(d.Code)))
+		}
+
+		paramStr := ""
+		if len(params) > 0 {
+			paramStr = " " + strings.Join(params, ",")
+		}
+
+		msg := d.Message
+		if d.Hint != "" {
+			msg += fmt.Sprintf(" (Hint: %s)", d.Hint)
+		}
+
+		if _, err := fmt.Fprintf(w, "::%s%s::%s\n", cmdType, paramStr, escapeWorkflowData(msg)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // JSONFormatter serializes diagnostics to JSON.
 type JSONFormatter struct {
 	Indent bool
