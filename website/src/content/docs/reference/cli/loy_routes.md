@@ -3,7 +3,7 @@ title: "loy routes"
 description: "Inspect and list all registered HTTP and WebSocket routes"
 slug: reference/cli/loy-routes
 sidebar:
-  order: 45
+  order: 46
 ---
 
 

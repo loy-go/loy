@@ -60,6 +60,7 @@ The make command tree provides scaffolding for clean-architecture Go application
 * [loy make runtime](/loy/reference/cli/loy-make-runtime/)	 - Scaffold application runtime lifecycle, composition root, and health checks
 * [loy make seeder](/loy/reference/cli/loy-make-seeder/)	 - Scaffold database seeder fixture
 * [loy make service](/loy/reference/cli/loy-make-service/)	 - Scaffold application service use case
+* [loy make tenant](/loy/reference/cli/loy-make-tenant/)	 - Scaffold multi-tenancy context, RLS helper, and initial migration
 * [loy make test](/loy/reference/cli/loy-make-test/)	 - Scaffold unit and integration tests
 * [loy make view](/loy/reference/cli/loy-make-view/)	 - Scaffold Templ view component or page
 * [loy make ws](/loy/reference/cli/loy-make-ws/)	 - Scaffold WebSocket hub, client pumps, and protocol frames

@@ -3,7 +3,7 @@ title: "loy migrate status"
 description: "Dump the status of all migrations"
 slug: reference/cli/loy-migrate-status
 sidebar:
-  order: 41
+  order: 42
 ---
 
 

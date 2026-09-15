@@ -1,22 +1,22 @@
 ---
-title: "loy make ws"
-description: "Scaffold WebSocket hub, client pumps, and protocol frames"
-slug: reference/cli/loy-make-ws
+title: "loy make tenant"
+description: "Scaffold multi-tenancy context, RLS helper, and initial migration"
+slug: reference/cli/loy-make-tenant
 sidebar:
-  order: 36
+  order: 33
 ---
 
 
-Scaffold WebSocket hub, client pumps, and protocol frames
+Scaffold multi-tenancy context, RLS helper, and initial migration
 
 ```
-loy make ws <name> [fields...] [flags]
+loy make tenant <name> [fields...] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for ws
+  -h, --help   help for tenant
 ```
 
 ### Options inherited from parent commands

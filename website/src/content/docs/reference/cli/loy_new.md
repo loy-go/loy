@@ -3,7 +3,7 @@ title: "loy new"
 description: "Create a new Loy project with preset configuration"
 slug: reference/cli/loy-new
 sidebar:
-  order: 44
+  order: 45
 ---
 
 
@@ -23,7 +23,7 @@ loy new [project-name] [flags]
       --http string           HTTP adapter (fiber, chi, gin, nethttp, echo)
   -i, --interactive           Interactive project setup wizard
       --multi-tenant string   Multi-tenancy strategy (rls, column)
-  -p, --preset string         Preset template (api, fullstack, minimal, monorepo, web) (default "api")
+  -p, --preset string         Preset template (api, fullstack, minimal, monorepo, saas, web) (default "api")
       --queue string          Queue adapter (asynq, river, none)
 ```
 

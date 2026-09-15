@@ -3,7 +3,7 @@ title: "loy migrate create"
 description: "Create a new timestamped SQL migration file"
 slug: reference/cli/loy-migrate-create
 sidebar:
-  order: 37
+  order: 38
 ---
 
 
