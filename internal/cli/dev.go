@@ -20,6 +20,7 @@ func newDevCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 		debounce    time.Duration
 		gracePeriod time.Duration
 		apiOnly     bool
+		tui         bool
 	)
 
 	cmd := &cobra.Command{
@@ -65,13 +66,49 @@ func newDevCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 				NoColor:     cliOpts.NoColor,
 			}
 
+			ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
+
+			if tui {
+				tuiOpts := dev.TUIOptions{
+					ProjectName: rootDir,
+					Stdout:      cmd.OutOrStdout(),
+					Stdin:       cmd.InOrStdin(),
+					RefreshRate: 500 * time.Millisecond,
+					NoColor:     cliOpts.NoColor,
+				}
+				dashboard := dev.NewTUIDashboard(tuiOpts, nil)
+				sOpts.Stdout = dashboard
+
+				supervisor, err := dev.NewSupervisor(sOpts, fs)
+				if err != nil {
+					return fmt.Errorf("initializing dev supervisor: %w", err)
+				}
+				dashboard = dev.NewTUIDashboard(tuiOpts, supervisor)
+				// Re-point logger to dashboard so child outputs go to the TUI activity pane
+				sOpts.Stdout = dashboard
+
+				childCtx, cancel := context.WithCancel(ctx)
+				defer cancel()
+
+				supervisorErr := make(chan error, 1)
+				go func() {
+					supervisorErr <- supervisor.Run(childCtx)
+					cancel()
+				}()
+
+				_ = dashboard.Run(childCtx)
+				cancel()
+				if err := <-supervisorErr; err != nil && !errors.Is(err, context.Canceled) {
+					return err
+				}
+				return nil
+			}
+
 			supervisor, err := dev.NewSupervisor(sOpts, fs)
 			if err != nil {
 				return fmt.Errorf("initializing dev supervisor: %w", err)
 			}
-
-			ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
-			defer stop()
 
 			if err := supervisor.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
 				return err
@@ -83,6 +120,7 @@ func newDevCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 	cmd.Flags().DurationVar(&debounce, "debounce", 200*time.Millisecond, "File change debounce window")
 	cmd.Flags().DurationVar(&gracePeriod, "grace-period", 3*time.Second, "Grace period before sending SIGKILL")
 	cmd.Flags().BoolVar(&apiOnly, "api-only", false, "Run only the API server process")
+	cmd.Flags().BoolVar(&tui, "tui", false, "Start interactive full-terminal development dashboard")
 
 	return cmd
 }

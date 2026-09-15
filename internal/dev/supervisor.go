@@ -23,6 +23,7 @@ type Supervisor struct {
 	processes   []*ManagedProcess
 	gracePeriod time.Duration
 	mu          sync.Mutex
+	ctx         context.Context
 	stopped     bool
 }
 
@@ -220,6 +221,7 @@ func (s *Supervisor) stopProcesses() {
 // Run starts the supervisor, listens for file changes, and manages live restarts until context cancellation.
 func (s *Supervisor) Run(ctx context.Context) error {
 	s.mu.Lock()
+	s.ctx = ctx
 	if err := s.startProcesses(ctx); err != nil {
 		s.mu.Unlock()
 		return err
@@ -254,4 +256,21 @@ func (s *Supervisor) Run(ctx context.Context) error {
 			_ = s.startProcesses(ctx)
 		}
 	})
+}
+
+// RestartAll restarts all managed processes manually.
+func (s *Supervisor) RestartAll() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.stopped {
+		return nil
+	}
+	s.logger.LogLine("supervisor", "manual restart requested...")
+	s.stopProcesses()
+	ctx := s.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return s.startProcesses(ctx)
 }

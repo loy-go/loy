@@ -131,3 +131,18 @@ func (p *ManagedProcess) IsRunning() bool {
 	defer p.mu.Unlock()
 	return p.running
 }
+
+// PID returns the current process ID if running, or 0.
+func (p *ManagedProcess) PID() int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.cmd != nil && p.cmd.Process != nil && p.running {
+		return p.cmd.Process.Pid
+	}
+	return 0
+}
+
+// Task returns the process task definition.
+func (p *ManagedProcess) Task() ProcessTask {
+	return p.task
+}
