@@ -90,6 +90,7 @@ func NewRootCmdWithFS(fs filesystem.FileSystem, runner process.Runner) *cobra.Co
 	rootCmd.AddCommand(newSeedCmd(fs, runner))
 	rootCmd.AddCommand(newUpgradeCmd(fs, runner))
 	rootCmd.AddCommand(newPluginCmd(fs, runner))
+	rootCmd.AddCommand(newSelfUpdateCmd(fs, runner))
 	rootCmd.AddCommand(newCompletionCmd())
 
 	return rootCmd
