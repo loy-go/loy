@@ -1,22 +1,22 @@
 ---
-title: "loy version"
-description: "Print the Loy CLI version"
-slug: reference/cli/loy-version
+title: "loy plugin list"
+description: "List installed community plugins in the project"
+slug: reference/cli/loy-plugin-list
 sidebar:
-  order: 53
+  order: 48
 ---
 
 
-Print the Loy CLI version
+List installed community plugins in the project
 
 ```
-loy version [flags]
+loy plugin list [path] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for version
+  -h, --help   help for list
 ```
 
 ### Options inherited from parent commands
@@ -31,5 +31,5 @@ loy version [flags]
 
 ### SEE ALSO
 
-* [loy](/loy/reference/cli/loy/)	 - Loy — Go developer platform with Laravel-like DX
+* [loy plugin](/loy/reference/cli/loy-plugin/)	 - Manage and execute sandboxed external community plugins and generators
 
