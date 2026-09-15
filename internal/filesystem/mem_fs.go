@@ -221,6 +221,7 @@ func (m *MemFileSystem) Walk(root string, fn fs.WalkDirFunc) error {
 
 	sort.Strings(matchedPaths)
 	skipPrefix := ""
+	vol := filepath.VolumeName(root)
 	for _, p := range matchedPaths {
 		if skipPrefix != "" && strings.HasPrefix(p, skipPrefix) {
 			continue
@@ -231,7 +232,11 @@ func (m *MemFileSystem) Walk(root string, fn fs.WalkDirFunc) error {
 		if err != nil {
 			return err
 		}
-		if err := fn(p, memDirEntry{fi: st}, nil); err != nil {
+		callPath := p
+		if vol != "" {
+			callPath = filepath.FromSlash(vol + p)
+		}
+		if err := fn(callPath, memDirEntry{fi: st}, nil); err != nil {
 			if errors.Is(err, fs.SkipDir) {
 				if st.IsDir() {
 					skipPrefix = p

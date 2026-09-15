@@ -284,19 +284,14 @@ func (u *Updater) resolveAssets(rel *GitHubRelease) (*ReleaseInfo, error) {
 	}
 
 	// Archive name pattern: loy_<version>_<os>_<arch>.tar.gz (or .zip on windows)
-	// Example: loy_0.3.0_linux_amd64.tar.gz or loy_0.3.0_darwin_arm64.tar.gz
-	ext := ".tar.gz"
-	if u.goos == "windows" {
-		ext = ".zip"
-	}
-
-	targetSuffix := fmt.Sprintf("_%s_%s%s", u.goos, u.goarch, ext)
+	// Example: loy_0.3.0_linux_amd64.tar.gz or loy_0.3.0_windows_amd64.zip
+	targetSuffix := fmt.Sprintf("_%s_%s", u.goos, u.goarch)
 
 	for _, asset := range rel.Assets {
 		if asset.Name == "checksums.txt" {
 			info.ChecksumsURL = asset.BrowserDownloadURL
 		}
-		if strings.HasSuffix(asset.Name, targetSuffix) {
+		if (strings.HasSuffix(asset.Name, targetSuffix+".tar.gz") || strings.HasSuffix(asset.Name, targetSuffix+".zip")) && info.ArchiveURL == "" {
 			info.ArchiveName = asset.Name
 			info.ArchiveURL = asset.BrowserDownloadURL
 		}

@@ -59,7 +59,7 @@ func (m *Manager) List(ctx context.Context) ([]*PluginManifest, error) {
 		}
 		if d.IsDir() {
 			rel, err := filepath.Rel(dir, path)
-			if err == nil && rel != "." && strings.Count(rel, string(filepath.Separator)) > 0 {
+			if err == nil && rel != "." && strings.Count(filepath.ToSlash(rel), "/") > 0 {
 				return iofs.SkipDir
 			}
 			return nil
