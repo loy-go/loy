@@ -3,7 +3,7 @@ title: "loy seed"
 description: "Execute database seeders to populate development fixtures"
 slug: reference/cli/loy-seed
 sidebar:
-  order: 51
+  order: 52
 ---
 
 

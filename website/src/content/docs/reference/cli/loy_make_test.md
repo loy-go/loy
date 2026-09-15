@@ -3,7 +3,7 @@ title: "loy make test"
 description: "Scaffold unit and integration tests"
 slug: reference/cli/loy-make-test
 sidebar:
-  order: 34
+  order: 35
 ---
 
 

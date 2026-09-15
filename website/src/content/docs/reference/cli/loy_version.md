@@ -3,7 +3,7 @@ title: "loy version"
 description: "Print the Loy CLI version"
 slug: reference/cli/loy-version
 sidebar:
-  order: 53
+  order: 55
 ---
 
 

@@ -24,6 +24,7 @@ loy dev [path] [flags]
       --debounce duration       File change debounce window (default 200ms)
       --grace-period duration   Grace period before sending SIGKILL (default 3s)
   -h, --help                    help for dev
+      --tui                     Start interactive full-terminal development dashboard
 ```
 
 ### Options inherited from parent commands

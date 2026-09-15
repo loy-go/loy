@@ -3,7 +3,7 @@ title: "loy make resource"
 description: "Scaffold API response resource transformation"
 slug: reference/cli/loy-make-resource
 sidebar:
-  order: 29
+  order: 30
 ---
 
 

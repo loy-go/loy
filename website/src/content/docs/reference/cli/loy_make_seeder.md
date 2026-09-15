@@ -3,7 +3,7 @@ title: "loy make seeder"
 description: "Scaffold database seeder fixture"
 slug: reference/cli/loy-make-seeder
 sidebar:
-  order: 31
+  order: 32
 ---
 
 

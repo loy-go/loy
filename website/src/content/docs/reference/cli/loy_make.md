@@ -51,6 +51,7 @@ The make command tree provides scaffolding for clean-architecture Go application
 * [loy make job](/loy/reference/cli/loy-make-job/)	 - Scaffold Asynq background job payload & processor
 * [loy make k8s](/loy/reference/cli/loy-make-k8s/)	 - Scaffold cloud-native Kubernetes manifests (deploy/k8s/)
 * [loy make listener](/loy/reference/cli/loy-make-listener/)	 - Scaffold event listener consumer
+* [loy make metrics](/loy/reference/cli/loy-make-metrics/)	 - Scaffold Prometheus metrics recorder and Grafana dashboard
 * [loy make model](/loy/reference/cli/loy-make-model/)	 - Scaffold domain entity model
 * [loy make outbox](/loy/reference/cli/loy-make-outbox/)	 - Scaffold Transactional Outbox migration, store, and dispatcher
 * [loy make policy](/loy/reference/cli/loy-make-policy/)	 - Scaffold authorization policy checks

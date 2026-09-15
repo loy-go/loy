@@ -3,7 +3,7 @@ title: "loy make runtime"
 description: "Scaffold application runtime lifecycle, composition root, and health checks"
 slug: reference/cli/loy-make-runtime
 sidebar:
-  order: 30
+  order: 31
 ---
 
 
@@ -17,6 +17,7 @@ loy make runtime [flags]
 
 ```
       --db string     Database adapter to scaffold (postgres, sqlite, mysql, or none)
+      --grpc          Enable simultaneous dual-listener gRPC server on port 9090
   -h, --help          help for runtime
       --http string   HTTP framework to scaffold (fiber, chi, gin, or nethttp)
 ```

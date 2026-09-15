@@ -3,7 +3,7 @@ title: "loy plugin list"
 description: "List installed community plugins in the project"
 slug: reference/cli/loy-plugin-list
 sidebar:
-  order: 48
+  order: 49
 ---
 
 

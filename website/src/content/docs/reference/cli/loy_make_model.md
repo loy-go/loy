@@ -3,7 +3,7 @@ title: "loy make model"
 description: "Scaffold domain entity model"
 slug: reference/cli/loy-make-model
 sidebar:
-  order: 24
+  order: 25
 ---
 
 

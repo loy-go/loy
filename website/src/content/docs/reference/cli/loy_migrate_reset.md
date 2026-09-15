@@ -3,7 +3,7 @@ title: "loy migrate reset"
 description: "Roll back all database migrations"
 slug: reference/cli/loy-migrate-reset
 sidebar:
-  order: 41
+  order: 42
 ---
 
 

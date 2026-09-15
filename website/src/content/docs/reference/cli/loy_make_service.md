@@ -3,7 +3,7 @@ title: "loy make service"
 description: "Scaffold application service use case"
 slug: reference/cli/loy-make-service
 sidebar:
-  order: 32
+  order: 33
 ---
 
 

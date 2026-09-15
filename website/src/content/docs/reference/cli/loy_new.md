@@ -3,7 +3,7 @@ title: "loy new"
 description: "Create a new Loy project with preset configuration"
 slug: reference/cli/loy-new
 sidebar:
-  order: 45
+  order: 46
 ---
 
 

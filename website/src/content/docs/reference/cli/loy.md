@@ -40,6 +40,7 @@ Loy is an opinionated developer platform and CLI toolchain for Go, providing arc
 * [loy plugin](/loy/reference/cli/loy-plugin/)	 - Manage and execute sandboxed external community plugins and generators
 * [loy routes](/loy/reference/cli/loy-routes/)	 - Inspect and list all registered HTTP and WebSocket routes
 * [loy seed](/loy/reference/cli/loy-seed/)	 - Execute database seeders to populate development fixtures
+* [loy self-update](/loy/reference/cli/loy-self-update/)	 - Update the Loy CLI binary to the latest or specified release
 * [loy upgrade](/loy/reference/cli/loy-upgrade/)	 - Migrate project configuration and restore managed regions without touching domain logic
 * [loy version](/loy/reference/cli/loy-version/)	 - Print the Loy CLI version
 

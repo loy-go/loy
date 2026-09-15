@@ -3,7 +3,7 @@ title: "loy migrate redo"
 description: "Roll back the most recent migration and re-apply it"
 slug: reference/cli/loy-migrate-redo
 sidebar:
-  order: 40
+  order: 41
 ---
 
 
