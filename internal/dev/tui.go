@@ -60,6 +60,13 @@ func NewTUIDashboard(opts TUIOptions, s *Supervisor) *TUIDashboard {
 	}
 }
 
+// SetSupervisor associates the running supervisor with this dashboard.
+func (d *TUIDashboard) SetSupervisor(s *Supervisor) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.supervisor = s
+}
+
 // Write implements io.Writer to pipe subprocess logs into the rolling activity buffer.
 func (d *TUIDashboard) Write(p []byte) (n int, err error) {
 	lines := strings.Split(strings.TrimRight(string(p), "\n"), "\n")

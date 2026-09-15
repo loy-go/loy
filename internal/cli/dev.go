@@ -84,9 +84,7 @@ func newDevCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("initializing dev supervisor: %w", err)
 				}
-				dashboard = dev.NewTUIDashboard(tuiOpts, supervisor)
-				// Re-point logger to dashboard so child outputs go to the TUI activity pane
-				sOpts.Stdout = dashboard
+				dashboard.SetSupervisor(supervisor)
 
 				childCtx, cancel := context.WithCancel(ctx)
 				defer cancel()

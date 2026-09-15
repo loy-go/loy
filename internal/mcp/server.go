@@ -228,6 +228,9 @@ func (s *Server) sendResult(id any, result any) {
 }
 
 func (s *Server) sendError(id any, code int, message string) {
+	if id == nil && code != ParseError {
+		return // Do not respond to notifications on error per JSON-RPC 2.0 section 4.1
+	}
 	resp := JSONRPCResponse{
 		JSONRPC: "2.0",
 		ID:      id,

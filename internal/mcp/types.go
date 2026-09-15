@@ -15,7 +15,7 @@ type JSONRPCRequest struct {
 // JSONRPCResponse models an outgoing JSON-RPC 2.0 response.
 type JSONRPCResponse struct {
 	JSONRPC string        `json:"jsonrpc"`
-	ID      any           `json:"id,omitempty"`
+	ID      any           `json:"id"`
 	Result  any           `json:"result,omitempty"`
 	Error   *JSONRPCError `json:"error,omitempty"`
 }

@@ -302,6 +302,14 @@ func (s *Server) handleLoyMakeCRUD(ctx context.Context, args json.RawMessage) (*
 	if mData, err := s.fs.ReadFile(manifestPath); err == nil {
 		p := manifest.NewParser()
 		if m, diag := p.ParseStrict(manifestPath, mData); diag == nil && m != nil {
+			if m.MultiTenancy.Enabled {
+				genInput.Args["multi_tenant"] = "true"
+				strategy := m.MultiTenancy.Strategy
+				if strategy == "" {
+					strategy = "rls"
+				}
+				genInput.Args["tenant_strategy"] = strategy
+			}
 			if m.Defaults.HTTP != "" {
 				genInput.Args["http"] = m.Defaults.HTTP
 			}
@@ -445,14 +453,18 @@ func (s *Server) handleLoyMakeMigration(ctx context.Context, args json.RawMessag
 }
 
 func (s *Server) buildGraphModel(ctx context.Context, targetDir string) (*graph.GraphModel, error) {
+	return s.buildGraphModelWithFS(ctx, s.fs, targetDir)
+}
+
+func (s *Server) buildGraphModelWithFS(ctx context.Context, fs filesystem.FileSystem, targetDir string) (*graph.GraphModel, error) {
 	moduleName := ""
-	disc, err := discovery.NewDiscoverer(s.fs, s.runner)
+	disc, err := discovery.NewDiscoverer(fs, s.runner)
 	if err == nil {
 		discRes, diag := disc.Discover(ctx, targetDir)
 		if diag == nil && discRes != nil {
 			targetDir = discRes.RootDir
 			if discRes.HasGoMod {
-				if data, err := s.fs.ReadFile(discRes.GoModPath); err == nil {
+				if data, err := fs.ReadFile(discRes.GoModPath); err == nil {
 					if f, err := modfile.Parse(discRes.GoModPath, data, nil); err == nil && f.Module != nil {
 						moduleName = f.Module.Mod.Path
 					}
@@ -461,7 +473,7 @@ func (s *Server) buildGraphModel(ctx context.Context, targetDir string) (*graph.
 		}
 	}
 
-	analyzer := architecture.NewAnalyzer(s.fs, architecture.AnalyzerConfig{
+	analyzer := architecture.NewAnalyzer(fs, architecture.AnalyzerConfig{
 		ModuleName: moduleName,
 		RootDir:    targetDir,
 		Rules:      rules.DefaultRules(),
@@ -559,5 +571,5 @@ func (s *Server) buildBaseGraphModel(ctx context.Context, baseRef string) (*grap
 		}
 	}
 
-	return s.buildGraphModel(ctx, tmpBaseDir)
+	return s.buildGraphModelWithFS(ctx, filesystem.NewOSFileSystem(), tmpBaseDir)
 }
