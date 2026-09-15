@@ -1,0 +1,81 @@
+{
+  "name": "loy-vscode",
+  "displayName": "Loy Developer Platform",
+  "description": "Architecture boundary enforcement, live diagnostics, and CLI workflows for Go applications built with Loy.",
+  "version": "1.0.0",
+  "publisher": "loy-go",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Linters",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "go",
+    "golang",
+    "architecture",
+    "clean-architecture",
+    "linter"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:go",
+    "workspaceContains:loy.yaml"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "loy.check",
+        "title": "Loy: Check Architecture",
+        "category": "Loy"
+      },
+      {
+        "command": "loy.graph",
+        "title": "Loy: View Architecture Dependency Graph",
+        "category": "Loy"
+      },
+      {
+        "command": "loy.routes",
+        "title": "Loy: Inspect HTTP Routes",
+        "category": "Loy"
+      },
+      {
+        "command": "loy.dev",
+        "title": "Loy: Start Development Server",
+        "category": "Loy"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Loy Configuration",
+      "properties": {
+        "loy.path": {
+          "type": "string",
+          "default": "loy",
+          "scope": "machine",
+          "description": "Path to the loy binary (default: 'loy' on system PATH)."
+        },
+        "loy.checkOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically run 'loy check' on Go file save."
+        },
+        "loy.deepAnalysis": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable deep type analysis using go/packages during check."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  }
+}
