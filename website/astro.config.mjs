@@ -41,6 +41,26 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Component Best Practices',
+          items: [
+            { label: 'Best Practices Overview', slug: 'best-practices' },
+            { label: 'Domain Models & Entities', slug: 'best-practices/domain-and-models' },
+            { label: 'Repositories & Persistence', slug: 'best-practices/repositories-and-persistence' },
+            { label: 'Services & Use Cases', slug: 'best-practices/services-and-usecases' },
+            { label: 'Handlers & Transports', slug: 'best-practices/handlers-and-transports' },
+            { label: 'Request & Resource DTOs', slug: 'best-practices/dtos-and-validation' },
+            { label: 'Background Jobs & Workers', slug: 'best-practices/background-jobs-and-workers' },
+            { label: 'Domain Events & Listeners', slug: 'best-practices/events-and-listeners' },
+            { label: 'Authorization Policies & RBAC', slug: 'best-practices/policies-and-security' },
+            { label: 'Database Migrations & Seeders', slug: 'best-practices/migrations-and-seeding' },
+            { label: 'WebSockets & Streaming', slug: 'best-practices/websockets-and-streaming' },
+            { label: 'gRPC & Protocol Buffers', slug: 'best-practices/grpc-and-protobuf' },
+            { label: 'Transactional Outbox', slug: 'best-practices/transactional-outbox' },
+            { label: 'Composition Root Wiring', slug: 'best-practices/composition-root-wiring' },
+            { label: 'Architecture Enforcement in CI', slug: 'best-practices/architecture-enforcement' },
+          ],
+        },
+        {
           label: 'Recipes & Cookbooks',
           items: [
             { label: 'Overview & Catalog', slug: 'recipes' },
