@@ -272,6 +272,23 @@ func TestAtomicGenerators(t *testing.T) {
 		}
 	})
 
+	t.Run("tenant generator", func(t *testing.T) {
+		gen := builtin.NewTenantGenerator(mod).WithDatabase(true)
+		arts, err := gen.Generate(ctx, generator.Input{Name: "tenant"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(arts) != 2 {
+			t.Fatalf("expected 2 tenant artifacts, got %d", len(arts))
+		}
+		if arts[0].Path != "internal/platform/tenant/context.go" {
+			t.Errorf("expected tenant context.go, got: %s", arts[0].Path)
+		}
+		if arts[1].Path != "migrations/00001_init_tenancy.sql" {
+			t.Errorf("expected tenancy migration, got: %s", arts[1].Path)
+		}
+	})
+
 	t.Run("grpc generator", func(t *testing.T) {
 		gen := builtin.NewGRPCGenerator(mod)
 		arts, err := gen.Generate(ctx, generator.Input{Name: "candidate"})

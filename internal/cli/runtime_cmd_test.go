@@ -341,3 +341,51 @@ func TestNewProject_InteractiveWizard(t *testing.T) {
 		t.Errorf("expected sqlite.go from wizard choice")
 	}
 }
+
+func TestNewProject_SaaSPreset(t *testing.T) {
+	memFS := filesystem.NewMemFileSystem()
+	rootCmd := cli.NewRootCmdWithFS(memFS, nil)
+
+	rootCmd.SetArgs([]string{"new", "mysaas", "--preset", "saas"})
+	err := rootCmd.ExecuteContext(context.Background())
+	if err != nil {
+		t.Fatalf("loy new --preset saas failed: %v", err)
+	}
+
+	targetDir, _ := filesystem.CleanAndValidatePath(".", "mysaas")
+
+	// 1. Check loy.yaml has multi_tenancy
+	manifestBytes, err := memFS.ReadFile(targetDir + "/loy.yaml")
+	if err != nil {
+		t.Fatalf("reading loy.yaml: %v", err)
+	}
+	if !strings.Contains(string(manifestBytes), "multi_tenancy:") || !strings.Contains(string(manifestBytes), "strategy: rls") {
+		t.Errorf("expected multi_tenancy with rls strategy in loy.yaml:\n%s", string(manifestBytes))
+	}
+
+	// 2. Check auth platform files scaffolded
+	authFile := targetDir + "/internal/platform/auth/jwt.go"
+	if exists, _ := memFS.Exists(authFile); !exists {
+		t.Errorf("expected internal/platform/auth/jwt.go in saas preset")
+	}
+
+	// 3. Check tenant context and RLS helper scaffolded
+	tenantFile := targetDir + "/internal/platform/tenant/context.go"
+	tenantBytes, err := memFS.ReadFile(tenantFile)
+	if err != nil {
+		t.Fatalf("reading tenant/context.go: %v", err)
+	}
+	if !strings.Contains(string(tenantBytes), "SetLocalTenantRLS") {
+		t.Errorf("expected SetLocalTenantRLS in tenant/context.go")
+	}
+
+	// 4. Check initial tenancy migration scaffolded
+	migFile := targetDir + "/migrations/00001_init_tenancy.sql"
+	migBytes, err := memFS.ReadFile(migFile)
+	if err != nil {
+		t.Fatalf("reading 00001_init_tenancy.sql: %v", err)
+	}
+	if !strings.Contains(string(migBytes), "CREATE TABLE IF NOT EXISTS tenants") {
+		t.Errorf("expected CREATE TABLE IF NOT EXISTS tenants in migration")
+	}
+}

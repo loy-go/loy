@@ -121,6 +121,17 @@ func TestMakeCommand(t *testing.T) {
 		}
 	})
 
+	t.Run("make tenant", func(t *testing.T) {
+		out, err := executeMakeCommand(root, "make", "tenant", "tenant")
+		if err != nil {
+			t.Fatalf("make tenant failed: %v, out: %s", err, out)
+		}
+		tenantPath := filepath.Join(tempDir, "internal/platform/tenant/context.go")
+		if _, err := os.Stat(tenantPath); os.IsNotExist(err) {
+			t.Fatalf("expected file %s to exist, output: %s", tenantPath, out)
+		}
+	})
+
 	t.Run("make dry run", func(t *testing.T) {
 		out, err := executeMakeCommand(root, "make", "job", "email_sender", "--dry-run")
 		if err != nil {

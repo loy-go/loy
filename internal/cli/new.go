@@ -12,6 +12,7 @@ import (
 	"github.com/loy-go/loy/internal/generator"
 	"github.com/loy-go/loy/internal/generator/builtin"
 	"github.com/loy-go/loy/internal/generator/plan"
+	"github.com/loy-go/loy/internal/manifest"
 	"github.com/loy-go/loy/internal/preset"
 	"github.com/loy-go/loy/internal/process"
 )
@@ -150,11 +151,16 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 			goModPath, _ := filesystem.CleanAndValidatePath(targetDir, filepath.Join(targetDir, "go.mod"))
 			_ = fs.WriteFile(goModPath, fmt.Appendf(nil, "module %s\n\ngo 1.22\n", projectName), 0644)
 
+			if multiTenantOpt != "" {
+				p.MultiTenancy = &manifest.MultiTenancyConfig{
+					Enabled:   true,
+					Strategy:  multiTenantOpt,
+					TenantKey: "org_id",
+				}
+			}
+
 			manifestPath, _ := filesystem.CleanAndValidatePath(targetDir, filepath.Join(targetDir, "loy.yaml"))
 			yamlContent := p.MaterializeYAML(projectName)
-			if multiTenantOpt != "" {
-				yamlContent += fmt.Sprintf("\nmulti_tenancy:\n  enabled: true\n  strategy: %s\n", multiTenantOpt)
-			}
 			if err := fs.WriteFile(manifestPath, []byte(yamlContent), 0644); err != nil {
 				return fmt.Errorf("writing loy.yaml: %w", err)
 			}
@@ -183,6 +189,24 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("scaffolding runtime: %w", err)
 				}
+
+				if p.Name == "saas" || (p.MultiTenancy != nil && p.MultiTenancy.Enabled) {
+					if p.Name == "saas" {
+						authGen := builtin.NewAuthGenerator(projectName)
+						authArts, err := authGen.Generate(ctx, generator.Input{Name: "auth"})
+						if err != nil {
+							return fmt.Errorf("scaffolding auth: %w", err)
+						}
+						artifacts = append(artifacts, authArts...)
+					}
+					tenantGen := builtin.NewTenantGenerator(projectName).WithDatabase(dbDialect != "")
+					tenantArts, err := tenantGen.Generate(ctx, generator.Input{Name: "tenant"})
+					if err != nil {
+						return fmt.Errorf("scaffolding multi-tenancy: %w", err)
+					}
+					artifacts = append(artifacts, tenantArts...)
+				}
+
 				builder := plan.NewBuilder(fs)
 				runtimePlan, err := builder.Build(ctx, targetDir, artifacts, generator.Options{Force: force})
 				if err != nil {
@@ -210,7 +234,7 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&presetName, "preset", "p", "api", "Preset template (api, fullstack, minimal, monorepo, web)")
+	cmd.Flags().StringVarP(&presetName, "preset", "p", "api", "Preset template (api, fullstack, minimal, monorepo, saas, web)")
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Overwrite destination directory if exists")
 	cmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "Interactive project setup wizard")
 	cmd.Flags().StringVar(&httpOpt, "http", "", "HTTP adapter (fiber, chi, gin, nethttp, echo)")
@@ -262,7 +286,7 @@ func runInteractiveWizard(cmd *cobra.Command, initialName, defaultPreset, defaul
 	if defaultPreset == "" {
 		defaultPreset = "api"
 	}
-	_, _ = fmt.Fprintf(out, "Preset [api, fullstack, minimal, web, monorepo] [%s]: ", defaultPreset)
+	_, _ = fmt.Fprintf(out, "Preset [api, fullstack, minimal, saas, web, monorepo] [%s]: ", defaultPreset)
 	if line, err := reader.ReadString('\n'); err == nil {
 		line = strings.TrimSpace(line)
 		if line != "" {

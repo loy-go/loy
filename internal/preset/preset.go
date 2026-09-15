@@ -9,10 +9,11 @@ import (
 
 // Preset represents a concrete configuration template for a new or initialized project.
 type Preset struct {
-	Name        string
-	Description string
-	Defaults    manifest.DefaultsConfig
-	Workspace   *manifest.WorkspaceConfig
+	Name         string
+	Description  string
+	Defaults     manifest.DefaultsConfig
+	MultiTenancy *manifest.MultiTenancyConfig
+	Workspace    *manifest.WorkspaceConfig
 }
 
 // Manifest builds the typed manifest for a project.
@@ -21,6 +22,9 @@ func (p Preset) Manifest(projectName string) *manifest.Manifest {
 		Version:  1,
 		Project:  manifest.ProjectConfig{Name: projectName},
 		Defaults: p.Defaults,
+	}
+	if p.MultiTenancy != nil {
+		m.MultiTenancy = *p.MultiTenancy
 	}
 	if p.Workspace != nil {
 		m.Workspace = *p.Workspace
@@ -76,6 +80,19 @@ func (p Preset) MaterializeYAML(projectName string) string {
 		fmt.Fprintf(&b, "  assets: %s\n", p.Defaults.Assets)
 	}
 
+	if p.MultiTenancy != nil && p.MultiTenancy.Enabled {
+		b.WriteString("\nmulti_tenancy:\n")
+		b.WriteString("  enabled: true\n")
+		strategy := p.MultiTenancy.Strategy
+		if strategy == "" {
+			strategy = "rls"
+		}
+		fmt.Fprintf(&b, "  strategy: %s\n", strategy)
+		if p.MultiTenancy.TenantKey != "" {
+			fmt.Fprintf(&b, "  tenant_key: %s\n", p.MultiTenancy.TenantKey)
+		}
+	}
+
 	return b.String()
 }
 
@@ -105,6 +122,21 @@ func NewRegistry() *Registry {
 			Database: "postgres",
 			Cache:    "valkey",
 			Queue:    "asynq",
+		},
+	})
+	r.Register(Preset{
+		Name:        "saas",
+		Description: "Multi-tenant SaaS platform (PostgreSQL RLS, Auth/RBAC, Valkey, Asynq)",
+		Defaults: manifest.DefaultsConfig{
+			HTTP:     "fiber",
+			Database: "postgres",
+			Cache:    "valkey",
+			Queue:    "asynq",
+		},
+		MultiTenancy: &manifest.MultiTenancyConfig{
+			Enabled:   true,
+			Strategy:  "rls",
+			TenantKey: "org_id",
 		},
 	})
 	r.Register(Preset{
@@ -153,5 +185,5 @@ func (r *Registry) Get(name string) (Preset, bool) {
 
 // Names returns sorted names of available presets.
 func (r *Registry) Names() []string {
-	return []string{"api", "fullstack", "minimal", "monorepo", "web"}
+	return []string{"api", "fullstack", "minimal", "monorepo", "saas", "web"}
 }

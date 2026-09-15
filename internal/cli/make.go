@@ -92,6 +92,10 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 		return builtin.NewAuthGenerator(mod)
 	}, []string{}))
 
+	cmd.AddCommand(newArtifactCmd("tenant", "Scaffold multi-tenancy context, RLS helper, and initial migration", fs, runner, opts, func(mod string) generator.Generator {
+		return builtin.NewTenantGenerator(mod)
+	}, []string{}))
+
 	cmd.AddCommand(newArtifactCmd("grpc", "Scaffold Proto contract and gRPC transport server", fs, runner, opts, func(mod string) generator.Generator {
 		return builtin.NewGRPCGenerator(mod)
 	}, []string{}))

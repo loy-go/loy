@@ -10,8 +10,8 @@ import (
 func TestRegistry_Presets(t *testing.T) {
 	reg := preset.NewRegistry()
 	names := reg.Names()
-	if len(names) != 5 {
-		t.Fatalf("expected 5 presets, got %d", len(names))
+	if len(names) != 6 {
+		t.Fatalf("expected 6 presets, got %d", len(names))
 	}
 
 	parser := manifest.NewParser()
