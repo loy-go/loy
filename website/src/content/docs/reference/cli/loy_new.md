@@ -10,7 +10,7 @@ sidebar:
 Create a new Loy project with preset configuration
 
 ```
-loy new <project-name> [flags]
+loy new [project-name] [flags]
 ```
 
 ### Options
@@ -20,7 +20,8 @@ loy new <project-name> [flags]
       --db string             Database adapter (postgres, sqlite, mysql, none)
   -f, --force                 Overwrite destination directory if exists
   -h, --help                  help for new
-      --http string           HTTP adapter (fiber, chi, nethttp, echo)
+      --http string           HTTP adapter (fiber, chi, gin, nethttp, echo)
+  -i, --interactive           Interactive project setup wizard
       --multi-tenant string   Multi-tenancy strategy (rls, column)
   -p, --preset string         Preset template (api, fullstack, minimal, monorepo, web) (default "api")
       --queue string          Queue adapter (asynq, river, none)

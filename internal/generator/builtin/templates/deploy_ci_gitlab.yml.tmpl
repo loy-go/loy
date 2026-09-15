@@ -4,16 +4,21 @@ stages:
   - test
   - build
 
-{{if or .WithDatabase .WithCache}}services:
-  {{if .WithDatabase}}- postgres:16-alpine
-  {{end}}{{if .WithCache}}- valkey/valkey:7-alpine
+{{if or (and .WithDatabase (ne .DatabaseDialect "sqlite")) .WithCache}}services:
+  {{if .WithDatabase}}{{if eq .DatabaseDialect "mysql"}}- mysql:8.0
+  {{else if or (eq .DatabaseDialect "postgres") (eq .DatabaseDialect "")}}- postgres:16-alpine
+  {{end}}{{end}}{{if .WithCache}}- valkey/valkey:7-alpine
   {{end}}
-variables:
-  {{if .WithDatabase}}POSTGRES_USER: loy
+{{end}}{{if or .WithDatabase .WithCache}}variables:
+  {{if .WithDatabase}}{{if eq .DatabaseDialect "mysql"}}MYSQL_ROOT_PASSWORD: "root"
+  MYSQL_DATABASE: "{{.ProjectName}}_test"
+  DATABASE_URL: "root:root@tcp(mysql:3306)/{{.ProjectName}}_test?parseTime=true"
+  {{else if eq .DatabaseDialect "sqlite"}}DATABASE_URL: "file:memdb?mode=memory&cache=shared"
+  {{else}}POSTGRES_USER: loy
   POSTGRES_PASSWORD: loy_secret
   POSTGRES_DB: {{.ProjectName}}_test
   DATABASE_URL: "postgres://loy:loy_secret@postgres:5432/{{.ProjectName}}_test?sslmode=disable"
-  {{end}}{{if .WithCache}}VALKEY_ADDR: "valkey:6379"
+  {{end}}{{end}}{{if .WithCache}}VALKEY_ADDR: "valkey:6379"
   {{end}}
 {{end}}test:
   stage: test

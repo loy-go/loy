@@ -10,8 +10,20 @@ jobs:
   test:
     name: Test & Architecture Verification
     runs-on: ubuntu-latest
-    {{if or .WithDatabase .WithCache}}services:
-      {{if .WithDatabase}}postgres:
+    {{if or (and .WithDatabase (ne .DatabaseDialect "sqlite")) .WithCache}}services:
+      {{if .WithDatabase}}{{if eq .DatabaseDialect "mysql"}}mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: {{.ProjectName}}_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      {{else if or (eq .DatabaseDialect "postgres") (eq .DatabaseDialect "")}}postgres:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: loy
@@ -24,7 +36,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      {{end}}{{if .WithCache}}valkey:
+      {{end}}{{end}}{{if .WithCache}}valkey:
         image: valkey/valkey:7-alpine
         ports:
           - 6379:6379
@@ -51,14 +63,17 @@ jobs:
         run: go vet ./...
 
       - name: Verify architecture boundaries (loy check)
-        run: go run github.com/loy-go/loy/cmd/loy@latest check
+        run: go run github.com/loy-go/loy/cmd/loy@latest check --format github
 
       - name: Run test suite with race detector
         env:
           ENV: test
-          {{if .WithDatabase}}DATABASE_URL: postgres://loy:loy_secret@localhost:5432/{{.ProjectName}}_test?sslmode=disable
-          {{end}}{{if .WithCache}}VALKEY_ADDR: localhost:6379
-          {{end}}run: go test -v -race -cover ./...
+          {{if .WithDatabase}}{{if eq .DatabaseDialect "mysql"}}DATABASE_URL: root:root@tcp(localhost:3306)/{{.ProjectName}}_test?parseTime=true
+          {{else if eq .DatabaseDialect "sqlite"}}DATABASE_URL: file:memdb?mode=memory&cache=shared
+          {{else}}DATABASE_URL: postgres://loy:loy_secret@localhost:5432/{{.ProjectName}}_test?sslmode=disable
+          {{end}}{{end}}{{if .WithCache}}VALKEY_ADDR: localhost:6379
+          {{end}}
+        run: go test -v -race -cover ./...
 
       - name: Compile application binary
         run: go build -v ./...

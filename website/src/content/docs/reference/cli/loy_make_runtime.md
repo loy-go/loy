@@ -16,8 +16,9 @@ loy make runtime [flags]
 ### Options
 
 ```
+      --db string     Database adapter to scaffold (postgres, sqlite, mysql, or none)
   -h, --help          help for runtime
-      --http string   HTTP framework to scaffold (fiber or nethttp)
+      --http string   HTTP framework to scaffold (fiber, chi, gin, or nethttp)
 ```
 
 ### Options inherited from parent commands

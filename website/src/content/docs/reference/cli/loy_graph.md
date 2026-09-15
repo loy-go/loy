@@ -20,7 +20,8 @@ loy graph [path] [flags]
 ### Options
 
 ```
-  -f, --format string     Graph output format (ascii, dot, mermaid) (default "ascii")
+      --diff string       Compare architectural dependencies against git ref (e.g. main, origin/main)
+  -f, --format string     Graph output format (ascii, dot, mermaid, markdown) (default "ascii")
   -h, --help              help for graph
       --violations-only   Render only packages involved in architectural violations
 ```

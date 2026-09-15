@@ -12,31 +12,34 @@ import (
 
 // CIData holds parameters for CI pipeline generation.
 type CIData struct {
-	ModulePath   string
-	ProjectName  string
-	Provider     string // "github" or "gitlab"
-	WithDatabase bool
-	WithCache    bool
-	WithQueue    bool
+	ModulePath      string
+	ProjectName     string
+	Provider        string // "github" or "gitlab"
+	DatabaseDialect string // "postgres", "sqlite", "mysql"
+	WithDatabase    bool
+	WithCache       bool
+	WithQueue       bool
 }
 
 // CIGenerator scaffolds continuous integration workflows for GitHub Actions or GitLab CI.
 type CIGenerator struct {
-	modulePath   string
-	provider     string
-	withDatabase bool
-	withCache    bool
-	withQueue    bool
+	modulePath      string
+	provider        string
+	databaseDialect string
+	withDatabase    bool
+	withCache       bool
+	withQueue       bool
 }
 
 // NewCIGenerator constructs CIGenerator.
 func NewCIGenerator(modulePath string) *CIGenerator {
 	return &CIGenerator{
-		modulePath:   modulePath,
-		provider:     "github",
-		withDatabase: true,
-		withCache:    true,
-		withQueue:    true,
+		modulePath:      modulePath,
+		provider:        "github",
+		databaseDialect: "postgres",
+		withDatabase:    true,
+		withCache:       true,
+		withQueue:       true,
 	}
 }
 
@@ -44,6 +47,17 @@ func NewCIGenerator(modulePath string) *CIGenerator {
 func (g *CIGenerator) WithProvider(provider string) *CIGenerator {
 	if provider != "" {
 		g.provider = strings.ToLower(provider)
+	}
+	return g
+}
+
+// WithDatabaseDialect sets the database dialect ("postgres", "sqlite", "mysql", "none").
+func (g *CIGenerator) WithDatabaseDialect(dialect string) *CIGenerator {
+	if dialect != "" {
+		g.databaseDialect = dialect
+		if dialect == "none" {
+			g.withDatabase = false
+		}
 	}
 	return g
 }
@@ -75,7 +89,8 @@ func (g *CIGenerator) Generate(ctx context.Context, input generator.Input) ([]mo
 			provider = strings.ToLower(p)
 		}
 		if db, ok := input.Args["database"]; ok {
-			g.withDatabase = db == "true" || db == "1"
+			g.databaseDialect = db
+			g.withDatabase = db != "none" && db != "" && db != "false"
 		}
 		if c, ok := input.Args["cache"]; ok {
 			g.withCache = c == "true" || c == "1"
@@ -83,12 +98,13 @@ func (g *CIGenerator) Generate(ctx context.Context, input generator.Input) ([]mo
 	}
 
 	data := CIData{
-		ModulePath:   g.modulePath,
-		ProjectName:  strings.ToLower(projectName),
-		Provider:     provider,
-		WithDatabase: g.withDatabase,
-		WithCache:    g.withCache,
-		WithQueue:    g.withQueue,
+		ModulePath:      g.modulePath,
+		ProjectName:     strings.ToLower(projectName),
+		Provider:        provider,
+		DatabaseDialect: g.databaseDialect,
+		WithDatabase:    g.withDatabase,
+		WithCache:       g.withCache,
+		WithQueue:       g.withQueue,
 	}
 
 	renderer := GetRenderer()

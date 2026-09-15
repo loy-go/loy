@@ -20,9 +20,10 @@ loy check [path] [flags]
 ### Options
 
 ```
-      --deep     Run deep type analysis via go/packages
-  -h, --help     help for check
-      --strict   Treat all architectural warnings as fatal errors
+      --deep            Run deep type analysis via go/packages
+      --format string   Output format (text, json, github) (default "text")
+  -h, --help            help for check
+      --strict          Treat all architectural warnings as fatal errors
 ```
 
 ### Options inherited from parent commands

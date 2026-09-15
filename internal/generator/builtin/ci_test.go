@@ -67,4 +67,38 @@ func TestCIGenerator(t *testing.T) {
 			t.Errorf("missing golang image in gitlab ci:\n%s", content)
 		}
 	})
+
+	t.Run("mysql dialect in github actions", func(t *testing.T) {
+		gen := builtin.NewCIGenerator(mod).
+			WithDatabaseDialect("mysql").
+			WithCapabilities(true, false, false)
+		artifacts, err := gen.Generate(ctx, generator.Input{Name: "demoapp"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		content := string(artifacts[0].Content)
+		if !strings.Contains(content, "image: mysql:8.0") {
+			t.Errorf("expected mysql:8.0 in github actions:\n%s", content)
+		}
+		if !strings.Contains(content, "root:root@tcp(localhost:3306)") {
+			t.Errorf("expected mysql DATABASE_URL in github actions:\n%s", content)
+		}
+	})
+
+	t.Run("sqlite dialect in github actions", func(t *testing.T) {
+		gen := builtin.NewCIGenerator(mod).
+			WithDatabaseDialect("sqlite").
+			WithCapabilities(true, false, false)
+		artifacts, err := gen.Generate(ctx, generator.Input{Name: "demoapp"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		content := string(artifacts[0].Content)
+		if strings.Contains(content, "services:") {
+			t.Errorf("did not expect docker services for sqlite in github actions:\n%s", content)
+		}
+		if !strings.Contains(content, "DATABASE_URL: file:memdb?mode=memory&cache=shared") {
+			t.Errorf("expected sqlite memory DATABASE_URL in github actions:\n%s", content)
+		}
+	})
 }
