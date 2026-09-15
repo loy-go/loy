@@ -117,6 +117,19 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 			}
 
 			if len(violations) > 0 {
+				if format == "agent" {
+					var concrete []diagnostics.Diagnostic
+					for _, d := range cmdDiags {
+						if d != nil {
+							concrete = append(concrete, *d)
+						}
+					}
+					_ = (&diagnostics.AgentPromptFormatter{}).Format(cmd.OutOrStdout(), concrete)
+					return &CommandError{
+						Code:        1,
+						Diagnostics: nil,
+					}
+				}
 				if format == "github" && os.Getenv("GITHUB_ACTIONS") != "true" {
 					var concrete []diagnostics.Diagnostic
 					for _, d := range cmdDiags {
@@ -132,7 +145,9 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 				}
 			}
 
-			if opts.JSON && len(violations) == 0 {
+			if format == "agent" {
+				_ = (&diagnostics.AgentPromptFormatter{}).Format(cmd.OutOrStdout(), []diagnostics.Diagnostic{})
+			} else if opts.JSON && len(violations) == 0 {
 				_ = (&diagnostics.JSONFormatter{Indent: true}).Format(cmd.OutOrStdout(), []diagnostics.Diagnostic{})
 			} else if format == "github" {
 				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "::notice::All architecture rules passed.")
@@ -146,7 +161,7 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 
 	cmd.Flags().BoolVar(&deep, "deep", false, "Run deep type analysis via go/packages")
 	cmd.Flags().BoolVar(&strict, "strict", false, "Treat all architectural warnings as fatal errors")
-	cmd.Flags().StringVar(&format, "format", "text", "Output format (text, json, github)")
+	cmd.Flags().StringVar(&format, "format", "text", "Output format (text, json, github, agent)")
 
 	return cmd
 }

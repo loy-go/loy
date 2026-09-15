@@ -102,4 +102,57 @@ type User struct { R pg.Repo }
 			t.Errorf("expected ::error annotation with title in output, got: %s", out)
 		}
 	})
+
+	t.Run("check with format agent outputs self-healing prompt payload", func(t *testing.T) {
+		memFS := filesystem.NewMemFileSystem()
+		runner := &dummyRunner{}
+
+		_ = memFS.MkdirAll("/agentproj/internal/domain/order", 0755)
+		_ = memFS.WriteFile("/agentproj/go.mod", []byte("module github.com/test/agent\n\ngo 1.22\n"), 0644)
+		_ = memFS.WriteFile("/agentproj/internal/domain/order/order.go", []byte(`package order
+import "github.com/test/agent/internal/repository/pg"
+type Order struct { R pg.Repo }
+`), 0644)
+		_ = memFS.MkdirAll("/agentproj/internal/repository/pg", 0755)
+		_ = memFS.WriteFile("/agentproj/internal/repository/pg/pg.go", []byte("package pg\ntype Repo struct{}\n"), 0644)
+
+		outBuf := new(bytes.Buffer)
+		cmd := newCheckCmd(memFS, runner)
+		cmd.SetOut(outBuf)
+		cmd.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: false}))
+		cmd.SetArgs([]string{"/agentproj", "--format", "agent"})
+
+		err := cmd.Execute()
+		if err == nil {
+			t.Fatalf("expected check to fail with layer violation error")
+		}
+
+		out := outBuf.String()
+		if !strings.Contains(out, "LOY-ARCH-002") {
+			t.Errorf("expected LOY-ARCH-002 in agent output, got: %s", out)
+		}
+		if !strings.Contains(out, "invert_dependency") {
+			t.Errorf("expected invert_dependency action in agent output, got: %s", out)
+		}
+		if !strings.Contains(out, "OrderRepository") {
+			t.Errorf("expected OrderRepository in prompt, got: %s", out)
+		}
+
+		// Also test clean project with format agent
+		cleanBuf := new(bytes.Buffer)
+		cmdClean := newCheckCmd(memFS, runner)
+		cmdClean.SetOut(cleanBuf)
+		cmdClean.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: false}))
+		_ = memFS.MkdirAll("/cleanproj", 0755)
+		_ = memFS.WriteFile("/cleanproj/go.mod", []byte("module github.com/test/cleanagent\n\ngo 1.22\n"), 0644)
+		cmdClean.SetArgs([]string{"/cleanproj", "--format", "agent"})
+
+		cleanErr := cmdClean.Execute()
+		if cleanErr != nil {
+			t.Fatalf("expected clean check to pass, got: %v", cleanErr)
+		}
+		if strings.TrimSpace(cleanBuf.String()) != "[]" {
+			t.Errorf("expected empty json array for clean project, got: %q", cleanBuf.String())
+		}
+	})
 }
