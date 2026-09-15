@@ -41,6 +41,16 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Agentic & AI Platform',
+          items: [
+            { label: 'The Agent-Native Platform', slug: 'ai' },
+            { label: 'Model Context Protocol (MCP)', slug: 'ai/mcp-server' },
+            { label: 'Self-Healing Agent Loops', slug: 'ai/self-healing' },
+            { label: 'Universal Agent Rules', slug: 'ai/rules-generator' },
+            { label: 'Official VS Code Extension', slug: 'ai/vscode-extension' },
+          ],
+        },
+        {
           label: 'Component Best Practices',
           items: [
             { label: 'Best Practices Overview', slug: 'best-practices' },
@@ -79,8 +89,15 @@ export default defineConfig({
             { label: 'Building Vertical CRUD Slices', slug: 'guides/vertical-slice' },
             { label: 'Database Migrations & SQLC', slug: 'guides/database-migrations' },
             { label: 'Live Hot Reload Supervisor', slug: 'guides/live-reload' },
+            { label: 'Interactive Live TUI', slug: 'guides/interactive-tui' },
+            { label: 'Architecture Drift Diffing', slug: 'guides/architecture-drift' },
+            { label: 'Prometheus & Grafana Metrics', slug: 'guides/observability-metrics' },
+            { label: 'Community Plugins', slug: 'guides/plugin-system' },
             { label: 'Production Readiness Guide', slug: 'guides/production-readiness' },
             { label: 'Docker, K8s & Deployment', slug: 'guides/deployment' },
+            { label: 'HTTP Engine Benchmarks', slug: 'guides/http-benchmarks' },
+            { label: 'Migrating from Gin', slug: 'guides/migrating-from-gin' },
+            { label: 'Migrating from Laravel', slug: 'guides/migrating-from-laravel' },
           ],
         },
         {

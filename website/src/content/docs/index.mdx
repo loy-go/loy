@@ -1,9 +1,9 @@
 ---
 title: "Loy Developer Platform"
-description: "A build-time Go developer platform engineered for clean architecture, typed scaffolding, and zero runtime framework lock-in."
+description: "A build-time Go developer platform engineered for clean architecture, typed scaffolding, zero runtime framework lock-in, and agent-native AI workflows."
 template: splash
 hero:
-  tagline: "Build Laravel-like developer velocity in Go with ordinary, idiomatic code and zero runtime framework lock-in."
+  tagline: "Build Laravel-like developer velocity in Go with ordinary, idiomatic code, zero runtime framework lock-in, and a deterministic substrate for autonomous AI agents."
   image:
     file: ../../assets/hero.svg
   actions:
@@ -11,6 +11,10 @@ hero:
       link: /loy/start/quickstart/
       icon: right-arrow
       variant: primary
+    - text: Agent-Native Platform
+      link: /loy/ai/
+      icon: star
+      variant: secondary
     - text: GitHub Repository
       link: https://github.com/loy-go/loy
       icon: external
@@ -22,17 +26,23 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 ## Why Loy?
 
 <CardGrid stagger>
-  <Card title="Seams Over Components" icon="puzzle">
-    Loy standardizes the architectural wiring between battle-tested Go libraries (`pgx`, `fiber`, `asynq`, `goose`, `sqlc`, `otel`). We never build proprietary ORMs or web frameworks.
+  <Card title="Agent-Native Substrate" icon="laptop">
+    Built-in Model Context Protocol (`loy mcp`), automated self-healing feedback loops (`loy check --format agent`), and universal rule generation (`loy make agent-rules`) for Claude, Cursor, Copilot, and Windsurf.
   </Card>
   <Card title="Zero Runtime Lock-In" icon="rocket">
-    Generated applications are ordinary, compiled Go binaries. Your production apps never import `loy` or depend on proprietary framework runtimes.
+    Generated applications are ordinary, compiled Go binaries. Your production services never import `loy` or depend on proprietary framework runtimes.
   </Card>
-  <Card title="Explicit Wiring" icon="setting">
-    Zero reflection DI, zero magical runtime service locators. Dependencies are injected via standard Go constructors in `internal/app/wiring.go`.
+  <Card title="Seams Over Components" icon="puzzle">
+    Loy standardizes the architectural wiring between battle-tested Go libraries (`pgx`, `fiber`, `chi`, `asynq`, `goose`, `sqlc`, `otel`). No proprietary ORMs or web frameworks.
   </Card>
   <Card title="Automated Architecture Guard" icon="approve-check">
-    Enforce strict layer boundaries (`Transport -> Application -> Domain <- Infrastructure`) and prevent circular dependencies using `loy check`.
+    Enforce strict Clean Architecture layers (`Transport -> Application -> Domain <- Infrastructure`), prevent cyclic dependencies, and detect Git drift with `loy check` and `loy graph --diff`.
+  </Card>
+  <Card title="Interactive Live Dev TUI" icon="setting">
+    Supervise your Go API, background queue workers, and frontend bundlers simultaneously with hot reload in a visual full-terminal dashboard via `loy dev --tui`.
+  </Card>
+  <Card title="Turnkey Production Observability" icon="bars">
+    Generate Prometheus RED metrics, scrape endpoints, and turnkey Grafana dashboards out of the box with `loy make metrics`.
   </Card>
 </CardGrid>
 
@@ -44,16 +54,30 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 # 1. Install Loy CLI
 go install github.com/loy-go/loy/cmd/loy@latest
 
-# 2. Scaffold a new API service
-loy new myapp --preset api
+# 2. Scaffold a new API service with turnkey presets
+loy new myapp --preset api --http fiber --db postgres
 cd myapp
 
-# 3. Generate a full vertical CRUD slice
-loy make crud user name:string email:string:unique
+# 3. Generate a complete 4-layer vertical CRUD slice
+loy make crud user name:string email:string:unique role:string
 
-# 4. Verify architectural boundaries
+# 4. Enforce Clean Architecture invariants
 loy check
 
-# 5. Start live hot reload server
-loy dev
+# 5. Start the interactive multi-process live reload dashboard
+loy dev --tui
 ```
+
+---
+
+## The Loy Advantage Matrix
+
+| Requirement | Traditional Go | Heavy Frameworks (Buffalo, Beego) | **Loy Developer Platform** |
+|---|---|---|---|
+| **Runtime Dependency** | Standard Go | Heavy proprietary framework runtime | **Zero runtime lock-in** (compiled pure Go) |
+| **Dependency Injection** | Manual boilerplate | Dynamic reflection DI (`uber/dig`) | **Explicit constructor injection** in `wiring.go` |
+| **Architecture Enforcing** | Manual code reviews | None / Ad-hoc conventions | **Automated AST & type verification** (`loy check`) |
+| **AI Agent Support** | Hallucinated imports | No agent interfaces | **Native MCP server** & self-healing prompts |
+| **Persistence & Queries** | Repetitive SQL mapping | Proprietary ORMs | **Type-safe SQLC** + embedded Goose migrations |
+| **Observability** | Complex custom wiring | Partial or missing | **Turnkey Prometheus + Grafana dashboards** |
+| **Developer Experience** | Manual CLI tools | Monolithic commands | **Interactive TUI supervisor** + hot reload |
