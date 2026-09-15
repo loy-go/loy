@@ -5,23 +5,71 @@ description: "Comprehensive senior engineering guidelines and best practices for
 
 Loy is built around **Clean Architecture**, **Seams over Components** ([ADR-001](/loy/adrs/)), and **Explicit Constructor Injection** ([ADR-003](/loy/adrs/)).
 
-This guide details specific best practices, anti-patterns, and concrete code examples for every core Loy component.
+Rather than dictating an opinionated runtime, Loy standardizes the architectural wiring between mature Go libraries. To get the maximum advantage out of Loy, every layer and component should follow established Go engineering principles.
 
-## Component Index
+---
 
-| Component | Responsibility | Layer | Best Practices Guide |
+## The Mental Model: How Components Connect
+
+```text
+HTTP / gRPC Client
+       │
+       ▼
+1. Transport Handler (`internal/<feature>/transport`)
+   - Reads request DTOs (`request/`)
+   - Validates input format (regex, min/max, required)
+   - Translates DTO into domain entity
+       │
+       ▼
+2. Application Service (`internal/<feature>/service`)
+   - Evaluates authorization policies (`policy/`)
+   - Manages database transaction boundaries
+   - Executes domain rules on entities
+   - Emits domain events (`event/`)
+       │
+       ├──► Saves state via Repository Interface (`domain.Repository`)
+       │        │
+       │        ▼
+       │    3. Infrastructure Adapter (`internal/<feature>/repository`)
+       │       - Implements repository interface with SQL queries (`sqlc`/`pgx`)
+       │       - Handles PostgreSQL RLS tenant isolation
+       │       - Maps database errors to domain sentinel errors
+       │
+       └──► Enqueues async tasks (`job/`)
+                │
+                ▼
+            4. Background Worker Fleet (`cmd/worker`)
+               - Asynq queue processing
+               - Outbox event dispatching
+```
+
+---
+
+## Component Catalog & Deep Dives
+
+| Component | Layer | Purpose & Key Rule | Guide |
 |---|---|---|---|
-| **Domain Models & Entities** | Core business logic & state | Domain | [Domain & Models](./domain-and-models/) |
-| **Repositories & Adapters** | Data persistence & querying | Infrastructure | [Repositories & Persistence](./repositories-and-persistence/) |
-| **Application Services** | Use-case orchestration | Application | [Services & Use Cases](./services-and-usecases/) |
-| **Transport Handlers & Routing** | HTTP & Web protocol translation | Transport | [Handlers & Transports](./handlers-and-transports/) |
-| **Request & Resource DTOs** | Input validation & output mapping | Transport | [DTOs & Validation](./dtos-and-validation/) |
-| **Background Jobs & Tasks** | Asynchronous task execution | Application / Worker | [Jobs & Workers](./background-jobs-and-workers/) |
-| **Domain Events & Listeners** | Decoupled cross-context reactions | Domain / App | [Events & Listeners](./events-and-listeners/) |
-| **Authorization Policies & RBAC** | Declarative access control | Domain / App | [Policies & Security](./policies-and-security/) |
-| **Migrations & Seeders** | Schema evolution & fixture data | Infrastructure | [Migrations & Seeding](./migrations-and-seeding/) |
-| **WebSocket Hubs & Streams** | Real-time bidirectional streaming | Transport | [WebSockets & Streaming](./websockets-and-streaming/) |
-| **gRPC Services & Proto** | Binary RPC microservice contracts | Transport | [gRPC & Protocol Buffers](./grpc-and-protobuf/) |
-| **Transactional Outbox** | Reliable at-least-once event delivery | Infrastructure | [Transactional Outbox](./transactional-outbox/) |
-| **Composition Roots (Wiring)** | Dependency assembly | App | [Composition Root Wiring](./composition-root-wiring/) |
-| **Architecture Engine Guard** | Boundary & rule compliance | Meta / Toolchain | [Architecture Enforcement](./architecture-enforcement/) |
+| **Domain Models & Entities** | Domain | Pure Go structs representing business state. Zero external framework dependencies. | [Domain & Models](./domain-and-models/) |
+| **Repositories & Adapters** | Infrastructure | Database persistence implementing consumer-owned domain interfaces. Zero business logic. | [Repositories & Persistence](./repositories-and-persistence/) |
+| **Application Services** | Application | Coordinates business use cases. Accepts standard `context.Context`, never web types. | [Services & Use Cases](./services-and-usecases/) |
+| **Transport Handlers & Routing** | Transport | Translates external web requests. Never executes raw SQL queries directly. | [Handlers & Transports](./handlers-and-transports/) |
+| **Request & Resource DTOs** | Transport | Strongly typed input payloads and sanitized JSON response views. | [DTOs & Validation](./dtos-and-validation/) |
+| **Background Jobs & Tasks** | Worker | Asynchronous queue task definitions with automatic retries and dead-letter queues. | [Jobs & Workers](./background-jobs-and-workers/) |
+| **Domain Events & Listeners** | Domain / App | Decouples side-effects (e.g. sending emails when an order is created). | [Events & Listeners](./events-and-listeners/) |
+| **Authorization Policies & RBAC** | Domain / App | Declarative permission and role checks keeping authorization out of handlers. | [Policies & Security](./policies-and-security/) |
+| **Migrations & Seeders** | Infrastructure | Version-controlled SQL evolution and deterministic developer test fixtures. | [Migrations & Seeding](./migrations-and-seeding/) |
+| **WebSocket Hubs & Streams** | Transport | Real-time bidirectional streaming with dedicated read/write pumps. | [WebSockets & Streaming](./websockets-and-streaming/) |
+| **gRPC Services & Proto** | Transport | High-performance binary RPC contracts with dual HTTP/gRPC listening. | [gRPC & Protocol Buffers](./grpc-and-protobuf/) |
+| **Transactional Outbox** | Infrastructure | Guarantees at-least-once message delivery without distributed 2PC transactions. | [Transactional Outbox](./transactional-outbox/) |
+| **Composition Root (Wiring)** | Application | Assembles dependencies via standard Go constructors in `internal/app/wiring.go`. | [Composition Root Wiring](./composition-root-wiring/) |
+| **Architecture Enforcement** | Meta / Toolchain | Continuous AST verification ensuring code stays clean as teams scale. | [Architecture Enforcement](./architecture-enforcement/) |
+
+---
+
+## Core Guidelines for All Components
+
+1. **Accept Interfaces, Return Structs**: Functions and constructors accept narrow interfaces defined where they are consumed, and return concrete structs.
+2. **Consumer-Owned Interfaces**: Interfaces belong to the consuming package (e.g. `service` package defines the repository interface it needs), never the implementation package.
+3. **No Global State**: Package-level mutable variables (`var db *sql.DB`) are strictly forbidden. Always pass dependencies explicitly.
+4. **Wrap Internal Errors**: Always wrap lower-level errors with context using `%w`: `fmt.Errorf("finding candidate %d: %w", id, err)`.
+5. **Fail Fast at Construction**: Validate required dependencies inside constructor functions (`New...`) and return an error immediately if any dependency is `nil`.
