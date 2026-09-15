@@ -121,6 +121,20 @@ func (s *Splicer) ParseRegions(content []byte) (map[string]RegionInfo, error) {
 	return regions, nil
 }
 
+// ValidateRegions checks whether managed comment regions are valid, paired, and non-nested.
+// Returns a Diagnostic if regions are corrupted or incomplete, nil otherwise.
+func (s *Splicer) ValidateRegions(content []byte) *diagnostics.Diagnostic {
+	_, err := s.ParseRegions(content)
+	if err == nil {
+		return nil
+	}
+	if diag, ok := err.(*diagnostics.Diagnostic); ok {
+		return diag
+	}
+	d := diagnostics.NewError(diagnostics.CodeGenRegionCorrupt, err.Error())
+	return &d
+}
+
 // SpliceRegion inserts entry into target region in existingContent.
 // Idempotency: if trimmed entry line already exists inside region, returns content unchanged.
 // If isGoSource is true, runs go/format on output.

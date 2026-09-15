@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"go/ast"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/loy-go/loy/internal/architecture"
 	"github.com/loy-go/loy/internal/diagnostics"
+	"github.com/loy-go/loy/internal/generator/splicer"
 )
 
 // RuleArch011 flags service locator / DI container usage.
@@ -195,17 +197,39 @@ func extractApp(pkg string) string {
 	return ""
 }
 
-// RuleArch014 verifies generated artifact location/ownership.
-// Checks if generated loy files are located outside allowed generated regions/paths.
+// RuleArch014 verifies generated artifact location/ownership and managed comment region integrity.
+// Checks if generated loy files are located outside allowed generated regions/paths,
+// or if comment regions (// loy:region:... / // loy:endregion) were corrupted or deleted.
 type RuleArch014 struct{}
 
 func (r *RuleArch014) ID() string          { return "ARCH-014" }
-func (r *RuleArch014) Description() string { return "Generated code location and artifact ownership" }
+func (r *RuleArch014) Description() string { return "Generated code location, artifact ownership, and comment region integrity" }
 
 func (r *RuleArch014) Check(ctx context.Context, a *architecture.Analysis) []architecture.Violation {
 	var violations []architecture.Violation
+	sp := splicer.New()
 
 	for _, file := range a.Files {
+		// 1. Agent Validation Gate: Verify comment region integrity
+		if len(file.Content) > 0 && (bytes.Contains(file.Content, []byte("loy:region")) || bytes.Contains(file.Content, []byte("loy:endregion"))) {
+			if diag := sp.ValidateRegions(file.Content); diag != nil {
+				line := diag.Line
+				if line <= 0 {
+					line = 1
+				}
+				violations = append(violations, architecture.Violation{
+					RuleID:       r.ID(),
+					Code:         diagnostics.CodeArchArtifactOwnership,
+					Message:      fmt.Sprintf("corrupted managed comment region in %s: %s", file.Path, diag.Message),
+					Detail:       "managed comment regions (// loy:region:... and // loy:endregion) must be valid, closed, and non-nested",
+					Hint:         "restore missing comment region marker or run 'loy upgrade' to repair scaffolding",
+					File:         file.Path,
+					Line:         line,
+					Suppressible: false,
+				})
+			}
+		}
+
 		if file.AST == nil {
 			continue
 		}

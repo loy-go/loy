@@ -17,6 +17,7 @@ type FileAST struct {
 	AST      *ast.File
 	FileSet  *token.FileSet
 	Comments []*ast.CommentGroup
+	Content  []byte
 }
 
 // Analysis provides all extracted data to Architecture Rules.

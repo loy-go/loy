@@ -133,6 +133,7 @@ func (a *Analyzer) analyze(ctx context.Context) (*Analysis, map[string]Layer, []
 			AST:      fileAST,
 			FileSet:  fset,
 			Comments: fileAST.Comments,
+			Content:  data,
 		})
 
 		return nil

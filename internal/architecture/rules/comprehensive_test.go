@@ -4,6 +4,7 @@ import (
 	"context"
 	"go/parser"
 	"go/token"
+	"strings"
 	"testing"
 
 	"github.com/loy-go/loy/internal/architecture"
@@ -177,6 +178,31 @@ package domain
 		vs := r.Check(ctx, analysis)
 		if len(vs) != 1 || vs[0].RuleID != "ARCH-014" {
 			t.Fatalf("expected ARCH-014 violation, got: %+v", vs)
+		}
+	})
+
+	t.Run("ARCH-014 corrupted comment region", func(t *testing.T) {
+		src := `package service
+// loy:region:handlers
+func A() {}
+// Unclosed region marker!
+`
+		analysis := &architecture.Analysis{
+			Files: []*architecture.FileAST{
+				{
+					Path:    "internal/service/service.go",
+					Content: []byte(src),
+				},
+			},
+		}
+
+		r := &RuleArch014{}
+		vs := r.Check(ctx, analysis)
+		if len(vs) != 1 || vs[0].RuleID != "ARCH-014" {
+			t.Fatalf("expected ARCH-014 violation for unclosed region, got: %+v", vs)
+		}
+		if !strings.Contains(vs[0].Message, "unclosed region") {
+			t.Errorf("expected unclosed region message, got: %s", vs[0].Message)
 		}
 	})
 }
