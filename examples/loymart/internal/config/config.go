@@ -1,0 +1,45 @@
+package config
+
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/caarlos0/env/v11"
+)
+
+// Config defines application configuration mapped from environment variables.
+type Config struct {
+	Environment     string        `env:"APP_ENV" envDefault:"development"`
+	Port            int           `env:"PORT" envDefault:"8080"`
+	LogLevel        string        `env:"LOG_LEVEL" envDefault:"info"`
+	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"15s"`
+
+	DatabaseURL string `env:"DATABASE_URL" envDefault:"postgres://postgres:postgres@localhost:5432/app?sslmode=disable"`
+
+	DBMaxConns    int32         `env:"DB_MAX_CONNS" envDefault:"25"`
+	DBMinConns    int32         `env:"DB_MIN_CONNS" envDefault:"5"`
+	DBMaxConnLife time.Duration `env:"DB_MAX_CONN_LIFETIME" envDefault:"1h"`
+	DBMaxConnIdle time.Duration `env:"DB_MAX_CONN_IDLE_TIME" envDefault:"30m"`
+
+	RedisURL string `env:"REDIS_URL" envDefault:"localhost:6379"`
+}
+
+// Load parses environment variables into Config with defaults.
+func Load() (*Config, error) {
+	var cfg Config
+	if err := env.Parse(&cfg); err != nil {
+		return nil, fmt.Errorf("parsing config: %w", err)
+	}
+	if strings.ToLower(cfg.Environment) == "production" {
+
+		if strings.Contains(cfg.DatabaseURL, "sslmode=disable") {
+			return nil, fmt.Errorf("insecure database configuration: sslmode=disable is prohibited in production")
+		}
+		if strings.Contains(cfg.DatabaseURL, "postgres:postgres@") {
+			return nil, fmt.Errorf("insecure database configuration: default credentials prohibited in production")
+		}
+
+	}
+	return &cfg, nil
+}

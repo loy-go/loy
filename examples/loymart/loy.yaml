@@ -1,0 +1,17 @@
+# Loy project configuration
+# See https://loy.dev/docs for configuration details.
+version: 1
+
+project:
+  name: loymart
+
+defaults:
+  http: fiber
+  database: postgres
+  cache: valkey
+  queue: asynq
+
+multi_tenancy:
+  enabled: true
+  strategy: rls
+  tenant_key: org_id
