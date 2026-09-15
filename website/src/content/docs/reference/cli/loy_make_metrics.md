@@ -3,7 +3,7 @@ title: "loy make metrics"
 description: "Scaffold Prometheus metrics recorder and Grafana dashboard"
 slug: reference/cli/loy-make-metrics
 sidebar:
-  order: 24
+  order: 25
 ---
 
 

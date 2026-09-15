@@ -3,7 +3,7 @@ title: "loy make listener"
 description: "Scaffold event listener consumer"
 slug: reference/cli/loy-make-listener
 sidebar:
-  order: 23
+  order: 24
 ---
 
 

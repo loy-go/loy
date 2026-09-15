@@ -3,7 +3,7 @@ title: "loy make grpc"
 description: "Scaffold Proto contract and gRPC transport server"
 slug: reference/cli/loy-make-grpc
 sidebar:
-  order: 18
+  order: 19
 ---
 
 

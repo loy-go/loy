@@ -3,7 +3,7 @@ title: "loy migrate down"
 description: "Roll back the latest database migration batch (or to specific version)"
 slug: reference/cli/loy-migrate-down
 sidebar:
-  order: 40
+  order: 42
 ---
 
 

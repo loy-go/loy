@@ -38,6 +38,7 @@ The make command tree provides scaffolding for clean-architecture Go application
 ### SEE ALSO
 
 * [loy](/loy/reference/cli/loy/)	 - Loy — Go developer platform with Laravel-like DX
+* [loy make agent-rules](/loy/reference/cli/loy-make-agent-rules/)	 - Scaffold authoritative AI agent rules (Cursor, Claude, Copilot, Windsurf)
 * [loy make auth](/loy/reference/cli/loy-make-auth/)	 - Scaffold baseline JWT and password authentication kit
 * [loy make ci](/loy/reference/cli/loy-make-ci/)	 - Scaffold CI/CD pipeline workflow (GitHub Actions or GitLab CI)
 * [loy make crud](/loy/reference/cli/loy-make-crud/)	 - Scaffold full vertical CRUD slice (migration, queries, model, repo, service, handler, test, wiring)

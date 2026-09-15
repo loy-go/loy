@@ -3,7 +3,7 @@ title: "loy make k8s"
 description: "Scaffold cloud-native Kubernetes manifests (deploy/k8s/)"
 slug: reference/cli/loy-make-k8s
 sidebar:
-  order: 22
+  order: 23
 ---
 
 

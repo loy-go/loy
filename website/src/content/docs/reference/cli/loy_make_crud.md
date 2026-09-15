@@ -3,7 +3,7 @@ title: "loy make crud"
 description: "Scaffold full vertical CRUD slice (migration, queries, model, repo, service, handler, test, wiring)"
 slug: reference/cli/loy-make-crud
 sidebar:
-  order: 13
+  order: 14
 ---
 
 

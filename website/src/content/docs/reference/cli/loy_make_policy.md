@@ -3,7 +3,7 @@ title: "loy make policy"
 description: "Scaffold authorization policy checks"
 slug: reference/cli/loy-make-policy
 sidebar:
-  order: 27
+  order: 28
 ---
 
 

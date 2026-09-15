@@ -3,7 +3,7 @@ title: "loy make request"
 description: "Scaffold HTTP request DTO with validation"
 slug: reference/cli/loy-make-request
 sidebar:
-  order: 29
+  order: 30
 ---
 
 

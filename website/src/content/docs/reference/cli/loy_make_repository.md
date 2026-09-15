@@ -3,7 +3,7 @@ title: "loy make repository"
 description: "Scaffold domain repository interface & adapter"
 slug: reference/cli/loy-make-repository
 sidebar:
-  order: 28
+  order: 29
 ---
 
 

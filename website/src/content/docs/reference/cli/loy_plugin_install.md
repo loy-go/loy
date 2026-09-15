@@ -3,7 +3,7 @@ title: "loy plugin install"
 description: "Install a community plugin from a local directory or Git repository"
 slug: reference/cli/loy-plugin-install
 sidebar:
-  order: 48
+  order: 50
 ---
 
 

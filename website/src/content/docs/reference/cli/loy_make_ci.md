@@ -3,7 +3,7 @@ title: "loy make ci"
 description: "Scaffold CI/CD pipeline workflow (GitHub Actions or GitLab CI)"
 slug: reference/cli/loy-make-ci
 sidebar:
-  order: 12
+  order: 13
 ---
 
 

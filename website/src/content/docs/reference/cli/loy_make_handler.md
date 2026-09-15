@@ -3,7 +3,7 @@ title: "loy make handler"
 description: "Scaffold HTTP transport handler"
 slug: reference/cli/loy-make-handler
 sidebar:
-  order: 19
+  order: 20
 ---
 
 

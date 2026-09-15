@@ -3,7 +3,7 @@ title: "loy plugin"
 description: "Manage and execute sandboxed external community plugins and generators"
 slug: reference/cli/loy-plugin
 sidebar:
-  order: 47
+  order: 49
 ---
 
 

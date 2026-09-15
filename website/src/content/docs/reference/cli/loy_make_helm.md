@@ -3,7 +3,7 @@ title: "loy make helm"
 description: "Scaffold Helm chart for application (deploy/helm/<name>/)"
 slug: reference/cli/loy-make-helm
 sidebar:
-  order: 20
+  order: 21
 ---
 
 

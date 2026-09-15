@@ -3,7 +3,7 @@ title: "loy make deploy"
 description: "Scaffold production deployment assets (docker, k8s, helm, ci, or all)"
 slug: reference/cli/loy-make-deploy
 sidebar:
-  order: 14
+  order: 15
 ---
 
 

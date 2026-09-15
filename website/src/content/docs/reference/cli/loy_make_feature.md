@@ -3,7 +3,7 @@ title: "loy make feature"
 description: "Scaffold full vertical feature slice (model, repo, service, handler, test, wiring)"
 slug: reference/cli/loy-make-feature
 sidebar:
-  order: 17
+  order: 18
 ---
 
 

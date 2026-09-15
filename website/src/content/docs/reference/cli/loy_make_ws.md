@@ -3,7 +3,7 @@ title: "loy make ws"
 description: "Scaffold WebSocket hub, client pumps, and protocol frames"
 slug: reference/cli/loy-make-ws
 sidebar:
-  order: 37
+  order: 38
 ---
 
 

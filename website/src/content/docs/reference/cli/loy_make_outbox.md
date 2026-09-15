@@ -3,7 +3,7 @@ title: "loy make outbox"
 description: "Scaffold Transactional Outbox migration, store, and dispatcher"
 slug: reference/cli/loy-make-outbox
 sidebar:
-  order: 26
+  order: 27
 ---
 
 

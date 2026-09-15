@@ -3,7 +3,7 @@ title: "loy make docker"
 description: "Scaffold production multi-stage Dockerfile and docker-compose.yml"
 slug: reference/cli/loy-make-docker
 sidebar:
-  order: 15
+  order: 16
 ---
 
 

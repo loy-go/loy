@@ -3,7 +3,7 @@ title: "loy migrate version"
 description: "Print the current database migration version"
 slug: reference/cli/loy-migrate-version
 sidebar:
-  order: 45
+  order: 47
 ---
 
 

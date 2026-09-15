@@ -35,6 +35,7 @@ Loy is an opinionated developer platform and CLI toolchain for Go, providing arc
 * [loy hook](/loy/reference/cli/loy-hook/)	 - Manage Git lifecycle hooks for architecture enforcement
 * [loy init](/loy/reference/cli/loy-init/)	 - Initialize Loy configuration in an existing Go project
 * [loy make](/loy/reference/cli/loy-make/)	 - Scaffold application components, slices, and vertical features
+* [loy mcp](/loy/reference/cli/loy-mcp/)	 - Run the Model Context Protocol (MCP) server over standard I/O
 * [loy migrate](/loy/reference/cli/loy-migrate/)	 - Manage database schema migrations via embedded goose engine
 * [loy new](/loy/reference/cli/loy-new/)	 - Create a new Loy project with preset configuration
 * [loy plugin](/loy/reference/cli/loy-plugin/)	 - Manage and execute sandboxed external community plugins and generators

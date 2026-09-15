@@ -3,7 +3,7 @@ title: "loy upgrade"
 description: "Migrate project configuration and restore managed regions without touching domain logic"
 slug: reference/cli/loy-upgrade
 sidebar:
-  order: 54
+  order: 56
 ---
 
 

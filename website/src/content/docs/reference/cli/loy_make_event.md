@@ -3,7 +3,7 @@ title: "loy make event"
 description: "Scaffold domain event struct"
 slug: reference/cli/loy-make-event
 sidebar:
-  order: 16
+  order: 17
 ---
 
 

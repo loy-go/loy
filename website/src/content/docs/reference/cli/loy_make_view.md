@@ -3,7 +3,7 @@ title: "loy make view"
 description: "Scaffold Templ view component or page"
 slug: reference/cli/loy-make-view
 sidebar:
-  order: 36
+  order: 37
 ---
 
 

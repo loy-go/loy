@@ -1,22 +1,30 @@
 ---
-title: "loy make job"
-description: "Scaffold Asynq background job payload & processor"
-slug: reference/cli/loy-make-job
+title: "loy make agent-rules"
+description: "Scaffold authoritative AI agent rules (Cursor, Claude, Copilot, Windsurf)"
+slug: reference/cli/loy-make-agent-rules
 sidebar:
-  order: 22
+  order: 11
 ---
 
 
-Scaffold Asynq background job payload & processor
+Scaffold authoritative AI agent rules (Cursor, Claude, Copilot, Windsurf)
+
+### Synopsis
+
+loy make agent-rules scaffolds authoritative AI agent instruction documents
+enforcing Clean Architecture layer boundaries, managed comment region safety, and verification gates.
 
 ```
-loy make job <name> [fields...] [flags]
+loy make agent-rules [name] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for job
+      --client string   Alias for --target (default "all")
+      --for string      Alias for --target (default "all")
+  -h, --help            help for agent-rules
+      --target string   Target AI assistant (all, cursor, claude, copilot, windsurf) (default "all")
 ```
 
 ### Options inherited from parent commands
@@ -29,7 +37,6 @@ loy make job <name> [fields...] [flags]
       --modular            Scaffold sub-domain modular wiring file instead of flat wiring
       --no-color           Disable colored ANSI output
   -q, --quiet              Suppress non-essential output
-      --target string      Target application module in workspace
   -v, --verbose            Enable verbose/debug output
 ```
 

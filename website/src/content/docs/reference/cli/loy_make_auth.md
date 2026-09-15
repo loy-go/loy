@@ -3,7 +3,7 @@ title: "loy make auth"
 description: "Scaffold baseline JWT and password authentication kit"
 slug: reference/cli/loy-make-auth
 sidebar:
-  order: 11
+  order: 12
 ---
 
 

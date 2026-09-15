@@ -3,7 +3,7 @@ title: "loy make runtime"
 description: "Scaffold application runtime lifecycle, composition root, and health checks"
 slug: reference/cli/loy-make-runtime
 sidebar:
-  order: 31
+  order: 32
 ---
 
 

@@ -3,7 +3,7 @@ title: "loy make tenant"
 description: "Scaffold multi-tenancy context, RLS helper, and initial migration"
 slug: reference/cli/loy-make-tenant
 sidebar:
-  order: 34
+  order: 35
 ---
 
 
