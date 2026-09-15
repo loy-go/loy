@@ -1,0 +1,61 @@
+package metrics
+
+import (
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+var (
+	// HTTPRequestsTotal counts processed HTTP requests by method, route, and status code.
+	HTTPRequestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests processed partitioned by status code, method, and route template.",
+		},
+		[]string{"method", "route", "status"},
+	)
+
+	// HTTPRequestDuration tracks latency distribution of HTTP requests in seconds.
+	HTTPRequestDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_request_duration_seconds",
+			Help:    "Latency distribution of HTTP requests in seconds.",
+			Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
+		},
+		[]string{"method", "route", "status"},
+	)
+
+	// ActiveConnections tracks currently in-flight requests.
+	ActiveConnections = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "http_active_connections",
+			Help: "Current number of in-flight HTTP requests.",
+		},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(HTTPRequestsTotal)
+	prometheus.MustRegister(HTTPRequestDuration)
+	prometheus.MustRegister(ActiveConnections)
+}
+
+// RecordHTTPRequest records duration and increment counters for an HTTP response.
+// The route parameter should be a normalized route template (e.g. "/api/v1/users/:id") to prevent unbounded label cardinality.
+func RecordHTTPRequest(method, route string, status int, duration time.Duration) {
+	if route == "" {
+		route = "unknown"
+	}
+	statusStr := strconv.Itoa(status)
+	HTTPRequestsTotal.WithLabelValues(method, route, statusStr).Inc()
+	HTTPRequestDuration.WithLabelValues(method, route, statusStr).Observe(duration.Seconds())
+}
+
+// Handler returns the standard Prometheus HTTP handler for metrics scraping.
+func Handler() http.Handler {
+	return promhttp.Handler()
+}

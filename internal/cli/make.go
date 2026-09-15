@@ -96,6 +96,8 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 		return builtin.NewTenantGenerator(mod)
 	}, []string{}))
 
+	cmd.AddCommand(newMetricsCmd(fs, runner, opts))
+
 	cmd.AddCommand(newArtifactCmd("grpc", "Scaffold Proto contract and gRPC transport server", fs, runner, opts, func(mod string) generator.Generator {
 		return builtin.NewGRPCGenerator(mod)
 	}, []string{}))
@@ -152,10 +154,29 @@ func newArtifactCmd(name, short string, fs filesystem.FileSystem, runner process
 	return cmd
 }
 
+func newMetricsCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "metrics [name]",
+		Short: "Scaffold Prometheus metrics recorder and Grafana dashboard",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := ""
+			if len(args) > 0 {
+				name = args[0]
+			}
+			return runGenerator(cmd, fs, runner, opts, func(mod string) generator.Generator {
+				return builtin.NewMetricsGenerator(mod)
+			}, name, "", false)
+		},
+	}
+	return cmd
+}
+
 func newRuntimeCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
 	var (
 		httpFramework string
 		dbDialect     string
+		grpcEnabled   bool
 	)
 	cmd := &cobra.Command{
 		Use:   "runtime",
@@ -167,7 +188,7 @@ func newRuntimeCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOp
 				if fw == "" {
 					fw = "fiber"
 				}
-				gen := builtin.NewRuntimeGenerator(mod, fw)
+				gen := builtin.NewRuntimeGenerator(mod, fw).WithGRPC(grpcEnabled)
 				if dbDialect != "" {
 					gen.WithDatabaseDialect(dbDialect)
 				}
@@ -177,6 +198,7 @@ func newRuntimeCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOp
 	}
 	cmd.Flags().StringVar(&httpFramework, "http", "", "HTTP framework to scaffold (fiber, chi, gin, or nethttp)")
 	cmd.Flags().StringVar(&dbDialect, "db", "", "Database adapter to scaffold (postgres, sqlite, mysql, or none)")
+	cmd.Flags().BoolVar(&grpcEnabled, "grpc", false, "Enable simultaneous dual-listener gRPC server on port 9090")
 	return cmd
 }
 
@@ -338,6 +360,9 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 	}
 	if dbFlag := cmd.Flags().Lookup("db"); dbFlag != nil && dbFlag.Changed {
 		input.Args["database"] = dbFlag.Value.String()
+	}
+	if grpcFlag := cmd.Flags().Lookup("grpc"); grpcFlag != nil && grpcFlag.Changed {
+		input.Args["grpc"] = grpcFlag.Value.String()
 	}
 
 	artifacts, err := gen.Generate(ctx, input)

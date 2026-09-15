@@ -289,6 +289,26 @@ func TestAtomicGenerators(t *testing.T) {
 		}
 	})
 
+	t.Run("metrics generator", func(t *testing.T) {
+		gen := builtin.NewMetricsGenerator(mod)
+		arts, err := gen.Generate(ctx, generator.Input{Name: "app"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(arts) != 3 {
+			t.Fatalf("expected 3 metrics artifacts, got %d", len(arts))
+		}
+		if arts[0].Path != "internal/platform/metrics/metrics.go" {
+			t.Errorf("expected metrics.go, got: %s", arts[0].Path)
+		}
+		if arts[1].Path != "deploy/grafana/dashboard.json" {
+			t.Errorf("expected dashboard.json, got: %s", arts[1].Path)
+		}
+		if arts[2].Path != "deploy/prometheus/prometheus.yml" {
+			t.Errorf("expected prometheus.yml, got: %s", arts[2].Path)
+		}
+	})
+
 	t.Run("grpc generator", func(t *testing.T) {
 		gen := builtin.NewGRPCGenerator(mod)
 		arts, err := gen.Generate(ctx, generator.Input{Name: "candidate"})

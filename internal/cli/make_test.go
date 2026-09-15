@@ -132,6 +132,28 @@ func TestMakeCommand(t *testing.T) {
 		}
 	})
 
+	t.Run("make metrics", func(t *testing.T) {
+		out, err := executeMakeCommand(root, "make", "metrics", "app")
+		if err != nil {
+			t.Fatalf("make metrics failed: %v, out: %s", err, out)
+		}
+		metricsPath := filepath.Join(tempDir, "internal/platform/metrics/metrics.go")
+		if _, err := os.Stat(metricsPath); os.IsNotExist(err) {
+			t.Fatalf("expected file %s to exist, output: %s", metricsPath, out)
+		}
+		dashPath := filepath.Join(tempDir, "deploy/grafana/dashboard.json")
+		if _, err := os.Stat(dashPath); os.IsNotExist(err) {
+			t.Fatalf("expected file %s to exist, output: %s", dashPath, out)
+		}
+	})
+
+	t.Run("make metrics with no args", func(t *testing.T) {
+		out, err := executeMakeCommand(root, "make", "metrics", "--force")
+		if err != nil {
+			t.Fatalf("make metrics with no args failed: %v, out: %s", err, out)
+		}
+	})
+
 	t.Run("make dry run", func(t *testing.T) {
 		out, err := executeMakeCommand(root, "make", "job", "email_sender", "--dry-run")
 		if err != nil {
