@@ -149,7 +149,10 @@ func newArtifactCmd(name, short string, fs filesystem.FileSystem, runner process
 }
 
 func newRuntimeCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
-	var httpFramework string
+	var (
+		httpFramework string
+		dbDialect     string
+	)
 	cmd := &cobra.Command{
 		Use:   "runtime",
 		Short: "Scaffold application runtime lifecycle, composition root, and health checks",
@@ -160,11 +163,16 @@ func newRuntimeCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOp
 				if fw == "" {
 					fw = "fiber"
 				}
-				return builtin.NewRuntimeGenerator(mod, fw)
+				gen := builtin.NewRuntimeGenerator(mod, fw)
+				if dbDialect != "" {
+					gen.WithDatabaseDialect(dbDialect)
+				}
+				return gen
 			}, "runtime", "", false)
 		},
 	}
-	cmd.Flags().StringVar(&httpFramework, "http", "", "HTTP framework to scaffold (fiber or nethttp)")
+	cmd.Flags().StringVar(&httpFramework, "http", "", "HTTP framework to scaffold (fiber, chi, gin, or nethttp)")
+	cmd.Flags().StringVar(&dbDialect, "db", "", "Database adapter to scaffold (postgres, sqlite, mysql, or none)")
 	return cmd
 }
 
@@ -299,7 +307,7 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 		},
 	}
 
-	// Inspect loy.yaml in targetDir to populate manifest defaults (e.g. multi-tenancy)
+	// Inspect loy.yaml in targetDir to populate manifest defaults (e.g. multi-tenancy, http, database)
 	manifestPath := filepath.Join(targetDir, "loy.yaml")
 	if mData, err := fs.ReadFile(manifestPath); err == nil {
 		p := manifest.NewParser()
@@ -312,7 +320,20 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 				}
 				input.Args["tenant_strategy"] = strategy
 			}
+			if m.Defaults.HTTP != "" && input.Args["http"] == "" {
+				input.Args["http"] = m.Defaults.HTTP
+			}
+			if m.Defaults.Database != "" && input.Args["database"] == "" {
+				input.Args["database"] = m.Defaults.Database
+			}
 		}
+	}
+
+	if httpFlag := cmd.Flags().Lookup("http"); httpFlag != nil && httpFlag.Changed {
+		input.Args["http"] = httpFlag.Value.String()
+	}
+	if dbFlag := cmd.Flags().Lookup("db"); dbFlag != nil && dbFlag.Changed {
+		input.Args["database"] = dbFlag.Value.String()
 	}
 
 	artifacts, err := gen.Generate(ctx, input)
@@ -625,7 +646,8 @@ func newCICmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions
 			return runDeployArtifact(cmd, fs, runner, opts, func(mod string, man *manifest.Manifest) generator.Generator {
 				gen := builtin.NewCIGenerator(mod).WithProvider(provider)
 				if man != nil {
-					gen.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+					gen.WithCapabilities(man.Defaults.Database != "" && man.Defaults.Database != "none", man.Defaults.Cache != "" && man.Defaults.Cache != "none", man.Defaults.Queue != "" && man.Defaults.Queue != "none")
+					gen.WithDatabaseDialect(man.Defaults.Database)
 				}
 				return gen
 			}, name)
@@ -699,7 +721,8 @@ func newDeployCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOpt
 				generators = append(generators, func(mod string, man *manifest.Manifest) generator.Generator {
 					g := builtin.NewCIGenerator(mod).WithProvider(ciProvider)
 					if man != nil {
-						g.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+						g.WithCapabilities(man.Defaults.Database != "" && man.Defaults.Database != "none", man.Defaults.Cache != "" && man.Defaults.Cache != "none", man.Defaults.Queue != "" && man.Defaults.Queue != "none")
+						g.WithDatabaseDialect(man.Defaults.Database)
 					}
 					return g
 				})
@@ -738,7 +761,8 @@ func newDeployCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOpt
 					func(mod string, man *manifest.Manifest) generator.Generator {
 						g := builtin.NewCIGenerator(mod).WithProvider(ciProvider)
 						if man != nil {
-							g.WithCapabilities(man.Defaults.Database != "", man.Defaults.Cache != "", man.Defaults.Queue != "")
+							g.WithCapabilities(man.Defaults.Database != "" && man.Defaults.Database != "none", man.Defaults.Cache != "" && man.Defaults.Cache != "none", man.Defaults.Queue != "" && man.Defaults.Queue != "none")
+							g.WithDatabaseDialect(man.Defaults.Database)
 						}
 						return g
 					},

@@ -11,29 +11,31 @@ import (
 
 // RuntimeData holds template values for runtime application scaffolding.
 type RuntimeData struct {
-	ModulePath    string
-	ProjectName   string
-	HTTPFramework string // "fiber" or "nethttp"
-	WithDatabase  bool
-	WithCache     bool
-	WithQueue     bool
-	WithTelemetry bool
-	Template      string // e.g. "templ"
-	Assets        string // e.g. "vite"
-	Entrypoint    string // "api" or "web"
+	ModulePath      string
+	ProjectName     string
+	HTTPFramework   string // "fiber", "chi", or "nethttp"
+	DatabaseDialect string // "postgres", "sqlite", "mysql"
+	WithDatabase    bool
+	WithCache       bool
+	WithQueue       bool
+	WithTelemetry   bool
+	Template        string // e.g. "templ"
+	Assets          string // e.g. "vite"
+	Entrypoint      string // "api" or "web"
 }
 
 // RuntimeGenerator scaffolds standard composition root, lifecycle coordinator, config and platform tools.
 type RuntimeGenerator struct {
-	modulePath    string
-	httpFramework string
-	withDatabase  bool
-	withCache     bool
-	withQueue     bool
-	withTelemetry bool
-	template      string
-	assets        string
-	entrypoint    string
+	modulePath      string
+	httpFramework   string
+	databaseDialect string
+	withDatabase    bool
+	withCache       bool
+	withQueue       bool
+	withTelemetry   bool
+	template        string
+	assets          string
+	entrypoint      string
 }
 
 // NewRuntimeGenerator creates a RuntimeGenerator.
@@ -42,14 +44,34 @@ func NewRuntimeGenerator(modulePath, httpFramework string) *RuntimeGenerator {
 		httpFramework = "fiber"
 	}
 	return &RuntimeGenerator{
-		modulePath:    modulePath,
-		httpFramework: httpFramework,
-		withDatabase:  true,
-		withCache:     true,
-		withQueue:     true,
-		withTelemetry: true,
-		entrypoint:    "api",
+		modulePath:      modulePath,
+		httpFramework:   httpFramework,
+		databaseDialect: "postgres",
+		withDatabase:    true,
+		withCache:       true,
+		withQueue:       true,
+		withTelemetry:   true,
+		entrypoint:      "api",
 	}
+}
+
+// WithDatabaseDialect configures the database dialect (e.g. "postgres", "sqlite", "mysql", "none").
+func (g *RuntimeGenerator) WithDatabaseDialect(dialect string) *RuntimeGenerator {
+	if dialect != "" {
+		g.databaseDialect = dialect
+		if dialect == "none" {
+			g.withDatabase = false
+		}
+	}
+	return g
+}
+
+// WithHTTPFramework sets the HTTP transport framework (fiber, chi, nethttp).
+func (g *RuntimeGenerator) WithHTTPFramework(fw string) *RuntimeGenerator {
+	if fw != "" {
+		g.httpFramework = fw
+	}
+	return g
 }
 
 // WithCapabilities configures optional capability toggles.
@@ -88,6 +110,22 @@ func (g *RuntimeGenerator) Description() string {
 }
 
 func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) ([]model.Artifact, error) {
+	if input.Args != nil {
+		if fw := input.Args["http"]; fw != "" {
+			g.httpFramework = fw
+		}
+		if db := input.Args["database"]; db != "" {
+			g.databaseDialect = db
+			if db == "none" {
+				g.withDatabase = false
+			}
+		}
+	}
+
+	if g.databaseDialect == "none" {
+		g.withDatabase = false
+	}
+
 	projectName := filepath.Base(g.modulePath)
 	if projectName == "." || projectName == "/" || projectName == "" {
 		projectName = "myapp"
@@ -98,17 +136,23 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 		entrypoint = "api"
 	}
 
+	dialect := g.databaseDialect
+	if dialect == "" {
+		dialect = "postgres"
+	}
+
 	data := RuntimeData{
-		ModulePath:    g.modulePath,
-		ProjectName:   projectName,
-		HTTPFramework: g.httpFramework,
-		WithDatabase:  g.withDatabase,
-		WithCache:     g.withCache,
-		WithQueue:     g.withQueue,
-		WithTelemetry: g.withTelemetry,
-		Template:      g.template,
-		Assets:        g.assets,
-		Entrypoint:    entrypoint,
+		ModulePath:      g.modulePath,
+		ProjectName:     projectName,
+		HTTPFramework:   g.httpFramework,
+		DatabaseDialect: dialect,
+		WithDatabase:    g.withDatabase,
+		WithCache:       g.withCache,
+		WithQueue:       g.withQueue,
+		WithTelemetry:   g.withTelemetry,
+		Template:        g.template,
+		Assets:          g.assets,
+		Entrypoint:      entrypoint,
 	}
 
 	renderer := GetRenderer()
@@ -235,20 +279,55 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 
 	// 8. Conditionally add platform integration templates
 	if g.withDatabase {
-		pgTmpl, err := ReadTemplate("platform_postgres.go.tmpl")
-		if err != nil {
-			return nil, fmt.Errorf("reading platform_postgres template: %w", err)
+		var dbArtifact model.Artifact
+		switch dialect {
+		case "sqlite":
+			sqTmpl, err := ReadTemplate("platform_sqlite.go.tmpl")
+			if err != nil {
+				return nil, fmt.Errorf("reading platform_sqlite template: %w", err)
+			}
+			sqContent, err := renderer.RenderGo(ctx, "platform_sqlite", sqTmpl, data)
+			if err != nil {
+				return nil, fmt.Errorf("rendering platform_sqlite: %w", err)
+			}
+			dbArtifact = model.Artifact{
+				Path:        "internal/platform/database/sqlite.go",
+				Ownership:   model.DeveloperOwned,
+				Permissions: 0644,
+				Content:     sqContent,
+			}
+		case "mysql":
+			myTmpl, err := ReadTemplate("platform_mysql.go.tmpl")
+			if err != nil {
+				return nil, fmt.Errorf("reading platform_mysql template: %w", err)
+			}
+			myContent, err := renderer.RenderGo(ctx, "platform_mysql", myTmpl, data)
+			if err != nil {
+				return nil, fmt.Errorf("rendering platform_mysql: %w", err)
+			}
+			dbArtifact = model.Artifact{
+				Path:        "internal/platform/database/mysql.go",
+				Ownership:   model.DeveloperOwned,
+				Permissions: 0644,
+				Content:     myContent,
+			}
+		default: // "postgres"
+			pgTmpl, err := ReadTemplate("platform_postgres.go.tmpl")
+			if err != nil {
+				return nil, fmt.Errorf("reading platform_postgres template: %w", err)
+			}
+			pgContent, err := renderer.RenderGo(ctx, "platform_postgres", pgTmpl, data)
+			if err != nil {
+				return nil, fmt.Errorf("rendering platform_postgres: %w", err)
+			}
+			dbArtifact = model.Artifact{
+				Path:        "internal/platform/database/postgres.go",
+				Ownership:   model.DeveloperOwned,
+				Permissions: 0644,
+				Content:     pgContent,
+			}
 		}
-		pgContent, err := renderer.RenderGo(ctx, "platform_postgres", pgTmpl, data)
-		if err != nil {
-			return nil, fmt.Errorf("rendering platform_postgres: %w", err)
-		}
-		artifacts = append(artifacts, model.Artifact{
-			Path:        "internal/platform/database/postgres.go",
-			Ownership:   model.DeveloperOwned,
-			Permissions: 0644,
-			Content:     pgContent,
-		})
+		artifacts = append(artifacts, dbArtifact)
 	}
 
 	if g.withCache {
@@ -332,20 +411,32 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 		})
 	}
 
-	if g.httpFramework == "fiber" {
-		fiberTmpl, err := ReadTemplate("transport_fiber.go.tmpl")
+	var transportTmplName string
+	switch g.httpFramework {
+	case "fiber":
+		transportTmplName = "transport_fiber.go.tmpl"
+	case "chi":
+		transportTmplName = "transport_chi.go.tmpl"
+	case "gin":
+		transportTmplName = "transport_gin.go.tmpl"
+	case "nethttp":
+		transportTmplName = "transport_nethttp.go.tmpl"
+	}
+
+	if transportTmplName != "" {
+		tmpl, err := ReadTemplate(transportTmplName)
 		if err != nil {
-			return nil, fmt.Errorf("reading transport_fiber template: %w", err)
+			return nil, fmt.Errorf("reading %s template: %w", transportTmplName, err)
 		}
-		fiberContent, err := renderer.RenderGo(ctx, "transport_fiber", fiberTmpl, data)
+		content, err := renderer.RenderGo(ctx, transportTmplName, tmpl, data)
 		if err != nil {
-			return nil, fmt.Errorf("rendering transport_fiber: %w", err)
+			return nil, fmt.Errorf("rendering %s: %w", transportTmplName, err)
 		}
 		artifacts = append(artifacts, model.Artifact{
 			Path:        "internal/transport/http/server.go",
 			Ownership:   model.DeveloperOwned,
 			Permissions: 0644,
-			Content:     fiberContent,
+			Content:     content,
 		})
 	}
 

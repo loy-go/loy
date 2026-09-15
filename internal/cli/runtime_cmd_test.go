@@ -63,7 +63,7 @@ func TestMakeRuntimeCommand(t *testing.T) {
 	_ = memFS.WriteFile(filepath.Join(tmpDir, "loy.yaml"), []byte("version: 1\nproject:\n  name: workspace\n"), 0644)
 
 	rootCmd := cli.NewRootCmdWithFS(memFS, nil)
-	rootCmd.SetArgs([]string{"make", "runtime", "--http", "nethttp", "-C", tmpDir})
+	rootCmd.SetArgs([]string{"make", "runtime", "--http", "nethttp", "--db", "sqlite", "-C", tmpDir})
 	err = rootCmd.ExecuteContext(context.Background())
 	if err != nil {
 		t.Fatalf("loy make runtime failed: %v", err)
@@ -78,6 +78,28 @@ func TestMakeRuntimeCommand(t *testing.T) {
 	content, _ := memFS.ReadFile(appFile)
 	if !strings.Contains(string(content), "http.ServeMux") {
 		t.Errorf("expected net/http server in app.go")
+	}
+
+	sqliteFile := filepath.Join(tmpDir, "internal", "platform", "database", "sqlite.go")
+	if sqExists, _ := memFS.Exists(sqliteFile); !sqExists {
+		t.Errorf("expected sqlite.go to be generated via make runtime --db sqlite")
+	}
+
+	// Test make runtime with --db none
+	tmpDirNone := t.TempDir()
+	_ = memFS.MkdirAll(tmpDirNone, 0755)
+	_ = memFS.WriteFile(filepath.Join(tmpDirNone, "go.mod"), []byte("module github.com/test/nonedb\n\ngo 1.22\n"), 0644)
+	_ = memFS.WriteFile(filepath.Join(tmpDirNone, "loy.yaml"), []byte("version: 1\nproject:\n  name: nonedb\n"), 0644)
+
+	rootCmdNone := cli.NewRootCmdWithFS(memFS, nil)
+	rootCmdNone.SetArgs([]string{"make", "runtime", "--http", "fiber", "--db", "none", "-C", tmpDirNone, "--force"})
+	if err := rootCmdNone.ExecuteContext(context.Background()); err != nil {
+		t.Fatalf("loy make runtime --db none failed: %v", err)
+	}
+
+	pgFile := filepath.Join(tmpDirNone, "internal", "platform", "database", "postgres.go")
+	if pgExists, _ := memFS.Exists(pgFile); pgExists {
+		t.Errorf("did not expect postgres.go when make runtime has --db none")
 	}
 }
 
@@ -159,5 +181,163 @@ func TestNewProjectGeneratesWebRuntime(t *testing.T) {
 	}
 	if exists, _ := memFS.Exists(targetDir + "/package.json"); exists {
 		t.Errorf("expected package.json NOT to exist in web preset")
+	}
+}
+
+func TestNewProject_ChiTransport(t *testing.T) {
+	memFS := filesystem.NewMemFileSystem()
+	rootCmd := cli.NewRootCmdWithFS(memFS, nil)
+
+	rootCmd.SetArgs([]string{"new", "mychi", "--http", "chi"})
+	err := rootCmd.ExecuteContext(context.Background())
+	if err != nil {
+		t.Fatalf("loy new --http chi failed: %v", err)
+	}
+
+	targetDir, _ := filesystem.CleanAndValidatePath(".", "mychi")
+	appBytes, err := memFS.ReadFile(targetDir + "/internal/app/app.go")
+	if err != nil {
+		t.Fatalf("reading app.go: %v", err)
+	}
+	if !strings.Contains(string(appBytes), "github.com/go-chi/chi/v5") {
+		t.Errorf("expected chi import in app.go")
+	}
+
+	serverBytes, err := memFS.ReadFile(targetDir + "/internal/transport/http/server.go")
+	if err != nil {
+		t.Fatalf("reading server.go: %v", err)
+	}
+	if !strings.Contains(string(serverBytes), "chi.NewRouter()") {
+		t.Errorf("expected chi.NewRouter() in server.go")
+	}
+}
+
+func TestNewProject_NetHTTPTransport(t *testing.T) {
+	memFS := filesystem.NewMemFileSystem()
+	rootCmd := cli.NewRootCmdWithFS(memFS, nil)
+
+	rootCmd.SetArgs([]string{"new", "mynethttp", "--http", "nethttp"})
+	err := rootCmd.ExecuteContext(context.Background())
+	if err != nil {
+		t.Fatalf("loy new --http nethttp failed: %v", err)
+	}
+
+	targetDir, _ := filesystem.CleanAndValidatePath(".", "mynethttp")
+	appBytes, err := memFS.ReadFile(targetDir + "/internal/app/app.go")
+	if err != nil {
+		t.Fatalf("reading app.go: %v", err)
+	}
+	if !strings.Contains(string(appBytes), "http.ServeMux") {
+		t.Errorf("expected http.ServeMux in app.go")
+	}
+
+	serverBytes, err := memFS.ReadFile(targetDir + "/internal/transport/http/server.go")
+	if err != nil {
+		t.Fatalf("reading server.go: %v", err)
+	}
+	if !strings.Contains(string(serverBytes), "http.NewServeMux()") {
+		t.Errorf("expected http.NewServeMux() in server.go")
+	}
+}
+
+func TestNewProject_GinTransport(t *testing.T) {
+	memFS := filesystem.NewMemFileSystem()
+	rootCmd := cli.NewRootCmdWithFS(memFS, nil)
+
+	rootCmd.SetArgs([]string{"new", "mygin", "--http", "gin"})
+	err := rootCmd.ExecuteContext(context.Background())
+	if err != nil {
+		t.Fatalf("loy new --http gin failed: %v", err)
+	}
+
+	targetDir, _ := filesystem.CleanAndValidatePath(".", "mygin")
+	appBytes, err := memFS.ReadFile(targetDir + "/internal/app/app.go")
+	if err != nil {
+		t.Fatalf("reading app.go: %v", err)
+	}
+	if !strings.Contains(string(appBytes), "github.com/gin-gonic/gin") {
+		t.Errorf("expected gin import in app.go")
+	}
+
+	serverBytes, err := memFS.ReadFile(targetDir + "/internal/transport/http/server.go")
+	if err != nil {
+		t.Fatalf("reading server.go: %v", err)
+	}
+	if !strings.Contains(string(serverBytes), "gin.New()") {
+		t.Errorf("expected gin.New() in server.go")
+	}
+}
+
+func TestNewProject_SqliteDatabase(t *testing.T) {
+	memFS := filesystem.NewMemFileSystem()
+	rootCmd := cli.NewRootCmdWithFS(memFS, nil)
+
+	rootCmd.SetArgs([]string{"new", "mysqapp", "--db", "sqlite"})
+	err := rootCmd.ExecuteContext(context.Background())
+	if err != nil {
+		t.Fatalf("loy new --db sqlite failed: %v", err)
+	}
+
+	targetDir, _ := filesystem.CleanAndValidatePath(".", "mysqapp")
+	exists, _ := memFS.Exists(targetDir + "/internal/platform/database/sqlite.go")
+	if !exists {
+		t.Errorf("expected sqlite.go to be generated")
+	}
+
+	pgExists, _ := memFS.Exists(targetDir + "/internal/platform/database/postgres.go")
+	if pgExists {
+		t.Errorf("did not expect postgres.go when sqlite is selected")
+	}
+}
+
+func TestNewProject_MySQLDatabase(t *testing.T) {
+	memFS := filesystem.NewMemFileSystem()
+	rootCmd := cli.NewRootCmdWithFS(memFS, nil)
+
+	rootCmd.SetArgs([]string{"new", "mymyapp", "--db", "mysql"})
+	err := rootCmd.ExecuteContext(context.Background())
+	if err != nil {
+		t.Fatalf("loy new --db mysql failed: %v", err)
+	}
+
+	targetDir, _ := filesystem.CleanAndValidatePath(".", "mymyapp")
+	exists, _ := memFS.Exists(targetDir + "/internal/platform/database/mysql.go")
+	if !exists {
+		t.Errorf("expected mysql.go to be generated")
+	}
+}
+
+func TestNewProject_InteractiveWizard(t *testing.T) {
+	memFS := filesystem.NewMemFileSystem()
+	rootCmd := cli.NewRootCmdWithFS(memFS, nil)
+
+	// Simulate user typing:
+	// Project name: "wizardapp"
+	// Preset: (default: api)
+	// HTTP: "chi"
+	// DB: "sqlite"
+	// Cache: (default)
+	// Queue: (default)
+	input := strings.NewReader("wizardapp\n\nchi\nsqlite\n\n\n")
+	rootCmd.SetIn(input)
+	rootCmd.SetArgs([]string{"new", "--interactive"})
+
+	err := rootCmd.ExecuteContext(context.Background())
+	if err != nil {
+		t.Fatalf("loy new --interactive failed: %v", err)
+	}
+
+	targetDir, _ := filesystem.CleanAndValidatePath(".", "wizardapp")
+	serverBytes, err := memFS.ReadFile(targetDir + "/internal/transport/http/server.go")
+	if err != nil {
+		t.Fatalf("reading server.go: %v", err)
+	}
+	if !strings.Contains(string(serverBytes), "chi.NewRouter()") {
+		t.Errorf("expected chi router from wizard choice")
+	}
+
+	sqliteExists, _ := memFS.Exists(targetDir + "/internal/platform/database/sqlite.go")
+	if !sqliteExists {
+		t.Errorf("expected sqlite.go from wizard choice")
 	}
 }
