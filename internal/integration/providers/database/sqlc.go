@@ -10,6 +10,7 @@ import (
 
 // SqlcConfigOptions contains properties to generate a standard sqlc.yaml configuration.
 type SqlcConfigOptions struct {
+	Engine      string // e.g. "postgresql", "sqlite", "mysql"
 	PackageName string // e.g. "db" or "repository"
 	PackageOut  string // e.g. "internal/platform/database/sqlc"
 	SchemaPath  string // e.g. "migrations"
@@ -19,6 +20,7 @@ type SqlcConfigOptions struct {
 // DefaultSqlcConfigOptions returns standard Loy layout defaults.
 func DefaultSqlcConfigOptions() SqlcConfigOptions {
 	return SqlcConfigOptions{
+		Engine:      "postgresql",
 		PackageName: "db",
 		PackageOut:  "internal/platform/database/sqlc",
 		SchemaPath:  "migrations",
@@ -26,7 +28,7 @@ func DefaultSqlcConfigOptions() SqlcConfigOptions {
 	}
 }
 
-// GenerateSqlcYAML generates a standard sqlc.yaml file configured for pgx/v5.
+// GenerateSqlcYAML generates a standard sqlc.yaml file configured for the target database engine.
 func GenerateSqlcYAML(opts SqlcConfigOptions) string {
 	if opts.PackageName == "" {
 		opts.PackageName = "db"
@@ -39,6 +41,45 @@ func GenerateSqlcYAML(opts SqlcConfigOptions) string {
 	}
 	if opts.QueriesPath == "" {
 		opts.QueriesPath = "queries"
+	}
+
+	engine := opts.Engine
+	if engine == "" {
+		engine = "postgresql"
+	}
+
+	if engine == "sqlite" || engine == "sqlite3" {
+		return fmt.Sprintf(`version: "2"
+sql:
+  - engine: "sqlite"
+    schema: "%s"
+    queries: "%s"
+    gen:
+      go:
+        package: "%s"
+        out: "%s"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_empty_slices: true
+`, opts.SchemaPath, opts.QueriesPath, opts.PackageName, opts.PackageOut)
+	}
+
+	if engine == "mysql" {
+		return fmt.Sprintf(`version: "2"
+sql:
+  - engine: "mysql"
+    schema: "%s"
+    queries: "%s"
+    gen:
+      go:
+        package: "%s"
+        out: "%s"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_empty_slices: true
+`, opts.SchemaPath, opts.QueriesPath, opts.PackageName, opts.PackageOut)
 	}
 
 	return fmt.Sprintf(`version: "2"

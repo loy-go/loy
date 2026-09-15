@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"sync"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "modernc.org/sqlite"
 )
 
 // DriverAdapter handles opening a database connection for migrations and queries.
@@ -28,6 +30,32 @@ func (p PostgresDriverAdapter) Open(dsn string) (*sql.DB, error) {
 	return db, nil
 }
 
+// SqliteDriverAdapter implements DriverAdapter for SQLite via modernc.org/sqlite.
+type SqliteDriverAdapter struct{}
+
+func (s SqliteDriverAdapter) Name() string       { return "sqlite" }
+func (s SqliteDriverAdapter) DriverName() string { return "sqlite" }
+func (s SqliteDriverAdapter) Open(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("opening sqlite connection: %w", err)
+	}
+	return db, nil
+}
+
+// MySQLDriverAdapter implements DriverAdapter for MySQL via github.com/go-sql-driver/mysql.
+type MySQLDriverAdapter struct{}
+
+func (m MySQLDriverAdapter) Name() string       { return "mysql" }
+func (m MySQLDriverAdapter) DriverName() string { return "mysql" }
+func (m MySQLDriverAdapter) Open(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("opening mysql connection: %w", err)
+	}
+	return db, nil
+}
+
 // DriverRegistry manages supported database drivers for migrations.
 type DriverRegistry struct {
 	mu      sync.RWMutex
@@ -43,6 +71,11 @@ func NewDriverRegistry() *DriverRegistry {
 	// Also register aliases 'postgresql' and 'pgx'
 	r.drivers["postgresql"] = PostgresDriverAdapter{}
 	r.drivers["pgx"] = PostgresDriverAdapter{}
+
+	r.Register(SqliteDriverAdapter{})
+	r.drivers["sqlite3"] = SqliteDriverAdapter{}
+
+	r.Register(MySQLDriverAdapter{})
 	return r
 }
 

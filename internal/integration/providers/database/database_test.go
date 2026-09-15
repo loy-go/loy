@@ -37,6 +37,33 @@ func TestDriverRegistry(t *testing.T) {
 		t.Errorf("expected driver pgx, got %s", pgAlias.DriverName())
 	}
 
+	// SQLite adapter
+	sqlite, err := reg.Get("sqlite")
+	if err != nil {
+		t.Fatalf("expected sqlite driver: %v", err)
+	}
+	if sqlite.Name() != "sqlite" || sqlite.DriverName() != "sqlite" {
+		t.Errorf("unexpected sqlite adapter: name=%s driver=%s", sqlite.Name(), sqlite.DriverName())
+	}
+
+	// SQLite alias
+	sqlite3, err := reg.Get("sqlite3")
+	if err != nil {
+		t.Fatalf("expected sqlite3 driver: %v", err)
+	}
+	if sqlite3.Name() != "sqlite" {
+		t.Errorf("expected name sqlite, got %s", sqlite3.Name())
+	}
+
+	// MySQL adapter
+	mysql, err := reg.Get("mysql")
+	if err != nil {
+		t.Fatalf("expected mysql driver: %v", err)
+	}
+	if mysql.Name() != "mysql" || mysql.DriverName() != "mysql" {
+		t.Errorf("unexpected mysql adapter: name=%s driver=%s", mysql.Name(), mysql.DriverName())
+	}
+
 	// Unknown driver
 	if _, err := reg.Get("unknown"); err == nil {
 		t.Errorf("expected error for unknown driver")
@@ -138,6 +165,28 @@ func TestSqlcConfigAndRunner(t *testing.T) {
 	// Scaffold again - should be idempotent and not overwrite
 	if err := runner.ScaffoldConfig(ctx, "/app", opts); err != nil {
 		t.Fatalf("idempotent scaffolding failed: %v", err)
+	}
+}
+
+func TestSqlcMultiDatabaseEngines(t *testing.T) {
+	sqliteYAML := database.GenerateSqlcYAML(database.SqlcConfigOptions{
+		Engine: "sqlite",
+	})
+	if !strings.Contains(sqliteYAML, `engine: "sqlite"`) {
+		t.Errorf("expected sqlite engine in sqlc yaml: %s", sqliteYAML)
+	}
+	if strings.Contains(sqliteYAML, "pgx/v5") {
+		t.Errorf("did not expect pgx in sqlite sqlc yaml: %s", sqliteYAML)
+	}
+
+	mysqlYAML := database.GenerateSqlcYAML(database.SqlcConfigOptions{
+		Engine: "mysql",
+	})
+	if !strings.Contains(mysqlYAML, `engine: "mysql"`) {
+		t.Errorf("expected mysql engine in sqlc yaml: %s", mysqlYAML)
+	}
+	if strings.Contains(mysqlYAML, "pgx/v5") {
+		t.Errorf("did not expect pgx in mysql sqlc yaml: %s", mysqlYAML)
 	}
 }
 

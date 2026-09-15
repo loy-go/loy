@@ -87,8 +87,12 @@ func (r *GooseRunner) configureGoose(opts MigrationOptions) error {
 
 	// Dialect selection
 	dialect := "postgres"
-	if opts.Driver == "pgx" || opts.Driver == "postgresql" {
+	if opts.Driver == "pgx" || opts.Driver == "postgresql" || opts.Driver == "postgres" {
 		dialect = "postgres"
+	} else if opts.Driver == "sqlite" || opts.Driver == "sqlite3" {
+		dialect = "sqlite3"
+	} else if opts.Driver == "mysql" {
+		dialect = "mysql"
 	} else if opts.Driver != "" {
 		dialect = opts.Driver
 	}

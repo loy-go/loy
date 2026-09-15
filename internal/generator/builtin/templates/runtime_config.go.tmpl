@@ -15,7 +15,13 @@ type Config struct {
 	LogLevel        string        `env:"LOG_LEVEL" envDefault:"info"`
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"15s"`
 
+{{if eq .DatabaseDialect "sqlite"}}
+	DatabaseURL   string        `env:"DATABASE_URL" envDefault:"app.db"`
+{{else if eq .DatabaseDialect "mysql"}}
+	DatabaseURL   string        `env:"DATABASE_URL" envDefault:"root:root@tcp(localhost:3306)/app?parseTime=true"`
+{{else}}
 	DatabaseURL   string        `env:"DATABASE_URL" envDefault:"postgres://postgres:postgres@localhost:5432/app?sslmode=disable"`
+{{end}}
 	DBMaxConns    int32         `env:"DB_MAX_CONNS" envDefault:"25"`
 	DBMinConns    int32         `env:"DB_MIN_CONNS" envDefault:"5"`
 	DBMaxConnLife time.Duration `env:"DB_MAX_CONN_LIFETIME" envDefault:"1h"`
@@ -31,12 +37,23 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 	if strings.ToLower(cfg.Environment) == "production" {
+{{if .WithDatabase}}
+{{if or (eq .DatabaseDialect "postgres") (eq .DatabaseDialect "")}}
 		if strings.Contains(cfg.DatabaseURL, "sslmode=disable") {
 			return nil, fmt.Errorf("insecure database configuration: sslmode=disable is prohibited in production")
 		}
 		if strings.Contains(cfg.DatabaseURL, "postgres:postgres@") {
 			return nil, fmt.Errorf("insecure database configuration: default credentials prohibited in production")
 		}
+{{else if eq .DatabaseDialect "mysql"}}
+		if strings.Contains(cfg.DatabaseURL, "root:root@") || strings.Contains(cfg.DatabaseURL, "root:@") {
+			return nil, fmt.Errorf("insecure database configuration: default credentials prohibited in production")
+		}
+		if !strings.Contains(cfg.DatabaseURL, "tls=") || strings.Contains(cfg.DatabaseURL, "tls=false") {
+			return nil, fmt.Errorf("insecure database configuration: TLS encryption is required in production")
+		}
+{{end}}
+{{end}}
 	}
 	return &cfg, nil
 }

@@ -1,0 +1,50 @@
+package database
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"time"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+// MySQLConfig models MySQL database pool settings.
+type MySQLConfig struct {
+	DSN             string
+	MaxConns        int
+	MinConns        int
+	MaxConnLifetime time.Duration
+	MaxConnIdleTime time.Duration
+}
+
+// NewMySQLPool initializes a MySQL connection pool and performs a health ping.
+func NewMySQLPool(ctx context.Context, cfg MySQLConfig) (*sql.DB, error) {
+	db, err := sql.Open("mysql", cfg.DSN)
+	if err != nil {
+		return nil, fmt.Errorf("opening mysql database: %w", err)
+	}
+
+	if cfg.MaxConns > 0 {
+		db.SetMaxOpenConns(cfg.MaxConns)
+	}
+	if cfg.MinConns > 0 {
+		db.SetMaxIdleConns(cfg.MinConns)
+	}
+	if cfg.MaxConnLifetime > 0 {
+		db.SetConnMaxLifetime(cfg.MaxConnLifetime)
+	}
+	if cfg.MaxConnIdleTime > 0 {
+		db.SetConnMaxIdleTime(cfg.MaxConnIdleTime)
+	}
+
+	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := db.PingContext(pingCtx); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("pinging mysql database: %w", err)
+	}
+
+	return db, nil
+}
