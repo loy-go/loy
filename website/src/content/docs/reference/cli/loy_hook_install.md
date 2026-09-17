@@ -1,13 +1,13 @@
 ---
 title: "loy hook install"
-description: "Install Git pre-commit hook to run loy check before each commit"
+description: "Install Git pre-commit and pre-push hooks to enforce checks and tests before push"
 slug: reference/cli/loy-hook-install
 sidebar:
   order: 10
 ---
 
 
-Install Git pre-commit hook to run loy check before each commit
+Install Git pre-commit and pre-push hooks to enforce checks and tests before push
 
 ```
 loy hook install [path] [flags]

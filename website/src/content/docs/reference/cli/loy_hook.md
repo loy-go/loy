@@ -11,7 +11,7 @@ Manage Git lifecycle hooks for architecture enforcement
 
 ### Synopsis
 
-loy hook installs and manages Git hooks (e.g. pre-commit) to enforce clean architecture rules locally.
+loy hook installs and manages Git hooks (e.g. pre-commit and pre-push) to enforce clean architecture rules and testing locally.
 
 ### Options
 
@@ -32,5 +32,5 @@ loy hook installs and manages Git hooks (e.g. pre-commit) to enforce clean archi
 ### SEE ALSO
 
 * [loy](/loy/reference/cli/loy/)	 - Loy — Go developer platform with Laravel-like DX
-* [loy hook install](/loy/reference/cli/loy-hook-install/)	 - Install Git pre-commit hook to run loy check before each commit
+* [loy hook install](/loy/reference/cli/loy-hook-install/)	 - Install Git pre-commit and pre-push hooks to enforce checks and tests before push
 

@@ -34,4 +34,18 @@ func TestHookInstall(t *testing.T) {
 	if !bytes.Contains(content, []byte("loy check --quiet")) {
 		t.Errorf("expected hook to contain 'loy check --quiet', got:\n%s", string(content))
 	}
+
+	pushExists, err := memFS.Exists("/workspace/.git/hooks/pre-push")
+	if err != nil || !pushExists {
+		t.Fatalf("expected pre-push hook to exist, err: %v", err)
+	}
+
+	pushContent, err := memFS.ReadFile("/workspace/.git/hooks/pre-push")
+	if err != nil {
+		t.Fatalf("failed reading pre-push hook content: %v", err)
+	}
+
+	if !bytes.Contains(pushContent, []byte("go test -short")) {
+		t.Errorf("expected hook to contain 'go test -short', got:\n%s", string(pushContent))
+	}
 }
