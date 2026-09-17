@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to release (e.g. v0.4.4). Leave empty to use current ref."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -19,6 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ inputs.tag != '' && format('refs/tags/{0}', inputs.tag) || github.ref }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -50,12 +57,15 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ inputs.tag != '' && inputs.tag || github.ref_name }}
 
       - name: Sign & Upload Checksums with Cosign
         run: |
           cosign sign-blob --yes dist/checksums.txt \
             --bundle dist/checksums.txt.bundle
-          gh release upload "${{ github.ref_name }}" dist/checksums.txt.bundle
+          RELEASE_TAG="${{ inputs.tag != '' && inputs.tag || github.ref_name }}"
+          gh release upload "$RELEASE_TAG" dist/checksums.txt.bundle
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COSIGN_EXPERIMENTAL: "1"
+
