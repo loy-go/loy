@@ -34,6 +34,8 @@ func TestCheckCmd(t *testing.T) {
 		_ = memFS.WriteFile("/proj/internal/domain/user/user.go", []byte("package user\ntype User struct{}\n"), 0644)
 
 		cmd := newCheckCmd(memFS, runner)
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
 		cmd.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: true}))
 		cmd.SetArgs([]string{"/proj"})
 
@@ -59,6 +61,8 @@ type User struct { R pg.Repo }
 		_ = memFS.WriteFile("/badproj/internal/repository/pg/pg.go", []byte("package pg\ntype Repo struct{}\n"), 0644)
 
 		cmd := newCheckCmd(memFS, runner)
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
 		cmd.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: true}))
 		cmd.SetArgs([]string{"/badproj"})
 
@@ -89,6 +93,7 @@ type User struct { R pg.Repo }
 		outBuf := new(bytes.Buffer)
 		cmd := newCheckCmd(memFS, runner)
 		cmd.SetOut(outBuf)
+		cmd.SetErr(outBuf)
 		cmd.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: false}))
 		cmd.SetArgs([]string{"/ghproj", "--format", "github"})
 
@@ -119,6 +124,7 @@ type Order struct { R pg.Repo }
 		outBuf := new(bytes.Buffer)
 		cmd := newCheckCmd(memFS, runner)
 		cmd.SetOut(outBuf)
+		cmd.SetErr(outBuf)
 		cmd.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: false}))
 		cmd.SetArgs([]string{"/agentproj", "--format", "agent"})
 
@@ -142,6 +148,7 @@ type Order struct { R pg.Repo }
 		cleanBuf := new(bytes.Buffer)
 		cmdClean := newCheckCmd(memFS, runner)
 		cmdClean.SetOut(cleanBuf)
+		cmdClean.SetErr(cleanBuf)
 		cmdClean.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: false}))
 		_ = memFS.MkdirAll("/cleanproj", 0755)
 		_ = memFS.WriteFile("/cleanproj/go.mod", []byte("module github.com/test/cleanagent\n\ngo 1.22\n"), 0644)
@@ -182,6 +189,8 @@ type PostgresRepository struct{}
 
 		// First, check without --fix should fail with ARCH-005
 		cmd := newCheckCmd(memFS, runner)
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
 		cmd.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: true}))
 		cmd.SetArgs([]string{"/fixproj"})
 		err := cmd.Execute()
@@ -191,6 +200,8 @@ type PostgresRepository struct{}
 
 		// Now, check with --fix should remediate and pass
 		cmdFix := newCheckCmd(memFS, runner)
+		cmdFix.SetOut(io.Discard)
+		cmdFix.SetErr(io.Discard)
 		cmdFix.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: true}))
 		cmdFix.SetArgs([]string{"/fixproj", "--fix"})
 		errFix := cmdFix.Execute()

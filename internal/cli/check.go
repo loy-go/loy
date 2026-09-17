@@ -25,9 +25,11 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 	)
 
 	cmd := &cobra.Command{
-		Use:   "check [path]",
-		Short: "Validate architectural rules and boundaries",
-		Long:  `Validates that Go code strictly adheres to Loy architectural invariants, layer boundaries, and workspace topology.`,
+		Use:           "check [path]",
+		Short:         "Validate architectural rules and boundaries",
+		Long:          `Validates that Go code strictly adheres to Loy architectural invariants, layer boundaries, and workspace topology.`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			opts := GetOptions(ctx)
