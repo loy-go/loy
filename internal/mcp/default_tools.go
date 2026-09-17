@@ -7,12 +7,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	iofs "io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/loy-go/loy/internal/architecture"
 	"github.com/loy-go/loy/internal/architecture/rules"
+	"github.com/loy-go/loy/internal/astmod"
 	"github.com/loy-go/loy/internal/diagnostics"
 	"github.com/loy-go/loy/internal/discovery"
 	"github.com/loy-go/loy/internal/filesystem"
@@ -115,6 +117,118 @@ func (s *Server) registerDefaultToolsAndResources() {
 			},
 		},
 	}, s.handleLoyMakeMigration)
+
+	// 6. Tool: loy_ast_insert_field
+	s.RegisterTool(Tool{
+		Name:        "loy_ast_insert_field",
+		Description: "Safely insert a struct field with comments and tags into Go source code using DST AST mutations",
+		InputSchema: InputSchema{
+			Type:     "object",
+			Required: []string{"file", "struct_name", "field_name", "field_type"},
+			Properties: map[string]PropertyDef{
+				"file": {
+					Type:        "string",
+					Description: "Target Go file path relative to project root",
+				},
+				"struct_name": {
+					Type:        "string",
+					Description: "Name of the struct type to modify",
+				},
+				"field_name": {
+					Type:        "string",
+					Description: "Field identifier (e.g. Email, Age)",
+				},
+				"field_type": {
+					Type:        "string",
+					Description: "Go type definition (e.g. string, *int, []string)",
+				},
+				"tags": {
+					Type:        "string",
+					Description: "Optional struct field tags (e.g. `json:\"email,omitempty\"`)",
+				},
+			},
+		},
+	}, s.handleLoyAstInsertField)
+
+	// 7. Tool: loy_ast_add_route
+	s.RegisterTool(Tool{
+		Name:        "loy_ast_add_route",
+		Description: "Safely add an HTTP endpoint registration to the router function using DST AST mutations",
+		InputSchema: InputSchema{
+			Type:     "object",
+			Required: []string{"file", "method", "path", "handler"},
+			Properties: map[string]PropertyDef{
+				"file": {
+					Type:        "string",
+					Description: "Target Go file containing route registration",
+				},
+				"method": {
+					Type:        "string",
+					Description: "HTTP method (GET, POST, PUT, DELETE, PATCH)",
+				},
+				"path": {
+					Type:        "string",
+					Description: "Route path (e.g. /users, /posts/:id)",
+				},
+				"handler": {
+					Type:        "string",
+					Description: "Handler identifier or method (e.g. h.Create, h.List)",
+				},
+			},
+		},
+	}, s.handleLoyAstAddRoute)
+
+	// 8. Tool: loy_ast_bind_dependency
+	s.RegisterTool(Tool{
+		Name:        "loy_ast_bind_dependency",
+		Description: "Explicitly bind a constructor dependency into the composition root (internal/app/wiring.go) per ADR-003",
+		InputSchema: InputSchema{
+			Type:     "object",
+			Required: []string{"provider_func", "dep_name"},
+			Properties: map[string]PropertyDef{
+				"file": {
+					Type:        "string",
+					Description: "Target wiring file (defaults to internal/app/wiring.go)",
+				},
+				"provider_func": {
+					Type:        "string",
+					Description: "Constructor invocation expression (e.g. userRepo.NewPostgresRepository(a.db))",
+				},
+				"dep_name": {
+					Type:        "string",
+					Description: "Variable name for the bound instance (e.g. userRepo)",
+				},
+			},
+		},
+	}, s.handleLoyAstBindDependency)
+
+	// 9. Tool: loy_plan_preview
+	s.RegisterTool(Tool{
+		Name:        "loy_plan_preview",
+		Description: "Sandbox preview of code generation with in-memory architectural verification before committing to disk",
+		InputSchema: InputSchema{
+			Type:     "object",
+			Required: []string{"generator", "name"},
+			Properties: map[string]PropertyDef{
+				"generator": {
+					Type:        "string",
+					Description: "Generator to run (e.g. crud, model, command, query, migration)",
+				},
+				"name": {
+					Type:        "string",
+					Description: "Entity or feature name",
+				},
+				"fields": {
+					Type:        "string",
+					Description: "Space-separated entity fields",
+				},
+				"args": {
+					Type:        "object",
+					Description: "Optional additional generator arguments",
+				},
+			},
+		},
+	}, s.handleLoyPlanPreview)
 
 	// Resources:
 	// R1. loy://rules/catalog
@@ -572,4 +686,287 @@ func (s *Server) buildBaseGraphModel(ctx context.Context, baseRef string) (*grap
 	}
 
 	return s.buildGraphModelWithFS(ctx, filesystem.NewOSFileSystem(), tmpBaseDir)
+}
+
+func (s *Server) handleLoyAstInsertField(ctx context.Context, args json.RawMessage) (*ToolCallResult, error) {
+	var input struct {
+		File       string `json:"file"`
+		StructName string `json:"struct_name"`
+		FieldName  string `json:"field_name"`
+		FieldType  string `json:"field_type"`
+		Tags       string `json:"tags"`
+	}
+	if err := json.Unmarshal(args, &input); err != nil {
+		return nil, fmt.Errorf("parsing arguments: %w", err)
+	}
+	if input.File == "" || input.StructName == "" || input.FieldName == "" || input.FieldType == "" {
+		return nil, fmt.Errorf("file, struct_name, field_name, and field_type are required")
+	}
+
+	cleanPath, err := filesystem.CleanAndValidatePath(s.projectRoot, filepath.Join(s.projectRoot, input.File))
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := s.fs.ReadFile(cleanPath)
+	if err != nil {
+		return nil, fmt.Errorf("reading %s: %w", input.File, err)
+	}
+
+	modified, err := astmod.InsertField(data, input.StructName, input.FieldName, input.FieldType, input.Tags)
+	if err != nil {
+		return &ToolCallResult{
+			Content: []ToolContent{{Type: "text", Text: fmt.Sprintf("Error inserting field: %v", err)}},
+			IsError: true,
+		}, nil
+	}
+
+	if err := s.fs.WriteFile(cleanPath, modified, 0644); err != nil {
+		return nil, fmt.Errorf("writing %s: %w", input.File, err)
+	}
+
+	return &ToolCallResult{
+		Content: []ToolContent{{
+			Type: "text",
+			Text: fmt.Sprintf("Successfully inserted field %s %s into struct %s in %s", input.FieldName, input.FieldType, input.StructName, input.File),
+		}},
+	}, nil
+}
+
+func (s *Server) handleLoyAstAddRoute(ctx context.Context, args json.RawMessage) (*ToolCallResult, error) {
+	var input struct {
+		File    string `json:"file"`
+		Method  string `json:"method"`
+		Path    string `json:"path"`
+		Handler string `json:"handler"`
+	}
+	if err := json.Unmarshal(args, &input); err != nil {
+		return nil, fmt.Errorf("parsing arguments: %w", err)
+	}
+	if input.File == "" || input.Method == "" || input.Path == "" || input.Handler == "" {
+		return nil, fmt.Errorf("file, method, path, and handler are required")
+	}
+
+	cleanPath, err := filesystem.CleanAndValidatePath(s.projectRoot, filepath.Join(s.projectRoot, input.File))
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := s.fs.ReadFile(cleanPath)
+	if err != nil {
+		return nil, fmt.Errorf("reading %s: %w", input.File, err)
+	}
+
+	modified, err := astmod.AddRoute(data, input.Method, input.Path, input.Handler)
+	if err != nil {
+		return &ToolCallResult{
+			Content: []ToolContent{{Type: "text", Text: fmt.Sprintf("Error adding route: %v", err)}},
+			IsError: true,
+		}, nil
+	}
+
+	if err := s.fs.WriteFile(cleanPath, modified, 0644); err != nil {
+		return nil, fmt.Errorf("writing %s: %w", input.File, err)
+	}
+
+	return &ToolCallResult{
+		Content: []ToolContent{{
+			Type: "text",
+			Text: fmt.Sprintf("Successfully added route %s %s -> %s in %s", input.Method, input.Path, input.Handler, input.File),
+		}},
+	}, nil
+}
+
+func (s *Server) handleLoyAstBindDependency(ctx context.Context, args json.RawMessage) (*ToolCallResult, error) {
+	var input struct {
+		File         string `json:"file"`
+		ProviderFunc string `json:"provider_func"`
+		DepName      string `json:"dep_name"`
+	}
+	if err := json.Unmarshal(args, &input); err != nil {
+		return nil, fmt.Errorf("parsing arguments: %w", err)
+	}
+	if input.File == "" {
+		input.File = "internal/app/wiring.go"
+	}
+	if input.ProviderFunc == "" || input.DepName == "" {
+		return nil, fmt.Errorf("provider_func and dep_name are required")
+	}
+
+	cleanPath, err := filesystem.CleanAndValidatePath(s.projectRoot, filepath.Join(s.projectRoot, input.File))
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := s.fs.ReadFile(cleanPath)
+	if err != nil {
+		return nil, fmt.Errorf("reading %s: %w", input.File, err)
+	}
+
+	modified, err := astmod.BindDependency(data, input.ProviderFunc, input.DepName)
+	if err != nil {
+		return &ToolCallResult{
+			Content: []ToolContent{{Type: "text", Text: fmt.Sprintf("Error binding dependency: %v", err)}},
+			IsError: true,
+		}, nil
+	}
+
+	if err := s.fs.WriteFile(cleanPath, modified, 0644); err != nil {
+		return nil, fmt.Errorf("writing %s: %w", input.File, err)
+	}
+
+	return &ToolCallResult{
+		Content: []ToolContent{{
+			Type: "text",
+			Text: fmt.Sprintf("Successfully bound dependency %s := %s in %s", input.DepName, input.ProviderFunc, input.File),
+		}},
+	}, nil
+}
+
+func (s *Server) handleLoyPlanPreview(ctx context.Context, args json.RawMessage) (*ToolCallResult, error) {
+	var input struct {
+		Generator string            `json:"generator"`
+		Name      string            `json:"name"`
+		Fields    string            `json:"fields"`
+		Args      map[string]string `json:"args"`
+	}
+	if err := json.Unmarshal(args, &input); err != nil {
+		return nil, fmt.Errorf("parsing arguments: %w", err)
+	}
+	if input.Generator == "" || input.Name == "" {
+		return nil, fmt.Errorf("generator and name are required")
+	}
+
+	moduleName := ""
+	disc, err := discovery.NewDiscoverer(s.fs, s.runner)
+	if err == nil {
+		if discRes, diag := disc.Discover(ctx, s.projectRoot); diag == nil && discRes != nil {
+			if discRes.HasGoMod {
+				if data, err := s.fs.ReadFile(discRes.GoModPath); err == nil {
+					if f, err := modfile.Parse(discRes.GoModPath, data, nil); err == nil && f.Module != nil {
+						moduleName = f.Module.Mod.Path
+					}
+				}
+			}
+		}
+	}
+
+	var gen generator.Generator
+	switch strings.ToLower(input.Generator) {
+	case "crud":
+		gen = builtin.NewCRUDGenerator(moduleName)
+	case "model":
+		gen = builtin.NewModelGenerator(moduleName)
+	case "command":
+		gen = builtin.NewCommandGenerator(moduleName)
+	case "query":
+		gen = builtin.NewQueryGenerator(moduleName)
+	case "migration":
+		gen = builtin.NewMigrationGenerator(moduleName)
+	default:
+		gen = builtin.NewCRUDGenerator(moduleName)
+	}
+
+	genArgs := make(map[string]string)
+	if input.Fields != "" {
+		genArgs["fields"] = input.Fields
+	}
+	for k, v := range input.Args {
+		genArgs[k] = v
+	}
+
+	genInput := generator.Input{
+		Name: input.Name,
+		Args: genArgs,
+	}
+
+	artifacts, err := gen.Generate(ctx, genInput)
+	if err != nil {
+		return &ToolCallResult{
+			Content: []ToolContent{{Type: "text", Text: fmt.Sprintf("Generator error: %v", err)}},
+			IsError: true,
+		}, nil
+	}
+
+	sandboxFS := filesystem.NewMemFileSystem()
+
+	// Clone existing project files into sandboxFS
+	_ = s.fs.Walk(s.projectRoot, func(p string, d iofs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil
+		}
+		if d.IsDir() {
+			name := d.Name()
+			if name == ".git" || name == "vendor" || name == "node_modules" || (strings.HasPrefix(name, ".") && name != ".") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if strings.HasSuffix(p, ".go") || strings.HasSuffix(p, "loy.yaml") || strings.HasSuffix(p, "go.mod") {
+			rel, _ := filepath.Rel(s.projectRoot, p)
+			if rel != "" && !strings.HasPrefix(rel, ".") {
+				data, readErr := s.fs.ReadFile(p)
+				if readErr == nil {
+					_ = sandboxFS.MkdirAll(filepath.Dir(rel), 0755)
+					_ = sandboxFS.WriteFile(rel, data, 0644)
+				}
+			}
+		}
+		return nil
+	})
+
+	type artifactPreview struct {
+		Path   string `json:"path"`
+		Action string `json:"action"`
+		Bytes  int    `json:"bytes"`
+	}
+	var previews []artifactPreview
+
+	for _, art := range artifacts {
+		action := "create"
+		if exists, _ := sandboxFS.Exists(art.Path); exists {
+			action = "modify"
+		}
+		_ = sandboxFS.MkdirAll(filepath.Dir(art.Path), 0755)
+		_ = sandboxFS.WriteFile(art.Path, []byte(art.Content), 0644)
+
+		previews = append(previews, artifactPreview{
+			Path:   art.Path,
+			Action: action,
+			Bytes:  len(art.Content),
+		})
+	}
+
+	analyzer := architecture.NewAnalyzer(sandboxFS, architecture.AnalyzerConfig{
+		ModuleName: moduleName,
+		RootDir:    ".",
+		Rules:      rules.DefaultRules(),
+	})
+	violations, _ := analyzer.Run(ctx)
+
+	type sandboxReport struct {
+		Status     string            `json:"status"`
+		Artifacts  []artifactPreview `json:"artifacts"`
+		Violations []string          `json:"violations,omitempty"`
+	}
+
+	report := sandboxReport{
+		Status:    "ready",
+		Artifacts: previews,
+	}
+
+	for _, v := range violations {
+		report.Violations = append(report.Violations, fmt.Sprintf("[%s] %s: %s", v.RuleID, v.File, v.Message))
+	}
+	if len(violations) > 0 {
+		report.Status = "architectural_violations_detected"
+	}
+
+	payload, _ := json.MarshalIndent(report, "", "  ")
+	return &ToolCallResult{
+		Content: []ToolContent{{
+			Type: "text",
+			Text: string(payload),
+		}},
+	}, nil
 }

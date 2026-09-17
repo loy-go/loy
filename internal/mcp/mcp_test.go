@@ -374,3 +374,96 @@ func TestMCPServer_ErrorsAndEdgeCases(t *testing.T) {
 		t.Errorf("expected InternalError for missing manifest: %+v", manErrResp)
 	}
 }
+
+func TestMCPServer_ASTAndPlanPreviewTools(t *testing.T) {
+	memFS := filesystem.NewMemFileSystem()
+	runner := process.NewExecRunner()
+
+	_ = memFS.MkdirAll("/proj", 0755)
+	_ = memFS.WriteFile("/proj/go.mod", []byte("module github.com/example/asttest\n\ngo 1.22\n"), 0644)
+	_ = memFS.WriteFile("/proj/loy.yaml", []byte("version: 1\nproject:\n  name: asttest\n"), 0644)
+
+	// Seed struct file for ast insertion
+	_ = memFS.MkdirAll("/proj/internal/user/model", 0755)
+	_ = memFS.WriteFile("/proj/internal/user/model/user.go", []byte(`package model
+
+// User entity
+type User struct {
+	ID int64 `+"`json:\"id\"`"+`
+}
+`), 0644)
+
+	// Seed route file for ast add_route
+	_ = memFS.MkdirAll("/proj/internal/user/transport/http", 0755)
+	_ = memFS.WriteFile("/proj/internal/user/transport/http/routes.go", []byte(`package http
+
+import "github.com/gofiber/fiber/v2"
+
+func RegisterRoutes(router fiber.Router) {
+	router.Get("/users", nil)
+}
+`), 0644)
+
+	// Seed wiring file for ast bind_dependency
+	_ = memFS.MkdirAll("/proj/internal/app", 0755)
+	_ = memFS.WriteFile("/proj/internal/app/wiring.go", []byte(`package app
+
+func WireApp(a *App) error {
+	return nil
+}
+`), 0644)
+
+	requests := []string{
+		// 1. loy_ast_insert_field
+		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"loy_ast_insert_field","arguments":{"file":"internal/user/model/user.go","struct_name":"User","field_name":"Email","field_type":"string","tags":"json:\"email\""}}}`,
+		// 2. loy_ast_add_route
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"loy_ast_add_route","arguments":{"file":"internal/user/transport/http/routes.go","method":"POST","path":"/users","handler":"h.Create"}}}`,
+		// 3. loy_ast_bind_dependency
+		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"loy_ast_bind_dependency","arguments":{"file":"internal/app/wiring.go","provider_func":"userRepo.NewPostgresRepository(a.db)","dep_name":"userRepo"}}}`,
+		// 4. loy_plan_preview
+		`{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"loy_plan_preview","arguments":{"generator":"crud","name":"product","fields":"title:string price:float"}}}`,
+	}
+
+	inBuf := &lineReader{lines: requests}
+	var outBuf bytes.Buffer
+
+	server := mcp.NewServer(memFS, runner, "/proj", inBuf, &outBuf)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := server.Run(ctx)
+	if err != nil {
+		t.Fatalf("server run failed: %v", err)
+	}
+
+	outLines := strings.Split(strings.TrimSpace(outBuf.String()), "\n")
+	if len(outLines) != 4 {
+		t.Fatalf("expected 4 responses, got %d:\n%s", len(outLines), outBuf.String())
+	}
+
+	// 1. Verify loy_ast_insert_field
+	userFile, err := memFS.ReadFile("/proj/internal/user/model/user.go")
+	if err != nil || !strings.Contains(string(userFile), "Email string `json:\"email\"`") {
+		t.Errorf("expected Email field inserted in user.go:\n%s", string(userFile))
+	}
+
+	// 2. Verify loy_ast_add_route
+	routeFile, err := memFS.ReadFile("/proj/internal/user/transport/http/routes.go")
+	if err != nil || !strings.Contains(string(routeFile), `router.Post("/users", h.Create)`) {
+		t.Errorf("expected route inserted in routes.go:\n%s", string(routeFile))
+	}
+
+	// 3. Verify loy_ast_bind_dependency
+	wiringFile, err := memFS.ReadFile("/proj/internal/app/wiring.go")
+	if err != nil || !strings.Contains(string(wiringFile), "userRepo, _ := userRepo.NewPostgresRepository(a.db)") {
+		t.Errorf("expected dependency bound in wiring.go:\n%s", string(wiringFile))
+	}
+
+	// 4. Verify loy_plan_preview
+	var previewResp mcp.JSONRPCResponse
+	_ = json.Unmarshal([]byte(outLines[3]), &previewResp)
+	previewData, _ := json.Marshal(previewResp.Result)
+	if !strings.Contains(string(previewData), "ready") || !strings.Contains(string(previewData), "product") {
+		t.Errorf("expected preview response containing product artifacts and ready status, got: %s", string(previewData))
+	}
+}
