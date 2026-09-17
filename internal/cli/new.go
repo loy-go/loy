@@ -27,6 +27,7 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 		queueOpt       string
 		cacheOpt       string
 		multiTenantOpt string
+		noTidy         bool
 	)
 
 	cmd := &cobra.Command{
@@ -218,7 +219,7 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 				}
 			}
 
-			if runner != nil {
+			if _, isOS := fs.(*filesystem.OSFileSystem); isOS && runner != nil && !noTidy {
 				_, _ = runner.Run(ctx, targetDir, "go", "mod", "tidy")
 			}
 
@@ -242,6 +243,7 @@ func newNewCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
 	cmd.Flags().StringVar(&queueOpt, "queue", "", "Queue adapter (asynq, river, none)")
 	cmd.Flags().StringVar(&cacheOpt, "cache", "", "Cache adapter (valkey, redis, memory, none)")
 	cmd.Flags().StringVar(&multiTenantOpt, "multi-tenant", "", "Multi-tenancy strategy (rls, column)")
+	cmd.Flags().BoolVar(&noTidy, "no-tidy", false, "Skip running go mod tidy after project creation")
 
 	return cmd
 }

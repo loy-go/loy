@@ -126,7 +126,7 @@ func TestNewCmd_Integration(t *testing.T) {
 	})
 
 	cmd := cli.NewRootCmd()
-	cmd.SetArgs([]string{"new", "demoapp", "--preset", "fullstack"})
+	cmd.SetArgs([]string{"new", "demoapp", "--preset", "fullstack", "--no-tidy"})
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("new command failed: %v", err)
 	}
@@ -144,21 +144,21 @@ func TestNewCmd_Integration(t *testing.T) {
 
 	// Duplicate new without --force fails
 	cmdDup := cli.NewRootCmd()
-	cmdDup.SetArgs([]string{"new", "demoapp"})
+	cmdDup.SetArgs([]string{"new", "demoapp", "--no-tidy"})
 	if err := cmdDup.Execute(); err == nil {
 		t.Fatal("expected duplicate project creation to fail without --force")
 	}
 
 	// Unknown preset fails
 	cmdBad := cli.NewRootCmd()
-	cmdBad.SetArgs([]string{"new", "badproj", "--preset", "unknown"})
+	cmdBad.SetArgs([]string{"new", "badproj", "--preset", "unknown", "--no-tidy"})
 	if err := cmdBad.Execute(); err == nil {
 		t.Fatal("expected error with unknown preset in new cmd")
 	}
 
 	// Custom adapters & multi-tenant flags
 	cmdCustom := cli.NewRootCmd()
-	cmdCustom.SetArgs([]string{"new", "customapp", "--http=chi", "--db=sqlite", "--queue=river", "--multi-tenant=rls"})
+	cmdCustom.SetArgs([]string{"new", "customapp", "--http=chi", "--db=sqlite", "--queue=river", "--multi-tenant=rls", "--no-tidy"})
 	if err := cmdCustom.Execute(); err != nil {
 		t.Fatalf("new command with custom adapters failed: %v", err)
 	}

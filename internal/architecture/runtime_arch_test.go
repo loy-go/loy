@@ -2,37 +2,30 @@ package architecture_test
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/loy-go/loy/internal/architecture"
 	"github.com/loy-go/loy/internal/architecture/rules"
 	"github.com/loy-go/loy/internal/cli"
 	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/process"
 )
 
 func TestArchitectureCheckOnRuntimeScaffold(t *testing.T) {
-	origDir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = os.Chdir(origDir) }()
+	fs := filesystem.NewMemFileSystem()
+	runner := process.NewNoopRunner()
 
-	tmpDir := t.TempDir()
-	fs := filesystem.NewOSFileSystem()
-
-	// 1. Create a project with api preset
-	rootCmd := cli.NewRootCmdWithFS(fs, nil)
-	rootCmd.SetArgs([]string{"new", "sampleapp", "--preset", "minimal", "-C", tmpDir})
-	err = rootCmd.ExecuteContext(context.Background())
+	// 1. Create a project with minimal preset in-memory without spawning external processes
+	rootCmd := cli.NewRootCmdWithFS(fs, runner)
+	rootCmd.SetArgs([]string{"new", "sampleapp", "--preset", "minimal", "--no-tidy"})
+	err := rootCmd.ExecuteContext(context.Background())
 	if err != nil {
 		t.Fatalf("loy new failed: %v", err)
 	}
 
-	appDir := filepath.Join(tmpDir, "sampleapp")
+	appDir, _ := filesystem.CleanAndValidatePath(".", "sampleapp")
 
-	// 2. Run architecture analyzer directly over generated files
+	// 2. Run architecture analyzer directly over generated files in memory
 	analyzer := architecture.NewAnalyzer(fs, architecture.AnalyzerConfig{
 		ModuleName: "sampleapp",
 		RootDir:    appDir,

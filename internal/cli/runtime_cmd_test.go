@@ -9,6 +9,7 @@ import (
 
 	"github.com/loy-go/loy/internal/cli"
 	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/process"
 )
 
 func TestNewProjectGeneratesRuntime(t *testing.T) {
@@ -58,12 +59,13 @@ func TestMakeRuntimeCommand(t *testing.T) {
 
 	tmpDir := t.TempDir()
 	memFS := filesystem.NewOSFileSystem()
+	runner := process.NewNoopRunner()
 	_ = memFS.MkdirAll(tmpDir, 0755)
 	_ = memFS.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte("module github.com/test/workspace\n\ngo 1.22\n"), 0644)
 	_ = memFS.WriteFile(filepath.Join(tmpDir, "loy.yaml"), []byte("version: 1\nproject:\n  name: workspace\n"), 0644)
 
-	rootCmd := cli.NewRootCmdWithFS(memFS, nil)
-	rootCmd.SetArgs([]string{"make", "runtime", "--http", "nethttp", "--db", "sqlite", "-C", tmpDir})
+	rootCmd := cli.NewRootCmdWithFS(memFS, runner)
+	rootCmd.SetArgs([]string{"make", "runtime", "--http", "nethttp", "--db", "sqlite", "-C", tmpDir, "--no-tidy"})
 	err = rootCmd.ExecuteContext(context.Background())
 	if err != nil {
 		t.Fatalf("loy make runtime failed: %v", err)
@@ -91,8 +93,8 @@ func TestMakeRuntimeCommand(t *testing.T) {
 	_ = memFS.WriteFile(filepath.Join(tmpDirNone, "go.mod"), []byte("module github.com/test/nonedb\n\ngo 1.22\n"), 0644)
 	_ = memFS.WriteFile(filepath.Join(tmpDirNone, "loy.yaml"), []byte("version: 1\nproject:\n  name: nonedb\n"), 0644)
 
-	rootCmdNone := cli.NewRootCmdWithFS(memFS, nil)
-	rootCmdNone.SetArgs([]string{"make", "runtime", "--http", "fiber", "--db", "none", "-C", tmpDirNone, "--force"})
+	rootCmdNone := cli.NewRootCmdWithFS(memFS, runner)
+	rootCmdNone.SetArgs([]string{"make", "runtime", "--http", "fiber", "--db", "none", "-C", tmpDirNone, "--force", "--no-tidy"})
 	if err := rootCmdNone.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("loy make runtime --db none failed: %v", err)
 	}

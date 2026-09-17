@@ -43,7 +43,7 @@ func cleanPath(p string) string {
 	if !strings.HasPrefix(cleaned, "/") {
 		cleaned = "/" + cleaned
 	}
-	return cleaned
+	return path.Clean(cleaned)
 }
 
 func (m *MemFileSystem) ReadFile(name string) ([]byte, error) {

@@ -34,7 +34,7 @@ func TestCanonicalEndToEndLoop(t *testing.T) {
 	buf := new(bytes.Buffer)
 	root.SetOut(buf)
 	root.SetErr(buf)
-	root.SetArgs([]string{"new", "demoapp", "--preset", "api"})
+	root.SetArgs([]string{"new", "demoapp", "--preset", "api", "--no-tidy"})
 	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("loy new failed: %v, output: %s", err, buf.String())
 	}
@@ -49,7 +49,7 @@ func TestCanonicalEndToEndLoop(t *testing.T) {
 	root = cli.NewRootCmd()
 	root.SetOut(buf)
 	root.SetErr(buf)
-	root.SetArgs([]string{"make", "crud", "products", "title:string:required", "price:int:required"})
+	root.SetArgs([]string{"make", "crud", "products", "title:string:required", "price:int:required", "--no-tidy"})
 	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("loy make crud failed: %v, output: %s", err, buf.String())
 	}
@@ -74,7 +74,7 @@ func TestCanonicalEndToEndLoop(t *testing.T) {
 	root = cli.NewRootCmd()
 	root.SetOut(buf)
 	root.SetErr(buf)
-	root.SetArgs([]string{"make", "deploy", "all", "--force"})
+	root.SetArgs([]string{"make", "deploy", "all", "--force", "--no-tidy"})
 	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("loy make deploy all failed: %v, output: %s", err, buf.String())
 	}
@@ -153,7 +153,7 @@ func TestCanonicalEndToEndLoop_Chi(t *testing.T) {
 	buf := new(bytes.Buffer)
 	root.SetOut(buf)
 	root.SetErr(buf)
-	root.SetArgs([]string{"new", "chiapp", "--preset", "api", "--http", "chi", "--db", "sqlite"})
+	root.SetArgs([]string{"new", "chiapp", "--preset", "api", "--http", "chi", "--db", "sqlite", "--no-tidy"})
 	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("loy new failed: %v, output: %s", err, buf.String())
 	}
@@ -168,7 +168,7 @@ func TestCanonicalEndToEndLoop_Chi(t *testing.T) {
 	root = cli.NewRootCmd()
 	root.SetOut(buf)
 	root.SetErr(buf)
-	root.SetArgs([]string{"make", "crud", "tasks", "name:string:required"})
+	root.SetArgs([]string{"make", "crud", "tasks", "name:string:required", "--no-tidy"})
 	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("loy make crud failed: %v, output: %s", err, buf.String())
 	}
@@ -227,7 +227,7 @@ func TestCanonicalEndToEndLoop_NetHTTP(t *testing.T) {
 	buf := new(bytes.Buffer)
 	root.SetOut(buf)
 	root.SetErr(buf)
-	root.SetArgs([]string{"new", "netapp", "--preset", "api", "--http", "nethttp", "--db", "sqlite"})
+	root.SetArgs([]string{"new", "netapp", "--preset", "api", "--http", "nethttp", "--db", "sqlite", "--no-tidy"})
 	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("loy new failed: %v, output: %s", err, buf.String())
 	}
@@ -242,7 +242,7 @@ func TestCanonicalEndToEndLoop_NetHTTP(t *testing.T) {
 	root = cli.NewRootCmd()
 	root.SetOut(buf)
 	root.SetErr(buf)
-	root.SetArgs([]string{"make", "crud", "notes", "title:string:required"})
+	root.SetArgs([]string{"make", "crud", "notes", "title:string:required", "--no-tidy"})
 	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("loy make crud failed: %v, output: %s", err, buf.String())
 	}
@@ -301,7 +301,7 @@ func TestCanonicalEndToEndLoop_Gin(t *testing.T) {
 	buf := new(bytes.Buffer)
 	root.SetOut(buf)
 	root.SetErr(buf)
-	root.SetArgs([]string{"new", "ginapp", "--preset", "api", "--http", "gin", "--db", "sqlite"})
+	root.SetArgs([]string{"new", "ginapp", "--preset", "api", "--http", "gin", "--db", "sqlite", "--no-tidy"})
 	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("loy new failed: %v, output: %s", err, buf.String())
 	}
@@ -316,7 +316,7 @@ func TestCanonicalEndToEndLoop_Gin(t *testing.T) {
 	root = cli.NewRootCmd()
 	root.SetOut(buf)
 	root.SetErr(buf)
-	root.SetArgs([]string{"make", "crud", "articles", "title:string:required"})
+	root.SetArgs([]string{"make", "crud", "articles", "title:string:required", "--no-tidy"})
 	if err := root.ExecuteContext(context.Background()); err != nil {
 		t.Fatalf("loy make crud failed: %v, output: %s", err, buf.String())
 	}
