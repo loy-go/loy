@@ -3,7 +3,7 @@ title: "loy make"
 description: "Scaffold application components, slices, and vertical features"
 slug: reference/cli/loy-make
 sidebar:
-  order: 10
+  order: 12
 ---
 
 
@@ -12,16 +12,18 @@ Scaffold application components, slices, and vertical features
 ### Synopsis
 
 The make command tree provides scaffolding for clean-architecture Go applications:
-  - Atomic generators: model, repository (repo), service (svc), handler, request, resource, job, event, listener, policy, test
+  - Atomic generators: model, repository (repo), service (svc), handler, request, resource, job, event, listener, policy, test, migration
   - Composers: feature, crud
 
 ### Options
 
 ```
       --dry-run         Preview generated operations without writing to disk
+      --dual-id         Scaffold dual identifier schema (BIGINT identity + UUID public)
       --force           Overwrite existing files if developer owned
   -h, --help            help for make
       --modular         Scaffold sub-domain modular wiring file instead of flat wiring
+      --no-tidy         Skip running go mod tidy after generation
       --target string   Target application module in workspace
 ```
 
@@ -41,27 +43,34 @@ The make command tree provides scaffolding for clean-architecture Go application
 * [loy make agent-rules](/loy/reference/cli/loy-make-agent-rules/)	 - Scaffold authoritative AI agent rules (Cursor, Claude, Copilot, Windsurf)
 * [loy make auth](/loy/reference/cli/loy-make-auth/)	 - Scaffold baseline JWT and password authentication kit
 * [loy make ci](/loy/reference/cli/loy-make-ci/)	 - Scaffold CI/CD pipeline workflow (GitHub Actions or GitLab CI)
+* [loy make command](/loy/reference/cli/loy-make-command/)	 - Scaffold CQRS write command and handler pipeline
 * [loy make crud](/loy/reference/cli/loy-make-crud/)	 - Scaffold full vertical CRUD slice (migration, queries, model, repo, service, handler, test, wiring)
 * [loy make deploy](/loy/reference/cli/loy-make-deploy/)	 - Scaffold production deployment assets (docker, k8s, helm, ci, or all)
 * [loy make docker](/loy/reference/cli/loy-make-docker/)	 - Scaffold production multi-stage Dockerfile and docker-compose.yml
 * [loy make event](/loy/reference/cli/loy-make-event/)	 - Scaffold domain event struct
 * [loy make feature](/loy/reference/cli/loy-make-feature/)	 - Scaffold full vertical feature slice (model, repo, service, handler, test, wiring)
+* [loy make from-db](/loy/reference/cli/loy-make-from-db/)	 - Reverse-engineer and scaffold CRUD stacks from database tables or SQL DDL
+* [loy make from-spec](/loy/reference/cli/loy-make-from-spec/)	 - Scaffold full CRUD stacks from OpenAPI or JSON Schema specification
 * [loy make grpc](/loy/reference/cli/loy-make-grpc/)	 - Scaffold Proto contract and gRPC transport server
 * [loy make handler](/loy/reference/cli/loy-make-handler/)	 - Scaffold HTTP transport handler
 * [loy make helm](/loy/reference/cli/loy-make-helm/)	 - Scaffold Helm chart for application (deploy/helm/<name>/)
+* [loy make idempotency](/loy/reference/cli/loy-make-idempotency/)	 - Scaffold request idempotency keys migration and middleware
 * [loy make job](/loy/reference/cli/loy-make-job/)	 - Scaffold Asynq background job payload & processor
 * [loy make k8s](/loy/reference/cli/loy-make-k8s/)	 - Scaffold cloud-native Kubernetes manifests (deploy/k8s/)
 * [loy make listener](/loy/reference/cli/loy-make-listener/)	 - Scaffold event listener consumer
 * [loy make metrics](/loy/reference/cli/loy-make-metrics/)	 - Scaffold Prometheus metrics recorder and Grafana dashboard
+* [loy make migration](/loy/reference/cli/loy-make-migration/)	 - Scaffold safe database migration with optional zero-downtime recipes
 * [loy make model](/loy/reference/cli/loy-make-model/)	 - Scaffold domain entity model
 * [loy make outbox](/loy/reference/cli/loy-make-outbox/)	 - Scaffold Transactional Outbox migration, store, and dispatcher
 * [loy make policy](/loy/reference/cli/loy-make-policy/)	 - Scaffold authorization policy checks
+* [loy make query](/loy/reference/cli/loy-make-query/)	 - Scaffold CQRS read query and projection view
 * [loy make repository](/loy/reference/cli/loy-make-repository/)	 - Scaffold domain repository interface & adapter
 * [loy make request](/loy/reference/cli/loy-make-request/)	 - Scaffold HTTP request DTO with validation
 * [loy make resource](/loy/reference/cli/loy-make-resource/)	 - Scaffold API response resource transformation
 * [loy make runtime](/loy/reference/cli/loy-make-runtime/)	 - Scaffold application runtime lifecycle, composition root, and health checks
 * [loy make seeder](/loy/reference/cli/loy-make-seeder/)	 - Scaffold database seeder fixture
 * [loy make service](/loy/reference/cli/loy-make-service/)	 - Scaffold application service use case
+* [loy make template](/loy/reference/cli/loy-make-template/)	 - Manage and eject generator templates for local project customization
 * [loy make tenant](/loy/reference/cli/loy-make-tenant/)	 - Scaffold multi-tenancy context, RLS helper, and initial migration
 * [loy make test](/loy/reference/cli/loy-make-test/)	 - Scaffold unit and integration tests
 * [loy make view](/loy/reference/cli/loy-make-view/)	 - Scaffold Templ view component or page

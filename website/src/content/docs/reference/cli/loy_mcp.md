@@ -3,7 +3,7 @@ title: "loy mcp"
 description: "Run the Model Context Protocol (MCP) server over standard I/O"
 slug: reference/cli/loy-mcp
 sidebar:
-  order: 39
+  order: 50
 ---
 
 

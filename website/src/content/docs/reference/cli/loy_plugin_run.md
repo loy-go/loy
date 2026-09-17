@@ -3,7 +3,7 @@ title: "loy plugin run"
 description: "Execute an installed plugin generator command within the sandbox"
 slug: reference/cli/loy-plugin-run
 sidebar:
-  order: 52
+  order: 63
 ---
 
 

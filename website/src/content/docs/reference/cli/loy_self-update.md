@@ -3,7 +3,7 @@ title: "loy self-update"
 description: "Update the Loy CLI binary to the latest or specified release"
 slug: reference/cli/loy-self-update
 sidebar:
-  order: 55
+  order: 66
 ---
 
 

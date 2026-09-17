@@ -138,6 +138,7 @@ Never modify codebase invariants or add framework dependencies without an accept
 
 ### 7.1 Plan & Documentation Synchronization
 - **Real-time Phase Plan updates**: Whenever an implementation step finishes and passes verification, update the corresponding phase plan (`docs/plans/0X-Phase-*.md`) status to `Completed` and mark definition of done checkboxes immediately. Never leave completed phases in `Ready for Implementation` status.
+- **Continuous Documentation Gating**: For every feature added, changed, or refactored, all CLI references, manifest documentation, and user guides must be synchronized immediately. Automated doc verification (`make check-docs` and `TestDocumentationSyncGate`) is gated in CI and pre-commit checks.
 - **Pre-Review self-audit**: Before requesting or performing code review, verify code against all Section 2 invariants (path jail, zero shell interpolation, explicit constructor injection, journal pre-registration).
 
 ---
@@ -147,31 +148,20 @@ Never modify codebase invariants or add framework dependencies without an accept
 Before concluding any implementation phase or submitting changes, run these verification commands:
 
 ```bash
-# 1. Full pre-commit verification gate (go vet, golangci-lint, short tests with race detector)
+# 1. Full pre-commit verification gate (go vet, golangci-lint, short tests with race detector, doc sync gate)
 make check
 
-# 2. Complete integration test suite
+# 2. Documentation synchronization and link integrity gate
+make check-docs
+
+# 3. Complete integration test suite
 make test-all
 
-# 3. Coverage validation (target >= 80% on core internal packages)
+# 4. Coverage validation (target >= 80% on core internal packages)
 go test -cover ./internal/... ./cmd/...
 
-# 4. Binary compilation smoke test
+# 5. Binary compilation smoke test
 make build
 ./bin/loy doctor
 ./bin/loy version
-
-# 5. Link integrity check across docs
-python3 -c '
-import os, re
-for root, _, files in os.walk("docs"):
-    for file in files:
-        if file.endswith(".md"):
-            p = os.path.join(root, file)
-            for _, link in re.findall(r"\[([^\]]+)\]\(([^)]+)\)", open(p).read()):
-                if not link.startswith("http") and not link.startswith("#"):
-                    tgt = os.path.normpath(os.path.join(root, link.split("#")[0]))
-                    if not os.path.exists(tgt):
-                        print(f"BROKEN: {p} -> {link}")
-'
 ```

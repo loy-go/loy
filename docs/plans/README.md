@@ -21,6 +21,7 @@ This directory contains the standard engineering pipeline and detailed implement
 | **09** | [09-Phase-Fullstack.md](./09-Phase-Fullstack.md) | Templ SSR, HTMX patterns, Vite asset pipeline integration | Completed |
 | **10** | [10-Phase-Deployment.md](./10-Phase-Deployment.md) | Multi-stage Dockerfiles, Kubernetes manifests, Helm charts, CI pipelines | Completed |
 | **11** | [11-Phase-Documentation-Platform.md](./11-Phase-Documentation-Platform.md) | Astro Starlight documentation site, automated CLI reference (`cmd/docgen`), rules catalog, GitHub Pages CI | Completed |
+| **12** | [12-Phase-Architectural-Extensions.md](./12-Phase-Architectural-Extensions.md) | Template overrides, configurable DAG, tri-route DB, CQRS, schema ingestion, fullstack typegen, semantic MCP mutations, doc gates | Completed |
 
 ---
 

@@ -15,7 +15,7 @@ LDFLAGS := -s -w \
 	-X $(MODULE)/internal/version.Commit=$(COMMIT) \
 	-X $(MODULE)/internal/version.Date=$(DATE)
 
-.PHONY: all build test test-all test-cover lint vet check clean golden help
+.PHONY: all build test test-all test-cover lint vet check check-docs clean golden help
 
 all: check build
 
@@ -47,8 +47,16 @@ lint:
 vet:
 	$(GO) vet ./...
 
-## check: Run full pre-commit verification gate (vet, lint, short tests)
-check: vet lint test
+## check-docs: Verify CLI documentation synchronization and link integrity
+check-docs:
+	@echo "Verifying CLI documentation synchronization..."
+	@$(GO) test -v ./cmd/docgen -run TestDocumentationSyncGate
+	@echo "Verifying documentation link integrity..."
+	@python3 scripts/check_docs_links.py
+	@echo "Documentation gates verified cleanly."
+
+## check: Run full pre-commit verification gate (vet, lint, short tests, doc sync)
+check: vet lint test check-docs
 
 ## golden: Update generator golden fixtures after intentional template modifications
 golden:

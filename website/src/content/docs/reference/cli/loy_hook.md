@@ -3,7 +3,7 @@ title: "loy hook"
 description: "Manage Git lifecycle hooks for architecture enforcement"
 slug: reference/cli/loy-hook
 sidebar:
-  order: 7
+  order: 9
 ---
 
 

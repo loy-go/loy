@@ -3,7 +3,7 @@ title: "loy make event"
 description: "Scaffold domain event struct"
 slug: reference/cli/loy-make-event
 sidebar:
-  order: 17
+  order: 20
 ---
 
 
@@ -24,10 +24,12 @@ loy make event <name> [fields...] [flags]
 ```
   -C, --directory string   Change execution directory
       --dry-run            Preview generated operations without writing to disk
+      --dual-id            Scaffold dual identifier schema (BIGINT identity + UUID public)
       --force              Overwrite existing files if developer owned
       --json               Output results in JSON format
       --modular            Scaffold sub-domain modular wiring file instead of flat wiring
       --no-color           Disable colored ANSI output
+      --no-tidy            Skip running go mod tidy after generation
   -q, --quiet              Suppress non-essential output
       --target string      Target application module in workspace
   -v, --verbose            Enable verbose/debug output

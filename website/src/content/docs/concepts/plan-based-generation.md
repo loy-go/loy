@@ -1,6 +1,6 @@
 ---
 title: "Plan-Based Code Generation"
-description: "How Loy achieves safe, deterministic, atomic code generation with file ownership models and journal rollbacks."
+description: "How Loy achieves safe, deterministic, atomic code generation with file ownership models, comment region splicing, and journal rollbacks."
 ---
 
 Most code generators and CLI scaffolding tools operate naively: when you run a command, they execute immediate disk writes (`os.WriteFile`) one file at a time. If an error occurs halfway through—a syntax error, a permission issue, a naming conflict, or a full disk—your project is left in a **corrupt, half-written state** with dirty Git working trees.
@@ -11,122 +11,174 @@ Loy prevents this entirely through **Plan-Based Atomic Generation** ([ADR-007](/
 
 ---
 
-## The Three-Phase Pipeline
+## 1. The Three-Phase Atomic Pipeline
 
-Loy treats file generation like a database transaction: **nothing touches the filesystem until the entire operation is calculated, validated, and proven conflict-free**.
+Loy treats file generation like a database transaction: **nothing touches the physical filesystem until the entire operation is calculated, validated, and proven conflict-free**.
 
 ```text
-User Input
-    │
-    ▼
+User CLI Command (e.g. loy make crud user)
+     │
+     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│ 1. IN-MEMORY PLAN CALCULATION                                          │
-│    Generators render templates in memory into typed Artifact models.   │
-│    Runs gofmt on Go source. Zero disk mutations occur.                 │
+│ Phase 1: IN-MEMORY PLAN CALCULATION                                    │
+│    • Generators render text/template in memory.                        │
+│    • Validates Go syntax with go/parser and formats with gofmt.        │
+│    • Resolves template overrides (.loy/templates/ vs embedded).        │
+│    • Zero disk writes occur.                                           │
 └───────────────────────────────────┬────────────────────────────────────┘
-                                    │
+                                    │ Outputs []model.Artifact
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│ 2. CONFLICT DETECTION & OWNERSHIP AUDIT                                │
-│    Validates target paths against Path Jail sandbox.                   │
-│    Inspects existing disk state to classify ownership models.          │
-│    Aborts cleanly if developer-owned files would be overwritten.       │
+│ Phase 2: CONFLICT DETECTION & OWNERSHIP AUDIT                          │
+│    • Path Jail sandbox: validates every path via CleanAndValidatePath. │
+│    • Inspects existing filesystem to detect file ownership models:     │
+│        - DeveloperOwned: Abort unless --force is provided.             │
+│        - GeneratedOwned: Verify header hash and allow clean update.    │
+│        - MixedOwned: Route to comment region splicer.                  │
+│    • Produces typed plan.Plan with OpCreate, OpSkip, OpSplice, etc.   │
 └───────────────────────────────────┬────────────────────────────────────┘
-                                    │
+                                    │ Validated plan.Plan
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│ 3. ATOMIC JOURNAL EXECUTION & ROLLBACK                                 │
-│    Registers each file mutation in an execution journal.               │
-│    Executes mutations. If ANY error occurs, automatically rolls back   │
-│    all previous writes in reverse LIFO order.                          │
+│ Phase 3: ATOMIC EXECUTION & JOURNAL ROLLBACK                           │
+│    • Pre-registers state journal before every physical write.          │
+│    • Executes planned file creations and managed comment splices.      │
+│    • IF ANY ERROR OCCURS: automatically rolls back all prior writes   │
+│      in reverse LIFO order, leaving working tree 100% clean.           │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## The 3 File Ownership Models
+## 2. The Three File Ownership Models
 
-Loy categorizes every file in your repository into an explicit ownership model:
+Loy explicitly categorizes every file in your repository into one of three ownership models ([ADR-007](/loy/adrs/)):
 
 ```text
 ┌───────────────────────────┬────────────────────────────────────────────────────────┐
 │ File Ownership Model      │ Generator Behavior                                     │
 ├───────────────────────────┼────────────────────────────────────────────────────────┤
-│ DeveloperOwned            │ Loy will NEVER overwrite without explicit `--force`.   │
-│ GeneratedOwned            │ Loy safely regenerates if headers are intact.          │
-│ MixedOwned (Spliced)      │ Loy only edits inside designated `// loy:region` tags. │
+│ DeveloperOwned            │ Loy will NEVER overwrite without explicit --force.     │
+│ GeneratedOwned            │ Loy safely regenerates if generated header is intact.  │
+│ MixedOwned (Spliced)      │ Loy only edits inside designated // loy:region tags.   │
 └───────────────────────────┴────────────────────────────────────────────────────────┘
 ```
 
-### 1. `DeveloperOwned`
-Files that contain your business logic (such as `domain/order.go`, `service/service.go`, or handwritten SQL queries).
+### 2.1 `DeveloperOwned`
+Files where developers write custom business rules, such as domain entities (`domain/order.go`), services (`service/service.go`), or SQL queries (`queries/orders.sql`).
+
 - **Rule**: If a `DeveloperOwned` file already exists on disk, Loy refuses to touch it:
   ```text
-  ERROR [LOY-GEN-001] conflict building plan: cannot overwrite developer-owned file "domain/order.go" without --force
+  ERROR [LOY-GEN-001] conflict building plan: cannot overwrite developer-owned file "internal/order/domain/order.go" without --force
   Hint: use --force to overwrite existing files
   ```
-- To overwrite intentionally, you must pass `--force`:
+- To intentionally overwrite existing developer-owned files:
   ```bash
   loy make crud order --force
   ```
 
-### 2. `GeneratedOwned`
-Files that are 100% managed by tooling (such as `queries/orders.sql.go` generated by `sqlc` or initial entity stubs).
-- These files carry a standard header:
+### 2.2 `GeneratedOwned`
+Files that are completely managed by tooling (such as sqlc query code `queries/orders.sql.go` or initial framework stubs).
+
+- These files carry a standard auto-generated comment header:
   ```go
   // Code generated by Loy; DO NOT EDIT.
   ```
-- **Rule**: Loy can safely overwrite or regenerate these files because they contain no custom human edits.
-- **Safety check**: If a developer edited a `GeneratedOwned` file and modified code without removing the header, Loy detects the content hash mismatch and blocks the overwrite unless `--force` is used.
+- **Rule**: Loy can safely regenerate these files because they contain no manual human logic.
+- **Safety check**: If a developer edited a `GeneratedOwned` file without removing the generated header, Loy computes a content checksum mismatch and blocks the overwrite unless `--force` is provided.
 
-### 3. `MixedOwned` (Managed Comment Regions)
-Files that combine developer-written code with generator-managed insertions (primarily the composition root `internal/app/wiring.go`).
-- Rather than parsing fragile ASTs or replacing whole files, Loy uses **Managed Comment Regions** ([ADR-014](/loy/adrs/)):
-  ```go title="internal/app/wiring.go"
-  func (a *App) wireDependencies() error {
-      // loy:region:repositories
-      orderRepo, err := orderRepo.NewPostgresRepository(a.db)
-      if err != nil {
-          return err
-      }
-      // loy:endregion
+### 2.3 `MixedOwned` (Managed Comment Regions)
+Files that combine developer-written code with generator-managed insertions, primarily the application composition root (`internal/app/wiring.go`).
 
-      // You can write custom code freely here!
-      // Loy will never touch code outside comment regions.
-  }
-  ```
-- **Rule**: Loy only splices code between `// loy:region:<name>` and `// loy:endregion`. Your surrounding custom code is guaranteed to remain untouched.
+Rather than performing fragile full-AST rewrites or prompting developers to copy-paste code, Loy uses **Managed Comment Regions** ([ADR-014](/loy/adrs/)):
+
+```go title="internal/app/wiring.go"
+func (a *App) wireDependencies() error {
+    // loy:region:repositories
+    userRepo, err := userRepo.NewPostgresRepository(a.db)
+    if err != nil {
+        return err
+    }
+    // loy:endregion
+
+    // loy:region:services
+    userSvc, err := userService.NewService(userRepo)
+    if err != nil {
+        return err
+    }
+    // loy:endregion
+
+    // Developer-owned logic lives freely outside comment regions!
+    // Custom middleware, custom database handles, or third-party SDKs
+    // are guaranteed never to be touched or removed by Loy generators.
+
+    return nil
+}
+```
+
+- **Rule**: Loy only splices code strictly between `// loy:region:<name>` and `// loy:endregion`. Your surrounding custom code is preserved byte-for-byte.
 
 ---
 
-## Idempotency & Subsequence Matching
+## 3. True Idempotency via Multi-Line Subsequence Matching
 
 What happens if you run `loy make crud order` twice?
 
-Traditional generators create duplicate imports and duplicate constructor lines, breaking compilation.
+Traditional code generators naively append lines, producing duplicate imports, duplicate variable declarations, and broken Go code.
 
-Loy's splicer implements **multi-line subsequence matching**:
-1. Scans the target comment region for the exact lines being inserted.
-2. If the lines are already present, the operation is marked as `OpSkip`.
-3. Returns your code unchanged without creating duplicate registrations or changing file timestamps.
-
----
-
-## Atomic Rollback with State Journals
-
-In complex scaffolding commands (such as `loy make crud`), Loy creates 8+ files and modifies `wiring.go`.
-
-If an error occurs on the 7th file (e.g. invalid syntax in a custom template or permission error):
-1. Loy immediately halts execution.
-2. Consults the pre-registered execution journal.
-3. Deletes any newly created files and restores spliced files back to their exact original byte content in reverse LIFO order.
-4. Leaves your Git working tree **100% clean**, exactly as it was before the command ran.
+Loy's splicer engine implements **multi-line subsequence matching**:
+1. It reads the target comment region in `internal/app/wiring.go`.
+2. It parses the candidate code snippet to insert.
+3. If the snippet already exists as a contiguous subsequence within the region, the splicer marks the operation as `OpSkip`.
+4. Your file remains untouched, avoiding redundant disk writes and preserving existing Git timestamps.
 
 ---
 
-## Dry-Run Previews
+## 4. State Journals & Guaranteed Rollbacks
 
-Before executing any generative command, you can inspect the plan without modifying a single byte on disk:
+During a complex scaffolding command (like `loy make crud`), Loy creates 8+ files across multiple directories and splices lines into `internal/app/wiring.go`.
+
+```text
+Scaffolding Execution Flow:
+  1. migrations/<ts>_create_books_table.sql ──> [Created]
+  2. queries/books.sql                     ──> [Created]
+  3. internal/book/domain/book.go          ──> [Created]
+  4. internal/book/repository/pg.go        ──> [Created]
+  5. internal/book/service/service.go      ──> [Created]
+  6. internal/book/transport/http/handler.go ──> [Created]
+  7. internal/app/wiring.go (splice)       ──> [Error: Disk Full / Permission Denied]
+                                                     │
+                                                     ▼
+                                      Automatic LIFO Rollback:
+                                        • Restore wiring.go backup
+                                        • Delete handler.go
+                                        • Delete service.go
+                                        • Delete pg.go
+                                        • Delete book.go
+                                        • Delete books.sql
+                                        • Delete migration.sql
+                                                     │
+                                                     ▼
+                                      Git Tree Remains 100% Clean!
+```
+
+- **Pre-registered journal**: Before any byte is written to disk, the `plan.Executor` registers the intended action in memory.
+- If any operation fails, the executor catches the error, traverses the journal in reverse (LIFO order), deletes all newly created files, and restores previous file contents from byte-exact backups.
+
+---
+
+## 5. Sandboxed Filesystem Security (Path Jail)
+
+To prevent path traversal vulnerabilities (`../../../etc/passwd`), all file access in Loy must pass through `filesystem.CleanAndValidatePath`:
+- Resolves all symlinks, dot-segments (`.`), and parent segments (`..`).
+- Ensures the resolved absolute path resides strictly inside the designated project root.
+- Rejects any command that attempts to escape the project sandbox with error code `LOY-SEC-001`.
+
+---
+
+## 6. Inspecting Plans (`--dry-run` & `--json`)
+
+You can inspect planned file operations without touching the disk:
 
 ```bash
 loy make crud user name:string email:string --dry-run
@@ -135,18 +187,18 @@ loy make crud user name:string email:string --dry-run
 Output:
 ```text
 Plan operations (dry-run) for crud user:
-  [create] migrations/20260916_create_users_table.sql
-  [create] queries/users.sql
-  [create] internal/user/domain/user.go
-  [create] internal/user/domain/repository.go
-  [create] internal/user/repository/pg_adapter.go
-  [create] internal/user/service/service.go
-  [create] internal/user/transport/http/handler.go
-  [create] internal/user/service/service_test.go
-  [splice] internal/app/wiring.go
+  [create] migrations/20260916_create_users_table.sql (382 bytes)
+  [create] queries/users.sql (245 bytes)
+  [create] internal/user/domain/user.go (412 bytes)
+  [create] internal/user/domain/repository.go (298 bytes)
+  [create] internal/user/repository/pg_adapter.go (1042 bytes)
+  [create] internal/user/service/service.go (854 bytes)
+  [create] internal/user/transport/http/handler.go (1420 bytes)
+  [splice] internal/app/wiring.go (128 bytes spliced into // loy:region:services)
 ```
 
-You can also output machine-readable JSON for CI automation or agent tooling:
+For agentic tool integrations or CI pipeline verification, output machine-readable JSON:
+
 ```bash
 loy make crud user name:string --dry-run --json
 ```

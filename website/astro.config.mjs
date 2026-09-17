@@ -88,6 +88,10 @@ export default defineConfig({
           items: [
             { label: 'Building Vertical CRUD Slices', slug: 'guides/vertical-slice' },
             { label: 'Database Migrations & SQLC', slug: 'guides/database-migrations' },
+            { label: 'CQRS & Commands', slug: 'guides/cqrs-and-commands' },
+            { label: 'Fullstack Typegen (TypeScript)', slug: 'guides/typegen-client' },
+            { label: 'Schema-First Ingestion', slug: 'guides/schema-ingestion' },
+            { label: 'Template Overrides', slug: 'guides/template-overrides' },
             { label: 'Live Hot Reload Supervisor', slug: 'guides/live-reload' },
             { label: 'Interactive Live TUI', slug: 'guides/interactive-tui' },
             { label: 'Architecture Drift Diffing', slug: 'guides/architecture-drift' },

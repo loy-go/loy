@@ -21,6 +21,7 @@ loy check [path] [flags]
 
 ```
       --deep            Run deep type analysis via go/packages
+      --fix             Auto-remediate architectural violations where possible (e.g. ARCH-005)
       --format string   Output format (text, json, github, agent) (default "text")
   -h, --help            help for check
       --strict          Treat all architectural warnings as fatal errors

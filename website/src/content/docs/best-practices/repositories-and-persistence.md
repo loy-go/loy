@@ -207,4 +207,45 @@ func TestCandidateService_GetCandidate(t *testing.T) {
 }
 ```
 
+---
+
+## 7. The Dual-Identifier Schema Pattern (`--dual-id`)
+
+Exposing sequential auto-incrementing integer IDs (`/api/v1/orders/1`, `/api/v1/orders/2`) creates severe enterprise security vulnerabilities:
+- **Enumeration Attacks**: Attackers can iterate through IDs to scrape entire databases.
+- **Business Intelligence Leakage**: Competitors can determine daily order volume and user sign-up rates.
+- **ID Collisions in Distributed Systems**: Merging records across multi-region databases becomes difficult.
+
+Loy solves this with the **Dual-Identifier Pattern** (`loy make crud <name> --dual-id`):
+
+```sql title="migrations/<timestamp>_create_orders_table.sql"
+CREATE TABLE orders (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    public_id UUID NOT NULL DEFAULT gen_random_uuid(),
+    total NUMERIC(10, 2) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    CONSTRAINT uq_orders_public_id UNIQUE (public_id)
+);
+```
+
+### Clean Architecture Separation
+- **Inside the Database & Domain**: Relationships, foreign keys, and indexes use `id BIGINT` (64-bit integer), preserving optimal B-tree memory footprint and high join performance.
+- **Outside at the API Boundary**: HTTP JSON resources and URLs expose only `public_id UUID` (e.g. `/api/v1/orders/f47ac10b-58cc-4372-a567-0e02b2c3d479`), completely shielding internal database keys.
+
+---
+
+## 8. PgBouncer Compatibility & Simple Protocol Mode
+
+When deploying to production with PgBouncer in `transaction` pooling mode:
+- Standard `pgx` prepared statements bind to individual server connections.
+- When PgBouncer reallocates server connections between transactions, prepared statements fail with `prepared statement "..." does not exist`.
+
+Loy resolves this in `internal/platform/database/postgres.go` by setting `exec_mode_simple_protocol`:
+
+```go
+config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+```
+
+This instructs `pgx` to send parameterized queries directly via simple protocol, completely eliminating prepared statement desynchronization under PgBouncer transaction pooling.
+
 This test runs in **0.001 seconds**, never touches a network socket, and tests business logic in total isolation.

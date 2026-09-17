@@ -3,7 +3,7 @@ title: "loy make docker"
 description: "Scaffold production multi-stage Dockerfile and docker-compose.yml"
 slug: reference/cli/loy-make-docker
 sidebar:
-  order: 16
+  order: 19
 ---
 
 
@@ -25,10 +25,12 @@ loy make docker [name] [flags]
 ```
   -C, --directory string   Change execution directory
       --dry-run            Preview generated operations without writing to disk
+      --dual-id            Scaffold dual identifier schema (BIGINT identity + UUID public)
       --force              Overwrite existing files if developer owned
       --json               Output results in JSON format
       --modular            Scaffold sub-domain modular wiring file instead of flat wiring
       --no-color           Disable colored ANSI output
+      --no-tidy            Skip running go mod tidy after generation
   -q, --quiet              Suppress non-essential output
       --target string      Target application module in workspace
   -v, --verbose            Enable verbose/debug output

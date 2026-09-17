@@ -3,7 +3,7 @@ title: "loy hook install"
 description: "Install Git pre-commit hook to run loy check before each commit"
 slug: reference/cli/loy-hook-install
 sidebar:
-  order: 8
+  order: 10
 ---
 
 

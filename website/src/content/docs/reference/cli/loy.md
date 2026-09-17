@@ -31,6 +31,7 @@ Loy is an opinionated developer platform and CLI toolchain for Go, providing arc
 * [loy dev](/loy/reference/cli/loy-dev/)	 - Start multi-process live development server with hot reload
 * [loy doc](/loy/reference/cli/loy-doc/)	 - Generate OpenAPI / Swagger documentation from code annotations
 * [loy doctor](/loy/reference/cli/loy-doctor/)	 - Validate development environment, toolchain prerequisites, and project state
+* [loy gen](/loy/reference/cli/loy-gen/)	 - Generate client SDKs, types, and external schemas from application code
 * [loy graph](/loy/reference/cli/loy-graph/)	 - Visualize package dependency hierarchy and architectural layers
 * [loy hook](/loy/reference/cli/loy-hook/)	 - Manage Git lifecycle hooks for architecture enforcement
 * [loy init](/loy/reference/cli/loy-init/)	 - Initialize Loy configuration in an existing Go project
