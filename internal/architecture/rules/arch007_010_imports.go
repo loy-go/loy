@@ -173,14 +173,20 @@ func (r *RuleArch010) Check(ctx context.Context, a *architecture.Analysis) []arc
 		fromLayer := architecture.Layer(fromNode.Layer)
 		toLayer := architecture.Layer(toNode.Layer)
 
-		// ARCH-002 through ARCH-006 govern specific single-layer violations and allow suppression.
-		// ARCH-010 acts as the fallback matrix enforcer.
-		if !architecture.IsAllowedDirection(fromLayer, toLayer) {
+		// Check allowed layer direction using custom Topology if present, or default matrix
+		var allowed bool
+		if a.Topology != nil {
+			allowed = a.Topology.IsAllowed(fromLayer, toLayer)
+		} else {
+			allowed = architecture.IsAllowedDirection(fromLayer, toLayer)
+		}
+
+		if !allowed {
 			violations = append(violations, architecture.Violation{
 				RuleID:       r.ID(),
 				Code:         diagnostics.CodeArchLayerDirection,
 				Message:      fmt.Sprintf("illegal layer dependency: %s (%s) -> %s (%s)", edge.From, fromLayer, edge.To, toLayer),
-				Detail:       "violates strict 4-layer matrix: Transport -> Application -> Domain <- Infrastructure",
+				Detail:       "violates architectural layer matrix",
 				Hint:         "invert dependency with an interface or adjust package layer responsibilities",
 				File:         edge.File,
 				Line:         edge.Line,

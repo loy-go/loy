@@ -42,10 +42,18 @@ type Integration struct {
 	Config  map[string]interface{} `yaml:"config,omitempty"`
 }
 
+// LayerConfig defines a topological layer, its matching path patterns, and what target layers it is allowed to import.
+type LayerConfig struct {
+	Allows []string `yaml:"allows,omitempty"`
+	Match  []string `yaml:"match,omitempty"`
+}
+
 // ArchitectureConfig customizes rule enforcement.
 type ArchitectureConfig struct {
-	Strict   bool     `yaml:"strict,omitempty"`
-	Excluded []string `yaml:"excluded,omitempty"`
+	Strict   bool                   `yaml:"strict,omitempty"`
+	Excluded []string               `yaml:"excluded,omitempty"`
+	Pattern  string                 `yaml:"pattern,omitempty"` // "ddd" | "hexagonal" | "cqrs" | "custom"
+	Layers   map[string]LayerConfig `yaml:"layers,omitempty"`
 }
 
 // WorkspaceConfig models workspace-level configuration.

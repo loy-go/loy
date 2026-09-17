@@ -2,10 +2,12 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/loy-go/loy/internal/architecture"
 	"github.com/loy-go/loy/internal/architecture/rules"
+	"github.com/loy-go/loy/internal/astmod"
 	"github.com/loy-go/loy/internal/diagnostics"
 	"github.com/loy-go/loy/internal/discovery"
 	"github.com/loy-go/loy/internal/filesystem"
@@ -18,6 +20,7 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 	var (
 		deep   bool
 		strict bool
+		fix    bool
 		format string
 	)
 
@@ -82,12 +85,23 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 				}
 			}
 
+			archLayers := make(map[string]architecture.LayerTopologyConfig)
+			for k, v := range mf.Architecture.Layers {
+				archLayers[k] = architecture.LayerTopologyConfig{
+					Allows: v.Allows,
+					Match:  v.Match,
+				}
+			}
+			topol, patterns := architecture.BuildTopology(mf.Architecture.Pattern, archLayers)
+
 			cfg := architecture.AnalyzerConfig{
 				ModuleName: moduleName,
 				RootDir:    discRes.RootDir,
 				Deep:       deep,
 				Strict:     strict || mf.Architecture.Strict,
 				Rules:      rules.DefaultRules(),
+				Topology:   topol,
+				Patterns:   patterns,
 			}
 
 			analyzer := architecture.NewAnalyzer(fs, cfg)
@@ -107,6 +121,32 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 
 			if format == "json" {
 				opts.JSON = true
+			}
+
+			if fix && len(violations) > 0 {
+				fixedCount := 0
+				for _, v := range violations {
+					if v.RuleID == "ARCH-005" {
+						msg := v.Message
+						const marker = "directly imports infrastructure package "
+						idx := strings.Index(msg, marker)
+						if idx != -1 {
+							infraPkg := strings.TrimSpace(msg[idx+len(marker):])
+							if err := astmod.FixARCH005(fs, v.File, infraPkg); err == nil {
+								fixedCount++
+							}
+						}
+					}
+				}
+				if fixedCount > 0 {
+					violations, err = analyzer.Run(ctx)
+					if err == nil && len(violations) == 0 {
+						if !opts.Quiet && !opts.JSON {
+							_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Auto-remediated %d architectural violation(s). All architecture rules passed.\n", fixedCount)
+						}
+						return nil
+					}
+				}
 			}
 
 			var cmdDiags []*diagnostics.Diagnostic
@@ -164,6 +204,7 @@ func newCheckCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 
 	cmd.Flags().BoolVar(&deep, "deep", false, "Run deep type analysis via go/packages")
 	cmd.Flags().BoolVar(&strict, "strict", false, "Treat all architectural warnings as fatal errors")
+	cmd.Flags().BoolVar(&fix, "fix", false, "Auto-remediate architectural violations where possible (e.g. ARCH-005)")
 	cmd.Flags().StringVar(&format, "format", "text", "Output format (text, json, github, agent)")
 
 	return cmd

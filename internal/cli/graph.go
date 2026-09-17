@@ -153,6 +153,9 @@ func newGraphCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command
 
 func buildGraphModel(ctx context.Context, fs filesystem.FileSystem, runner process.Runner, targetDir string) (*graph.GraphModel, error) {
 	moduleName := ""
+	var topol *architecture.Topology
+	var patterns []architecture.PatternRule
+
 	disc, err := discovery.NewDiscoverer(fs, runner)
 	if err == nil {
 		discRes, diag := disc.Discover(ctx, targetDir)
@@ -165,6 +168,14 @@ func buildGraphModel(ctx context.Context, fs filesystem.FileSystem, runner proce
 					parsed, _ := p.ParseStrict(discRes.ManifestPath, data)
 					if parsed != nil {
 						moduleName = parsed.Project.Module
+						archLayers := make(map[string]architecture.LayerTopologyConfig)
+						for k, v := range parsed.Architecture.Layers {
+							archLayers[k] = architecture.LayerTopologyConfig{
+								Allows: v.Allows,
+								Match:  v.Match,
+							}
+						}
+						topol, patterns = architecture.BuildTopology(parsed.Architecture.Pattern, archLayers)
 					}
 				}
 			}
@@ -184,6 +195,8 @@ func buildGraphModel(ctx context.Context, fs filesystem.FileSystem, runner proce
 		ModuleName: moduleName,
 		RootDir:    targetDir,
 		Rules:      rules.DefaultRules(),
+		Topology:   topol,
+		Patterns:   patterns,
 	})
 	g, layers, violations, err := analyzer.BuildGraph(ctx)
 	if err != nil {

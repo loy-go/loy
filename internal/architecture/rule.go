@@ -29,6 +29,7 @@ type Analysis struct {
 	Classifier    *Classifier
 	Suppressions  []Suppression
 	IsDeep        bool
+	Topology      *Topology
 }
 
 // Rule defines the contract for an architecture boundary check.

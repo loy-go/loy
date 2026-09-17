@@ -5,10 +5,17 @@ import (
 	"strings"
 )
 
+// PatternRule pairs a path glob/prefix pattern with an architectural layer.
+type PatternRule struct {
+	Pattern string
+	Layer   Layer
+}
+
 // Classifier maps import paths and file paths to Architectural layers.
 type Classifier struct {
 	moduleName string
 	overrides  map[string]Layer
+	patterns   []PatternRule
 }
 
 // NewClassifier creates a layer classifier for the target module.
@@ -21,6 +28,16 @@ func NewClassifier(moduleName string, overrides map[string]string) *Classifier {
 		c.overrides[pkg] = Layer(lyr)
 	}
 	return c
+}
+
+// AddPattern appends a custom path pattern to layer mapping.
+func (c *Classifier) AddPattern(pattern string, layer Layer) {
+	c.patterns = append(c.patterns, PatternRule{Pattern: pattern, Layer: layer})
+}
+
+// SetPatterns sets all custom pattern rules.
+func (c *Classifier) SetPatterns(patterns []PatternRule) {
+	c.patterns = patterns
 }
 
 // Classify determines the layer for a given package import path.
@@ -41,6 +58,13 @@ func (c *Classifier) Classify(importPath string) Layer {
 			!strings.HasPrefix(importPath, "cmd/") &&
 			!strings.HasPrefix(importPath, "views/") {
 			return LayerUnknown
+		}
+	}
+
+	// Check custom pattern rules next
+	for _, p := range c.patterns {
+		if matchPattern(p.Pattern, relPath) {
+			return p.Layer
 		}
 	}
 
@@ -77,3 +101,59 @@ func (c *Classifier) Classify(importPath string) Layer {
 
 	return LayerUnknown
 }
+
+func matchPattern(pattern, path string) bool {
+	pattern = filepath.ToSlash(pattern)
+	path = filepath.ToSlash(path)
+
+	if path == pattern {
+		return true
+	}
+	if ok, _ := filepath.Match(pattern, path); ok {
+		return true
+	}
+
+	patParts := strings.Split(pattern, "/")
+	pathParts := strings.Split(path, "/")
+
+	// If pattern ends with "**" (e.g. internal/*/service/**)
+	if len(patParts) > 0 && patParts[len(patParts)-1] == "**" {
+		prefixParts := patParts[:len(patParts)-1]
+		if len(pathParts) >= len(prefixParts) {
+			matched := true
+			for i, p := range prefixParts {
+				if ok, _ := filepath.Match(p, pathParts[i]); !ok {
+					matched = false
+					break
+				}
+			}
+			if matched {
+				return true
+			}
+		}
+	}
+
+	// If pattern ends with "*"
+	if len(patParts) > 0 && patParts[len(patParts)-1] == "*" {
+		prefixParts := patParts[:len(patParts)-1]
+		if len(pathParts) == len(patParts) {
+			matched := true
+			for i, p := range prefixParts {
+				if ok, _ := filepath.Match(p, pathParts[i]); !ok {
+					matched = false
+					break
+				}
+			}
+			if matched {
+				return true
+			}
+		}
+	}
+
+	if strings.HasPrefix(path, pattern+"/") {
+		return true
+	}
+
+	return false
+}
+

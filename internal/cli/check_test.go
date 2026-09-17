@@ -155,4 +155,53 @@ type Order struct { R pg.Repo }
 			t.Errorf("expected empty json array for clean project, got: %q", cleanBuf.String())
 		}
 	})
+
+	t.Run("check with --fix remediates ARCH-005", func(t *testing.T) {
+		memFS := filesystem.NewMemFileSystem()
+		_ = memFS.MkdirAll("/fixproj", 0755)
+		_ = memFS.WriteFile("/fixproj/go.mod", []byte("module github.com/test/fixproj\n\ngo 1.22\n"), 0644)
+		_ = memFS.WriteFile("/fixproj/loy.yaml", []byte("version: 1\nproject:\n  name: fixproj\n  module: github.com/test/fixproj\n"), 0644)
+
+		_ = memFS.MkdirAll("/fixproj/internal/user/service", 0755)
+		_ = memFS.WriteFile("/fixproj/internal/user/service/service.go", []byte(`package service
+
+import (
+	"github.com/test/fixproj/internal/user/repository"
+)
+
+type Service struct {
+	repo *repository.PostgresRepository
+}
+`), 0644)
+
+		_ = memFS.MkdirAll("/fixproj/internal/user/repository", 0755)
+		_ = memFS.WriteFile("/fixproj/internal/user/repository/repo.go", []byte(`package repository
+
+type PostgresRepository struct{}
+`), 0644)
+
+		// First, check without --fix should fail with ARCH-005
+		cmd := newCheckCmd(memFS, runner)
+		cmd.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: true}))
+		cmd.SetArgs([]string{"/fixproj"})
+		err := cmd.Execute()
+		if err == nil {
+			t.Fatalf("expected check without --fix to fail with ARCH-005")
+		}
+
+		// Now, check with --fix should remediate and pass
+		cmdFix := newCheckCmd(memFS, runner)
+		cmdFix.SetContext(WithOptions(context.Background(), &GlobalOptions{Quiet: true}))
+		cmdFix.SetArgs([]string{"/fixproj", "--fix"})
+		errFix := cmdFix.Execute()
+		if errFix != nil {
+			t.Fatalf("expected check --fix to succeed, got: %v", errFix)
+		}
+
+		// Verify file was updated
+		content, _ := memFS.ReadFile("/fixproj/internal/user/service/service.go")
+		if strings.Contains(string(content), "github.com/test/fixproj/internal/user/repository") {
+			t.Errorf("expected infra import removed from service.go:\n%s", string(content))
+		}
+	})
 }

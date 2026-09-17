@@ -15,6 +15,9 @@ func (r *RuleArch002) ID() string          { return "ARCH-002" }
 func (r *RuleArch002) Description() string { return "Domain must not import infrastructure" }
 
 func (r *RuleArch002) Check(ctx context.Context, a *architecture.Analysis) []architecture.Violation {
+	if a.Topology != nil && a.Topology.IsCustom() {
+		return nil
+	}
 	var violations []architecture.Violation
 
 	for _, edge := range a.Graph.AllEdges() {
@@ -48,6 +51,9 @@ func (r *RuleArch003) ID() string          { return "ARCH-003" }
 func (r *RuleArch003) Description() string { return "Domain must not import transport" }
 
 func (r *RuleArch003) Check(ctx context.Context, a *architecture.Analysis) []architecture.Violation {
+	if a.Topology != nil && a.Topology.IsCustom() {
+		return nil
+	}
 	var violations []architecture.Violation
 
 	for _, edge := range a.Graph.AllEdges() {
@@ -81,6 +87,9 @@ func (r *RuleArch004) ID() string          { return "ARCH-004" }
 func (r *RuleArch004) Description() string { return "Application must not import transport" }
 
 func (r *RuleArch004) Check(ctx context.Context, a *architecture.Analysis) []architecture.Violation {
+	if a.Topology != nil && a.Topology.IsCustom() {
+		return nil
+	}
 	var violations []architecture.Violation
 
 	for _, edge := range a.Graph.AllEdges() {
@@ -114,6 +123,9 @@ func (r *RuleArch005) ID() string          { return "ARCH-005" }
 func (r *RuleArch005) Description() string { return "Application must not import concrete infrastructure" }
 
 func (r *RuleArch005) Check(ctx context.Context, a *architecture.Analysis) []architecture.Violation {
+	if a.Topology != nil && a.Topology.IsCustom() {
+		return nil
+	}
 	var violations []architecture.Violation
 
 	for _, edge := range a.Graph.AllEdges() {
@@ -147,6 +159,9 @@ func (r *RuleArch006) ID() string          { return "ARCH-006" }
 func (r *RuleArch006) Description() string { return "Infrastructure must not import transport" }
 
 func (r *RuleArch006) Check(ctx context.Context, a *architecture.Analysis) []architecture.Violation {
+	if a.Topology != nil && a.Topology.IsCustom() {
+		return nil
+	}
 	var violations []architecture.Violation
 
 	for _, edge := range a.Graph.AllEdges() {

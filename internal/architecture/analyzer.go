@@ -22,6 +22,8 @@ type AnalyzerConfig struct {
 	Strict     bool
 	Rules      []Rule
 	LayerMap   map[string]string
+	Topology   *Topology
+	Patterns   []PatternRule
 }
 
 // Analyzer orchestrates Phase 1 AST and Phase 2 Type analysis.
@@ -55,6 +57,9 @@ func (a *Analyzer) Run(ctx context.Context) ([]Violation, error) {
 
 func (a *Analyzer) analyze(ctx context.Context) (*Analysis, map[string]Layer, []Violation, error) {
 	classifier := NewClassifier(a.cfg.ModuleName, a.cfg.LayerMap)
+	if len(a.cfg.Patterns) > 0 {
+		classifier.SetPatterns(a.cfg.Patterns)
+	}
 	g := graph.New()
 	layers := make(map[string]Layer)
 	fset := token.NewFileSet()
@@ -143,6 +148,11 @@ func (a *Analyzer) analyze(ctx context.Context) (*Analysis, map[string]Layer, []
 		return nil, nil, nil, fmt.Errorf("walking project root: %w", err)
 	}
 
+	topol := a.cfg.Topology
+	if topol == nil {
+		topol = NewDefaultTopology()
+	}
+
 	analysis := &Analysis{
 		ModuleName:   a.cfg.ModuleName,
 		Graph:        g,
@@ -150,6 +160,7 @@ func (a *Analyzer) analyze(ctx context.Context) (*Analysis, map[string]Layer, []
 		Classifier:   classifier,
 		Suppressions: allSuppressions,
 		IsDeep:       a.cfg.Deep,
+		Topology:     topol,
 	}
 
 	// Step 2: Phase 2 Deep Analysis if requested
