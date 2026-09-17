@@ -1,6 +1,7 @@
 package typescript
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -179,19 +180,19 @@ func RegisterRoutes(mux *http.ServeMux) {
 		t.Fatalf("Generate failed: %v", err)
 	}
 
-	if result.TypesPath != "client/types.ts" {
+	if filepath.Clean(result.TypesPath) != filepath.Clean(filepath.Join("client", "types.ts")) {
 		t.Errorf("expected types path client/types.ts, got %s", result.TypesPath)
 	}
-	if result.ClientPath != "client/client.ts" {
+	if filepath.Clean(result.ClientPath) != filepath.Clean(filepath.Join("client", "client.ts")) {
 		t.Errorf("expected client path client/client.ts, got %s", result.ClientPath)
 	}
 
-	typesData, err := fs.ReadFile("client/types.ts")
+	typesData, err := fs.ReadFile(result.TypesPath)
 	if err != nil || !strings.Contains(string(typesData), "ItemRequest") {
 		t.Errorf("expected types.ts to contain ItemRequest, got: %s", string(typesData))
 	}
 
-	clientData, err := fs.ReadFile("client/client.ts")
+	clientData, err := fs.ReadFile(result.ClientPath)
 	if err != nil || !strings.Contains(string(clientData), "class LoyClient") {
 		t.Errorf("expected client.ts to contain LoyClient, got: %s", string(clientData))
 	}
@@ -214,7 +215,7 @@ func TestGenerate_TypeScriptCompilerVerification(t *testing.T) {
 	osFS := filesystem.NewOSFileSystem()
 
 	// Write mock Go files
-	_ = osFS.MkdirAll(tempDir+"/internal/user/transport", 0755)
+	_ = osFS.MkdirAll(filepath.Join(tempDir, "internal", "user", "transport"), 0755)
 	dtoGo := `package transport
 type UserRequest struct {
 	Name string ` + "`json:\"name\"`" + `
@@ -226,7 +227,7 @@ type UserResource struct {
 	Email string ` + "`json:\"email\"`" + `
 }
 `
-	_ = osFS.WriteFile(tempDir+"/internal/user/transport/user.go", []byte(dtoGo), 0644)
+	_ = osFS.WriteFile(filepath.Join(tempDir, "internal", "user", "transport", "user.go"), []byte(dtoGo), 0644)
 
 	routesGo := `package transport
 import "net/http"
@@ -237,9 +238,9 @@ func Routes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /users/{id}", nil)
 }
 `
-	_ = osFS.WriteFile(tempDir+"/internal/user/transport/routes.go", []byte(routesGo), 0644)
+	_ = osFS.WriteFile(filepath.Join(tempDir, "internal", "user", "transport", "routes.go"), []byte(routesGo), 0644)
 
-	clientOut := tempDir + "/client"
+	clientOut := filepath.Join(tempDir, "client")
 	result, err := Generate(osFS, GenerateOptions{
 		RootDir: tempDir,
 		OutDir:  clientOut,
