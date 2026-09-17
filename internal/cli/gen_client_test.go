@@ -82,10 +82,10 @@ func RegisterRoutes(mux *http.ServeMux) {
 			t.Fatalf("failed to parse json output: %v, raw: %s", err, stdout.String())
 		}
 
-		if res["types_path"] != filepath.Join(outDir, "types.ts") {
+		if filepath.Clean(res["types_path"]) != filepath.Clean(filepath.Join(outDir, "types.ts")) {
 			t.Errorf("expected types_path, got %s", res["types_path"])
 		}
-		if res["client_path"] != filepath.Join(outDir, "client.ts") {
+		if filepath.Clean(res["client_path"]) != filepath.Clean(filepath.Join(outDir, "client.ts")) {
 			t.Errorf("expected client_path, got %s", res["client_path"])
 		}
 	})

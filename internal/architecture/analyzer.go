@@ -95,13 +95,21 @@ func (a *Analyzer) analyze(ctx context.Context) (*Analysis, map[string]Layer, []
 		}
 
 		// Compute import path for this file
-		normRoot := filepath.ToSlash(a.cfg.RootDir)
-		normPath := filepath.ToSlash(path)
-		relPath := normPath
-		if strings.HasPrefix(normPath, normRoot) {
-			relPath = strings.TrimPrefix(normPath, normRoot)
-			relPath = strings.TrimPrefix(relPath, "/")
+		relPath := path
+		if rel, err := filepath.Rel(a.cfg.RootDir, path); err == nil && !strings.HasPrefix(rel, "..") {
+			relPath = rel
+		} else {
+			evalRoot, errRoot := filepath.EvalSymlinks(a.cfg.RootDir)
+			evalPath, errPath := filepath.EvalSymlinks(path)
+			if errRoot == nil && errPath == nil {
+				if r, errRel := filepath.Rel(evalRoot, evalPath); errRel == nil && !strings.HasPrefix(r, "..") {
+					relPath = r
+				}
+			}
 		}
+		relPath = filepath.ToSlash(relPath)
+		relPath = strings.TrimPrefix(relPath, "/")
+		relPath = strings.TrimPrefix(relPath, "./")
 		dir := filepath.ToSlash(filepath.Dir(relPath))
 		pkgImport := a.cfg.ModuleName
 		if dir != "." && dir != "" {

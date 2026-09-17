@@ -89,7 +89,7 @@ func TestMakeCRUD_WithChiAndNetHTTP(t *testing.T) {
 			t.Fatalf("make crud in chi project failed: %v, out: %s", err, out)
 		}
 
-		handlerBytes, err := os.ReadFile(filepath.Join(tempDir, "internal/order/transport/http/handler.go"))
+		handlerBytes, err := os.ReadFile(filepath.Join(tempDir, filepath.FromSlash("internal/order/transport/http/handler.go")))
 		if err != nil {
 			t.Fatalf("reading order handler: %v", err)
 		}
@@ -122,7 +122,7 @@ func TestMakeCRUD_WithChiAndNetHTTP(t *testing.T) {
 			t.Fatalf("make crud in nethttp project failed: %v, out: %s", err, out)
 		}
 
-		handlerBytes, err := os.ReadFile(filepath.Join(tempDir, "internal/customer/transport/http/handler.go"))
+		handlerBytes, err := os.ReadFile(filepath.Join(tempDir, filepath.FromSlash("internal/customer/transport/http/handler.go")))
 		if err != nil {
 			t.Fatalf("reading customer handler: %v", err)
 		}
@@ -155,7 +155,7 @@ func TestMakeCRUD_WithChiAndNetHTTP(t *testing.T) {
 			t.Fatalf("make crud in gin project failed: %v, out: %s", err, out)
 		}
 
-		handlerBytes, err := os.ReadFile(filepath.Join(tempDir, "internal/invoice/transport/http/handler.go"))
+		handlerBytes, err := os.ReadFile(filepath.Join(tempDir, filepath.FromSlash("internal/invoice/transport/http/handler.go")))
 		if err != nil {
 			t.Fatalf("reading invoice handler: %v", err)
 		}

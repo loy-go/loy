@@ -64,7 +64,7 @@ func TestCanonicalEndToEndLoop(t *testing.T) {
 		"internal/app/wiring.go",
 	}
 	for _, f := range expectedCRUD {
-		if _, err := os.Stat(filepath.Join(appDir, f)); os.IsNotExist(err) {
+		if _, err := os.Stat(filepath.Join(appDir, filepath.FromSlash(f))); os.IsNotExist(err) {
 			t.Errorf("expected CRUD artifact %s to exist", f)
 		}
 	}
@@ -94,7 +94,7 @@ func TestCanonicalEndToEndLoop(t *testing.T) {
 		".github/workflows/ci.yml",
 	}
 	for _, f := range expectedDeploy {
-		if _, err := os.Stat(filepath.Join(appDir, f)); os.IsNotExist(err) {
+		if _, err := os.Stat(filepath.Join(appDir, filepath.FromSlash(f))); os.IsNotExist(err) {
 			t.Errorf("expected deployment artifact %s to exist", f)
 		}
 	}

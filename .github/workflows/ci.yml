@@ -70,16 +70,31 @@ jobs:
           go-version: ${{ matrix.go }}
           cache: true
 
-      - name: Run Unit Tests (Fast, Race Detector)
-        run: go test -v -short -race ./...
+      - name: Run Unit Tests
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            go test -v -short ./...
+          else
+            go test -v -short -race ./...
+          fi
+        shell: bash
 
-      - name: Run Integration Tests (Ubuntu only)
-        if: matrix.os == 'ubuntu-latest'
-        run: go test -v -race ./internal/cli/...
+      - name: Run Integration Tests
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            go test -v ./internal/cli/...
+          else
+            go test -v -race ./internal/cli/...
+          fi
+        shell: bash
 
   build-smoke:
-    name: Binary Compilation Smoke
-    runs-on: ubuntu-latest
+    name: Binary Compilation Smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -97,3 +112,4 @@ jobs:
           go build -trimpath -ldflags="-s -w" -o bin/loy ./cmd/loy
           ./bin/loy version
           ./bin/loy doctor
+        shell: bash

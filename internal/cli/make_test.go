@@ -180,7 +180,7 @@ func TestMakeCommand(t *testing.T) {
 		if err != nil {
 			t.Fatalf("make view failed: %v, out: %s", err, out)
 		}
-		path := filepath.Join(tempDir, "views/pages/dashboard.templ")
+		path := filepath.Join(tempDir, filepath.FromSlash("views/pages/dashboard.templ"))
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			t.Fatalf("expected file %s to exist, output: %s", path, out)
 		}
@@ -199,7 +199,7 @@ func TestMakeCommand(t *testing.T) {
 		if err != nil {
 			t.Fatalf("make view --partial failed: %v, out: %s", err, out)
 		}
-		path := filepath.Join(tempDir, "views/components/user_row.templ")
+		path := filepath.Join(tempDir, filepath.FromSlash("views/components/user_row.templ"))
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			t.Fatalf("expected file %s to exist", path)
 		}
@@ -235,10 +235,10 @@ func TestMakeCommand(t *testing.T) {
 		if err != nil {
 			t.Fatalf("make k8s failed: %v, out: %s", err, out)
 		}
-		if _, err := os.Stat(filepath.Join(tempDir, "deploy/k8s/deployment.yaml")); os.IsNotExist(err) {
+		if _, err := os.Stat(filepath.Join(tempDir, filepath.FromSlash("deploy/k8s/deployment.yaml"))); os.IsNotExist(err) {
 			t.Fatalf("expected deploy/k8s/deployment.yaml to exist")
 		}
-		if _, err := os.Stat(filepath.Join(tempDir, "deploy/k8s/service.yaml")); os.IsNotExist(err) {
+		if _, err := os.Stat(filepath.Join(tempDir, filepath.FromSlash("deploy/k8s/service.yaml"))); os.IsNotExist(err) {
 			t.Fatalf("expected deploy/k8s/service.yaml to exist")
 		}
 	})
@@ -249,7 +249,7 @@ func TestMakeCommand(t *testing.T) {
 		if err != nil {
 			t.Fatalf("make helm failed: %v, out: %s", err, out)
 		}
-		if _, err := os.Stat(filepath.Join(tempDir, "deploy/helm/testapp/Chart.yaml")); os.IsNotExist(err) {
+		if _, err := os.Stat(filepath.Join(tempDir, filepath.FromSlash("deploy/helm/testapp/Chart.yaml"))); os.IsNotExist(err) {
 			t.Fatalf("expected deploy/helm/testapp/Chart.yaml to exist")
 		}
 	})
@@ -260,7 +260,7 @@ func TestMakeCommand(t *testing.T) {
 		if err != nil {
 			t.Fatalf("make ci failed: %v, out: %s", err, out)
 		}
-		if _, err := os.Stat(filepath.Join(tempDir, ".github/workflows/ci.yml")); os.IsNotExist(err) {
+		if _, err := os.Stat(filepath.Join(tempDir, filepath.FromSlash(".github/workflows/ci.yml"))); os.IsNotExist(err) {
 			t.Fatalf("expected .github/workflows/ci.yml to exist")
 		}
 	})
@@ -278,7 +278,7 @@ func TestMakeCommand(t *testing.T) {
 			".github/workflows/ci.yml",
 		}
 		for _, f := range expected {
-			if _, err := os.Stat(filepath.Join(tempDir, f)); os.IsNotExist(err) {
+			if _, err := os.Stat(filepath.Join(tempDir, filepath.FromSlash(f))); os.IsNotExist(err) {
 				t.Errorf("expected %s to exist after make deploy", f)
 			}
 		}
@@ -299,7 +299,7 @@ func TestMakeCommand(t *testing.T) {
 		if err != nil {
 			t.Fatalf("make template eject failed: %v, out: %s", err, out2)
 		}
-		ejectedPath := filepath.Join(tempDir, ".loy/templates/model.go.tmpl")
+		ejectedPath := filepath.Join(tempDir, filepath.FromSlash(".loy/templates/model.go.tmpl"))
 		if _, err := os.Stat(ejectedPath); os.IsNotExist(err) {
 			t.Fatalf("expected ejected template to exist at %s", ejectedPath)
 		}
@@ -323,7 +323,7 @@ func TestMakeCommand(t *testing.T) {
 		if err != nil {
 			t.Fatalf("make command failed: %v, out: %s", err, out)
 		}
-		cmdFile := filepath.Join(tempDir, "internal/checkoutcart/command/checkout_cart_cmd.go")
+		cmdFile := filepath.Join(tempDir, filepath.FromSlash("internal/checkoutcart/command/checkout_cart_cmd.go"))
 		if _, err := os.Stat(cmdFile); os.IsNotExist(err) {
 			t.Fatalf("expected command file to exist at %s", cmdFile)
 		}
@@ -333,7 +333,7 @@ func TestMakeCommand(t *testing.T) {
 		if err != nil {
 			t.Fatalf("make query failed: %v, out: %s", err, out2)
 		}
-		queryFile := filepath.Join(tempDir, "internal/ordersummary/query/order_summary_query.go")
+		queryFile := filepath.Join(tempDir, filepath.FromSlash("internal/ordersummary/query/order_summary_query.go"))
 		if _, err := os.Stat(queryFile); os.IsNotExist(err) {
 			t.Fatalf("expected query file to exist at %s", queryFile)
 		}
@@ -368,7 +368,7 @@ components:
 		if err != nil {
 			t.Fatalf("make from-spec failed: %v, out: %s", err, out)
 		}
-		modelFile := filepath.Join(tempDir, "internal/widget/domain/widget.go")
+		modelFile := filepath.Join(tempDir, filepath.FromSlash("internal/widget/domain/widget.go"))
 		if _, err := os.Stat(modelFile); os.IsNotExist(err) {
 			t.Fatalf("expected generated widget model at %s", modelFile)
 		}
@@ -390,7 +390,7 @@ CREATE TABLE products (
 		if err != nil {
 			t.Fatalf("make from-db failed: %v, out: %s", err, out2)
 		}
-		prodFile := filepath.Join(tempDir, "internal/product/domain/product.go")
+		prodFile := filepath.Join(tempDir, filepath.FromSlash("internal/product/domain/product.go"))
 		if _, err := os.Stat(prodFile); os.IsNotExist(err) {
 			t.Fatalf("expected generated product model at %s", prodFile)
 		}
