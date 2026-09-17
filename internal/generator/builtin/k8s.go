@@ -90,7 +90,7 @@ func (g *K8sGenerator) Generate(ctx context.Context, input generator.Input) ([]m
 
 	var artifacts []model.Artifact
 	for _, m := range manifests {
-		tmplContent, err := ReadTemplate(m.tmplName)
+		tmplContent, err := ReadTemplateContext(ctx, m.tmplName)
 		if err != nil {
 			return nil, fmt.Errorf("reading %s: %w", m.tmplName, err)
 		}

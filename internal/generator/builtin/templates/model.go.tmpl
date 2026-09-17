@@ -9,6 +9,9 @@ import (
 // {{.Pascal}} represents the domain entity for {{.FeaturePkg}}.
 type {{.Pascal}} struct {
 	ID        int64     `json:"id" db:"id"`
+{{- if .DualID}}
+	PublicID  string    `json:"public_id" db:"public_id"`
+{{- end}}
 {{- range .Fields}}
 	{{.PascalName}} {{if .IsPointer}}*{{end}}{{.Type}} `{{.JSONTag}} {{.DBTag}}`
 {{- end}}

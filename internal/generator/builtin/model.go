@@ -42,7 +42,10 @@ func (g *ModelGenerator) Generate(ctx context.Context, input generator.Input) ([
 	}
 
 	data := NewBaseData(input.Name, g.modulePath, fields)
-	tmpl, err := ReadTemplate("model.go.tmpl")
+	if input.Args != nil && (input.Args["dual_id"] == "true" || input.Args["dual-id"] == "true") {
+		data.DualID = true
+	}
+	tmpl, err := ReadTemplateContext(ctx, "model.go.tmpl")
 	if err != nil {
 		return nil, err
 	}

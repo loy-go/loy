@@ -171,7 +171,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	renderer := GetRenderer()
 
 	// 1. cmd/<entrypoint>/main.go
-	mainTmpl, err := ReadTemplate("runtime_main.go.tmpl")
+	mainTmpl, err := ReadTemplateContext(ctx, "runtime_main.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading runtime_main template: %w", err)
 	}
@@ -181,7 +181,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	// 2. internal/config/config.go
-	configTmpl, err := ReadTemplate("runtime_config.go.tmpl")
+	configTmpl, err := ReadTemplateContext(ctx, "runtime_config.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading runtime_config template: %w", err)
 	}
@@ -191,7 +191,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	// 3. internal/platform/logger/logger.go
-	loggerTmpl, err := ReadTemplate("runtime_logger.go.tmpl")
+	loggerTmpl, err := ReadTemplateContext(ctx, "runtime_logger.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading runtime_logger template: %w", err)
 	}
@@ -201,7 +201,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	// 4. internal/platform/health/health.go
-	healthTmpl, err := ReadTemplate("runtime_health.go.tmpl")
+	healthTmpl, err := ReadTemplateContext(ctx, "runtime_health.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading runtime_health template: %w", err)
 	}
@@ -211,7 +211,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	// 5. internal/platform/shutdown/coordinator.go
-	shutdownTmpl, err := ReadTemplate("runtime_shutdown.go.tmpl")
+	shutdownTmpl, err := ReadTemplateContext(ctx, "runtime_shutdown.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading runtime_shutdown template: %w", err)
 	}
@@ -221,7 +221,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	// 6. internal/app/app.go
-	appTmpl, err := ReadTemplate("runtime_app.go.tmpl")
+	appTmpl, err := ReadTemplateContext(ctx, "runtime_app.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading runtime_app template: %w", err)
 	}
@@ -231,7 +231,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	// 7. internal/app/wiring.go
-	wiringTmpl, err := ReadTemplate("runtime_wiring.go.tmpl")
+	wiringTmpl, err := ReadTemplateContext(ctx, "runtime_wiring.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading runtime_wiring template: %w", err)
 	}
@@ -295,7 +295,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 		var dbArtifact model.Artifact
 		switch dialect {
 		case "sqlite":
-			sqTmpl, err := ReadTemplate("platform_sqlite.go.tmpl")
+			sqTmpl, err := ReadTemplateContext(ctx, "platform_sqlite.go.tmpl")
 			if err != nil {
 				return nil, fmt.Errorf("reading platform_sqlite template: %w", err)
 			}
@@ -310,7 +310,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 				Content:     sqContent,
 			}
 		case "mysql":
-			myTmpl, err := ReadTemplate("platform_mysql.go.tmpl")
+			myTmpl, err := ReadTemplateContext(ctx, "platform_mysql.go.tmpl")
 			if err != nil {
 				return nil, fmt.Errorf("reading platform_mysql template: %w", err)
 			}
@@ -325,7 +325,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 				Content:     myContent,
 			}
 		default: // "postgres"
-			pgTmpl, err := ReadTemplate("platform_postgres.go.tmpl")
+			pgTmpl, err := ReadTemplateContext(ctx, "platform_postgres.go.tmpl")
 			if err != nil {
 				return nil, fmt.Errorf("reading platform_postgres template: %w", err)
 			}
@@ -344,7 +344,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	if g.withCache {
-		valkeyTmpl, err := ReadTemplate("platform_valkey.go.tmpl")
+		valkeyTmpl, err := ReadTemplateContext(ctx, "platform_valkey.go.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading platform_valkey template: %w", err)
 		}
@@ -361,7 +361,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	if g.withQueue {
-		asynqTmpl, err := ReadTemplate("platform_asynq.go.tmpl")
+		asynqTmpl, err := ReadTemplateContext(ctx, "platform_asynq.go.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading platform_asynq template: %w", err)
 		}
@@ -376,7 +376,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 			Content:     asynqContent,
 		})
 
-		workerMainTmpl, err := ReadTemplate("runtime_worker_main.go.tmpl")
+		workerMainTmpl, err := ReadTemplateContext(ctx, "runtime_worker_main.go.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading runtime_worker_main template: %w", err)
 		}
@@ -391,7 +391,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 			Content:     workerMainContent,
 		})
 
-		workerWiringTmpl, err := ReadTemplate("runtime_worker_wiring.go.tmpl")
+		workerWiringTmpl, err := ReadTemplateContext(ctx, "runtime_worker_wiring.go.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading runtime_worker_wiring template: %w", err)
 		}
@@ -408,7 +408,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	if g.withTelemetry {
-		otelTmpl, err := ReadTemplate("platform_otel.go.tmpl")
+		otelTmpl, err := ReadTemplateContext(ctx, "platform_otel.go.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading platform_otel template: %w", err)
 		}
@@ -437,7 +437,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	if transportTmplName != "" {
-		tmpl, err := ReadTemplate(transportTmplName)
+		tmpl, err := ReadTemplateContext(ctx, transportTmplName)
 		if err != nil {
 			return nil, fmt.Errorf("reading %s template: %w", transportTmplName, err)
 		}
@@ -455,7 +455,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 
 	// 9. Fullstack / Web Templ integration
 	if g.template == "templ" {
-		renderTmpl, err := ReadTemplate("fullstack_render.go.tmpl")
+		renderTmpl, err := ReadTemplateContext(ctx, "fullstack_render.go.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading fullstack_render template: %w", err)
 		}
@@ -470,7 +470,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 			Content:     renderContent,
 		})
 
-		webHandlerTmpl, err := ReadTemplate("fullstack_web_handler.go.tmpl")
+		webHandlerTmpl, err := ReadTemplateContext(ctx, "fullstack_web_handler.go.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading fullstack_web_handler template: %w", err)
 		}
@@ -485,7 +485,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 			Content:     webHandlerContent,
 		})
 
-		baseTmpl, err := ReadTemplate("fullstack_base.templ.tmpl")
+		baseTmpl, err := ReadTemplateContext(ctx, "fullstack_base.templ.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading fullstack_base template: %w", err)
 		}
@@ -500,7 +500,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 			Content:     baseContent,
 		})
 
-		navbarTmpl, err := ReadTemplate("fullstack_navbar.templ.tmpl")
+		navbarTmpl, err := ReadTemplateContext(ctx, "fullstack_navbar.templ.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading fullstack_navbar template: %w", err)
 		}
@@ -515,7 +515,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 			Content:     navbarContent,
 		})
 
-		alertTmpl, err := ReadTemplate("fullstack_alert.templ.tmpl")
+		alertTmpl, err := ReadTemplateContext(ctx, "fullstack_alert.templ.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading fullstack_alert template: %w", err)
 		}
@@ -530,7 +530,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 			Content:     alertContent,
 		})
 
-		homeTmpl, err := ReadTemplate("fullstack_home.templ.tmpl")
+		homeTmpl, err := ReadTemplateContext(ctx, "fullstack_home.templ.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading fullstack_home template: %w", err)
 		}
@@ -564,7 +564,7 @@ func (g *RuntimeGenerator) Generate(ctx context.Context, input generator.Input) 
 		}
 
 		for _, vt := range viteTemplates {
-			rawTmpl, err := ReadTemplate(vt.tmplName)
+			rawTmpl, err := ReadTemplateContext(ctx, vt.tmplName)
 			if err != nil {
 				return nil, fmt.Errorf("reading %s: %w", vt.tmplName, err)
 			}

@@ -28,7 +28,7 @@ func (g *ListenerGenerator) Generate(ctx context.Context, input generator.Input)
 	}
 
 	data := NewBaseData(input.Name, g.modulePath, nil)
-	tmpl, err := ReadTemplate("listener.go.tmpl")
+	tmpl, err := ReadTemplateContext(ctx, "listener.go.tmpl")
 	if err != nil {
 		return nil, err
 	}

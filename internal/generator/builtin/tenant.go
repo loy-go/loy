@@ -37,7 +37,7 @@ func (g *TenantGenerator) Generate(ctx context.Context, input generator.Input) (
 	renderer := GetRenderer()
 
 	// 1. Context and middleware
-	ctxTmpl, err := ReadTemplate("tenant_context.go.tmpl")
+	ctxTmpl, err := ReadTemplateContext(ctx, "tenant_context.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading tenant_context template: %w", err)
 	}
@@ -57,7 +57,7 @@ func (g *TenantGenerator) Generate(ctx context.Context, input generator.Input) (
 
 	// 2. Initial tenancy migration
 	if g.withDatabase {
-		migTmpl, err := ReadTemplate("tenant_migration.sql.tmpl")
+		migTmpl, err := ReadTemplateContext(ctx, "tenant_migration.sql.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("reading tenant_migration template: %w", err)
 		}

@@ -33,7 +33,7 @@ func (g *MetricsGenerator) Generate(ctx context.Context, input generator.Input) 
 	renderer := GetRenderer()
 
 	// 1. Platform metrics recorder
-	metricsTmpl, err := ReadTemplate("platform_metrics.go.tmpl")
+	metricsTmpl, err := ReadTemplateContext(ctx, "platform_metrics.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading platform_metrics template: %w", err)
 	}
@@ -43,7 +43,7 @@ func (g *MetricsGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	// 2. Grafana Dashboard definition
-	dashboardTmpl, err := ReadTemplate("deploy_grafana_dashboard.json.tmpl")
+	dashboardTmpl, err := ReadTemplateContext(ctx, "deploy_grafana_dashboard.json.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading deploy_grafana_dashboard template: %w", err)
 	}
@@ -53,7 +53,7 @@ func (g *MetricsGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	// 3. Prometheus Scraper config
-	promTmpl, err := ReadTemplate("deploy_prometheus.yml.tmpl")
+	promTmpl, err := ReadTemplateContext(ctx, "deploy_prometheus.yml.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading deploy_prometheus template: %w", err)
 	}

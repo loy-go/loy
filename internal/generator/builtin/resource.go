@@ -39,7 +39,7 @@ func (g *ResourceGenerator) Generate(ctx context.Context, input generator.Input)
 	}
 
 	data := NewBaseData(input.Name, g.modulePath, fields)
-	tmpl, err := ReadTemplate("resource.go.tmpl")
+	tmpl, err := ReadTemplateContext(ctx, "resource.go.tmpl")
 	if err != nil {
 		return nil, err
 	}

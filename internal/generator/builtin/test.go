@@ -28,7 +28,7 @@ func (g *TestGenerator) Generate(ctx context.Context, input generator.Input) ([]
 	}
 
 	data := NewBaseData(input.Name, g.modulePath, nil)
-	tmpl, err := ReadTemplate("test.go.tmpl")
+	tmpl, err := ReadTemplateContext(ctx, "test.go.tmpl")
 	if err != nil {
 		return nil, err
 	}

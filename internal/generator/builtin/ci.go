@@ -118,7 +118,7 @@ func (g *CIGenerator) Generate(ctx context.Context, input generator.Input) ([]mo
 		outPath = ".github/workflows/ci.yml"
 	}
 
-	tmplContent, err := ReadTemplate(tmplName)
+	tmplContent, err := ReadTemplateContext(ctx, tmplName)
 	if err != nil {
 		return nil, fmt.Errorf("reading %s: %w", tmplName, err)
 	}

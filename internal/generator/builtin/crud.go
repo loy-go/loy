@@ -51,10 +51,13 @@ func (g *CRUDGenerator) Generate(ctx context.Context, input generator.Input) ([]
 		}
 		data.TenantStrategy = strategy
 	}
+	if input.Args != nil && (input.Args["dual_id"] == "true" || input.Args["dual-id"] == "true") {
+		data.DualID = true
+	}
 	renderer := GetRenderer()
 
 	// 1. Migration artifact
-	migTmpl, err := ReadTemplate("migration.sql.tmpl")
+	migTmpl, err := ReadTemplateContext(ctx, "migration.sql.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +69,7 @@ func (g *CRUDGenerator) Generate(ctx context.Context, input generator.Input) ([]
 	migPath := fmt.Sprintf("migrations/%s_create_%s_table.sql", timestamp, data.PluralLower)
 
 	// 2. sqlc Query artifact
-	queryTmpl, err := ReadTemplate("query.sql.tmpl")
+	queryTmpl, err := ReadTemplateContext(ctx, "query.sql.tmpl")
 	if err != nil {
 		return nil, err
 	}

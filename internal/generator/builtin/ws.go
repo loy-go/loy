@@ -31,7 +31,7 @@ func (g *WebSocketGenerator) Generate(ctx context.Context, input generator.Input
 	renderer := GetRenderer()
 
 	// 1. Protocol Frame
-	protoTmpl, err := ReadTemplate("ws_protocol.go.tmpl")
+	protoTmpl, err := ReadTemplateContext(ctx, "ws_protocol.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading ws_protocol template: %w", err)
 	}
@@ -41,7 +41,7 @@ func (g *WebSocketGenerator) Generate(ctx context.Context, input generator.Input
 	}
 
 	// 2. Hub
-	hubTmpl, err := ReadTemplate("ws_hub.go.tmpl")
+	hubTmpl, err := ReadTemplateContext(ctx, "ws_hub.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading ws_hub template: %w", err)
 	}
@@ -51,7 +51,7 @@ func (g *WebSocketGenerator) Generate(ctx context.Context, input generator.Input
 	}
 
 	// 3. Client Pumps
-	clientTmpl, err := ReadTemplate("ws_client.go.tmpl")
+	clientTmpl, err := ReadTemplateContext(ctx, "ws_client.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading ws_client template: %w", err)
 	}

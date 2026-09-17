@@ -39,7 +39,7 @@ func (g *RequestGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	data := NewBaseData(input.Name, g.modulePath, fields)
-	tmpl, err := ReadTemplate("request.go.tmpl")
+	tmpl, err := ReadTemplateContext(ctx, "request.go.tmpl")
 	if err != nil {
 		return nil, err
 	}

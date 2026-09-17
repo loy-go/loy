@@ -31,7 +31,7 @@ func (g *RepositoryGenerator) Generate(ctx context.Context, input generator.Inpu
 	renderer := GetRenderer()
 
 	// 1. Interface artifact in domain/
-	ifaceTmpl, err := ReadTemplate("repository_interface.go.tmpl")
+	ifaceTmpl, err := ReadTemplateContext(ctx, "repository_interface.go.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (g *RepositoryGenerator) Generate(ctx context.Context, input generator.Inpu
 	}
 
 	// 2. Adapter artifact in repository/
-	adapterTmpl, err := ReadTemplate("repository_adapter.go.tmpl")
+	adapterTmpl, err := ReadTemplateContext(ctx, "repository_adapter.go.tmpl")
 	if err != nil {
 		return nil, err
 	}

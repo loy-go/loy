@@ -6,8 +6,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/loy-go/loy/internal/cli"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/process"
 )
+
+func newCRUDTestRootCmd() *cobra.Command {
+	return cli.NewRootCmdWithFS(filesystem.NewOSFileSystem(), process.NewNoopRunner())
+}
 
 func TestMakeCRUDAndJSON(t *testing.T) {
 	tempDir := t.TempDir()
@@ -26,7 +33,7 @@ func TestMakeCRUDAndJSON(t *testing.T) {
 		t.Fatalf("writing go.mod error: %v", err)
 	}
 
-	root := cli.NewRootCmd()
+	root := newCRUDTestRootCmd()
 
 	t.Run("make crud with json output", func(t *testing.T) {
 		out, err := executeMakeCommand(root, "make", "crud", "product", "title:string:unique", "price:float", "--json")
@@ -76,7 +83,7 @@ func TestMakeCRUD_WithChiAndNetHTTP(t *testing.T) {
 		_ = os.WriteFile("go.mod", []byte("module github.com/example/chi-app\n\ngo 1.22\n"), 0644)
 		_ = os.WriteFile("loy.yaml", []byte("version: 1\nproject:\n  name: chi-app\ndefaults:\n  http: chi\n"), 0644)
 
-		root := cli.NewRootCmd()
+		root := newCRUDTestRootCmd()
 		out, err := executeMakeCommand(root, "make", "crud", "order", "code:string")
 		if err != nil {
 			t.Fatalf("make crud in chi project failed: %v, out: %s", err, out)
@@ -109,7 +116,7 @@ func TestMakeCRUD_WithChiAndNetHTTP(t *testing.T) {
 		_ = os.WriteFile("go.mod", []byte("module github.com/example/net-app\n\ngo 1.22\n"), 0644)
 		_ = os.WriteFile("loy.yaml", []byte("version: 1\nproject:\n  name: net-app\ndefaults:\n  http: nethttp\n"), 0644)
 
-		root := cli.NewRootCmd()
+		root := newCRUDTestRootCmd()
 		out, err := executeMakeCommand(root, "make", "crud", "customer", "name:string")
 		if err != nil {
 			t.Fatalf("make crud in nethttp project failed: %v, out: %s", err, out)
@@ -142,7 +149,7 @@ func TestMakeCRUD_WithChiAndNetHTTP(t *testing.T) {
 		_ = os.WriteFile("go.mod", []byte("module github.com/example/gin-app\n\ngo 1.22\n"), 0644)
 		_ = os.WriteFile("loy.yaml", []byte("version: 1\nproject:\n  name: gin-app\ndefaults:\n  http: gin\n"), 0644)
 
-		root := cli.NewRootCmd()
+		root := newCRUDTestRootCmd()
 		out, err := executeMakeCommand(root, "make", "crud", "invoice", "number:string")
 		if err != nil {
 			t.Fatalf("make crud in gin project failed: %v, out: %s", err, out)

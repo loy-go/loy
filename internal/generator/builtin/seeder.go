@@ -30,7 +30,7 @@ func (g *SeederGenerator) Generate(ctx context.Context, input generator.Input) (
 	data := NewBaseData(input.Name, g.modulePath, nil)
 	renderer := GetRenderer()
 
-	tmpl, err := ReadTemplate("seeder.go.tmpl")
+	tmpl, err := ReadTemplateContext(ctx, "seeder.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading seeder template: %w", err)
 	}

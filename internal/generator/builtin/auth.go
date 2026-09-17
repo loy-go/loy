@@ -27,7 +27,7 @@ func (g *AuthGenerator) Generate(ctx context.Context, input generator.Input) ([]
 	renderer := GetRenderer()
 
 	// 1. Password Hasher
-	pwdTmpl, err := ReadTemplate("auth_password.go.tmpl")
+	pwdTmpl, err := ReadTemplateContext(ctx, "auth_password.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading auth_password template: %w", err)
 	}
@@ -37,7 +37,7 @@ func (g *AuthGenerator) Generate(ctx context.Context, input generator.Input) ([]
 	}
 
 	// 2. Claims
-	claimsTmpl, err := ReadTemplate("auth_claims.go.tmpl")
+	claimsTmpl, err := ReadTemplateContext(ctx, "auth_claims.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading auth_claims template: %w", err)
 	}
@@ -47,7 +47,7 @@ func (g *AuthGenerator) Generate(ctx context.Context, input generator.Input) ([]
 	}
 
 	// 3. JWT Service
-	jwtTmpl, err := ReadTemplate("auth_jwt.go.tmpl")
+	jwtTmpl, err := ReadTemplateContext(ctx, "auth_jwt.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading auth_jwt template: %w", err)
 	}
@@ -57,7 +57,7 @@ func (g *AuthGenerator) Generate(ctx context.Context, input generator.Input) ([]
 	}
 
 	// 4. Middleware
-	mwTmpl, err := ReadTemplate("auth_middleware.go.tmpl")
+	mwTmpl, err := ReadTemplateContext(ctx, "auth_middleware.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading auth_middleware template: %w", err)
 	}

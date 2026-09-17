@@ -18,6 +18,7 @@ import (
 	"github.com/loy-go/loy/internal/generator/builtin/wiring"
 	"github.com/loy-go/loy/internal/generator/model"
 	"github.com/loy-go/loy/internal/generator/plan"
+	"github.com/loy-go/loy/internal/ingest"
 	"github.com/loy-go/loy/internal/manifest"
 	"github.com/loy-go/loy/internal/process"
 	"github.com/loy-go/loy/internal/workspace"
@@ -29,6 +30,8 @@ type makeOptions struct {
 	force   bool
 	dryRun  bool
 	modular bool
+	dualID  bool
+	noTidy  bool
 }
 
 func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command {
@@ -38,7 +41,7 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 		Use:   "make <artifact> <name> [flags] [args...]",
 		Short: "Scaffold application components, slices, and vertical features",
 		Long: `The make command tree provides scaffolding for clean-architecture Go applications:
-  - Atomic generators: model, repository (repo), service (svc), handler, request, resource, job, event, listener, policy, test
+  - Atomic generators: model, repository (repo), service (svc), handler, request, resource, job, event, listener, policy, test, migration
   - Composers: feature, crud`,
 	}
 
@@ -46,6 +49,8 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 	cmd.PersistentFlags().BoolVar(&opts.force, "force", false, "Overwrite existing files if developer owned")
 	cmd.PersistentFlags().BoolVar(&opts.dryRun, "dry-run", false, "Preview generated operations without writing to disk")
 	cmd.PersistentFlags().BoolVar(&opts.modular, "modular", false, "Scaffold sub-domain modular wiring file instead of flat wiring")
+	cmd.PersistentFlags().BoolVar(&opts.dualID, "dual-id", false, "Scaffold dual identifier schema (BIGINT identity + UUID public)")
+	cmd.PersistentFlags().BoolVar(&opts.noTidy, "no-tidy", false, "Skip running go mod tidy after generation")
 
 	// Atomic generators
 	cmd.AddCommand(newArtifactCmd("model", "Scaffold domain entity model", fs, runner, opts, func(mod string) generator.Generator {
@@ -59,6 +64,16 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 	cmd.AddCommand(newArtifactCmd("service", "Scaffold application service use case", fs, runner, opts, func(mod string) generator.Generator {
 		return builtin.NewServiceGenerator(mod)
 	}, []string{"svc"}))
+
+	cmd.AddCommand(newArtifactCmd("command", "Scaffold CQRS write command and handler pipeline", fs, runner, opts, func(mod string) generator.Generator {
+		return builtin.NewCommandGenerator(mod)
+	}, []string{"cmd"}))
+
+	cmd.AddCommand(newArtifactCmd("query", "Scaffold CQRS read query and projection view", fs, runner, opts, func(mod string) generator.Generator {
+		return builtin.NewQueryGenerator(mod)
+	}, []string{"qry"}))
+
+	cmd.AddCommand(newIdempotencyCmd(fs, runner, opts))
 
 	cmd.AddCommand(newArtifactCmd("handler", "Scaffold HTTP transport handler", fs, runner, opts, func(mod string) generator.Generator {
 		return builtin.NewHandlerGenerator(mod)
@@ -114,6 +129,8 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 		return builtin.NewSeederGenerator(mod)
 	}, []string{"seed"}))
 
+	cmd.AddCommand(newMigrationCmd(fs, runner, opts))
+
 	cmd.AddCommand(newArtifactCmd("test", "Scaffold unit and integration tests", fs, runner, opts, func(mod string) generator.Generator {
 		return builtin.NewTestGenerator(mod)
 	}, []string{}))
@@ -133,6 +150,9 @@ func newMakeCmd(fs filesystem.FileSystem, runner process.Runner) *cobra.Command 
 	cmd.AddCommand(newCRUDCmd(fs, runner, opts))
 	cmd.AddCommand(newDeployCmd(fs, runner, opts))
 	cmd.AddCommand(newAgentRulesCmd(fs, runner, opts))
+	cmd.AddCommand(newTemplateCmd(fs, runner, opts))
+	cmd.AddCommand(newFromSpecCmd(fs, runner, opts))
+	cmd.AddCommand(newFromDBCmd(fs, runner, opts))
 
 	return cmd
 }
@@ -346,6 +366,12 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 		return err
 	}
 
+	// Support custom template overrides in .loy/templates/
+	customTmplDir := filepath.Join(targetDir, ".loy", "templates")
+	if exists, _ := fs.Exists(customTmplDir); exists {
+		ctx = builtin.WithTemplateResolver(ctx, builtin.NewFilesystemTemplateResolver(fs, customTmplDir))
+	}
+
 	gen := factory(modulePath)
 	input := generator.Input{
 		Name: name,
@@ -389,6 +415,21 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 	}
 	if grpcFlag := cmd.Flags().Lookup("grpc"); grpcFlag != nil && grpcFlag.Changed {
 		input.Args["grpc"] = grpcFlag.Value.String()
+	}
+	if recipeFlag := cmd.Flags().Lookup("recipe"); recipeFlag != nil && recipeFlag.Changed {
+		input.Args["recipe"] = recipeFlag.Value.String()
+	}
+	if tableFlag := cmd.Flags().Lookup("table"); tableFlag != nil && tableFlag.Changed {
+		input.Args["table"] = tableFlag.Value.String()
+	}
+	if colFlag := cmd.Flags().Lookup("column"); colFlag != nil && colFlag.Changed {
+		input.Args["column"] = colFlag.Value.String()
+	}
+	if typeFlag := cmd.Flags().Lookup("type"); typeFlag != nil && typeFlag.Changed {
+		input.Args["type"] = typeFlag.Value.String()
+	}
+	if opts.dualID {
+		input.Args["dual_id"] = "true"
 	}
 
 	artifacts, err := gen.Generate(ctx, input)
@@ -478,7 +519,7 @@ func runGenerator(cmd *cobra.Command, fs filesystem.FileSystem, runner process.R
 		}
 	}
 
-	if runner != nil && !opts.dryRun {
+	if _, isOS := fs.(*filesystem.OSFileSystem); isOS && runner != nil && !opts.dryRun && !opts.noTidy {
 		_, _ = runner.Run(ctx, targetDir, "go", "mod", "tidy")
 	}
 
@@ -985,4 +1026,243 @@ func executeDeployPlan(cmd *cobra.Command, fs filesystem.FileSystem, opts *makeO
 	}
 
 	return nil
+}
+
+func newTemplateCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "template",
+		Short:   "Manage and eject generator templates for local project customization",
+		Aliases: []string{"tmpl"},
+	}
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "list",
+		Short: "List all built-in templates available for override",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			tmpls, err := builtin.ListTemplates()
+			if err != nil {
+				return err
+			}
+			ctx := cmd.Context()
+			globalOpts := GetOptions(ctx)
+			if globalOpts.JSON {
+				data, _ := json.MarshalIndent(tmpls, "", "  ")
+				_, _ = cmd.OutOrStdout().Write(data)
+				_, _ = cmd.OutOrStdout().Write([]byte("\n"))
+				return nil
+			}
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Available generator templates:")
+			for _, t := range tmpls {
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  - %s\n", t)
+			}
+			return nil
+		},
+	})
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "eject <name>",
+		Short: "Eject a built-in template into .loy/templates/ for local customization",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			ctx := cmd.Context()
+			targetDir, _, err := resolveProjectTarget(ctx, fs, runner, opts.target)
+			if err != nil {
+				return err
+			}
+
+			content, err := builtin.ReadTemplate(name)
+			if err != nil {
+				return &CommandError{
+					Code: 2,
+					Diagnostics: []*diagnostics.Diagnostic{{
+						Severity: diagnostics.SeverityError,
+						Code:     diagnostics.CodeCLIUsageError,
+						Message:  fmt.Sprintf("template %q not found: %v", name, err),
+					}},
+				}
+			}
+
+			outDir := filepath.Join(targetDir, ".loy", "templates")
+			if err := fs.MkdirAll(outDir, 0755); err != nil {
+				return err
+			}
+			outPath := filepath.Join(outDir, name)
+			if exists, _ := fs.Exists(outPath); exists && !opts.force {
+				return &CommandError{
+					Code: 1,
+					Diagnostics: []*diagnostics.Diagnostic{{
+						Severity: diagnostics.SeverityError,
+						Code:     diagnostics.CodeGenConflict,
+						Message:  fmt.Sprintf("template file already exists: %s (use --force to overwrite)", outPath),
+					}},
+				}
+			}
+
+			if err := fs.WriteFile(outPath, []byte(content), 0644); err != nil {
+				return err
+			}
+
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Ejected template %s to %s\n", name, outPath)
+			return nil
+		},
+	})
+
+	return cmd
+}
+
+func newMigrationCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	var recipe string
+	var table string
+	var column string
+	var colType string
+
+	cmd := &cobra.Command{
+		Use:     "migration <name> [flags]",
+		Short:   "Scaffold safe database migration with optional zero-downtime recipes",
+		Aliases: []string{"mig"},
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			return runGenerator(cmd, fs, runner, opts, func(mod string) generator.Generator {
+				return builtin.NewMigrationGenerator(mod)
+			}, name, "", false)
+		},
+	}
+
+	cmd.Flags().StringVar(&recipe, "recipe", "raw", "Migration recipe: raw, index-concurrent, or shadow-column")
+	cmd.Flags().StringVar(&table, "table", "items", "Target table for index or column recipes")
+	cmd.Flags().StringVar(&column, "column", "", "Target column for index or shadow-column recipes")
+	cmd.Flags().StringVar(&colType, "type", "TEXT", "Column data type for shadow-column recipe")
+
+	return cmd
+}
+
+func newIdempotencyCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	return &cobra.Command{
+		Use:     "idempotency [name]",
+		Short:   "Scaffold request idempotency keys migration and middleware",
+		Aliases: []string{"idemp"},
+		Args:    cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := "idempotency"
+			if len(args) > 0 {
+				name = args[0]
+			}
+			return runGenerator(cmd, fs, runner, opts, func(mod string) generator.Generator {
+				return builtin.NewIdempotencyGenerator(mod)
+			}, name, "", false)
+		},
+	}
+}
+
+func newFromSpecCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "from-spec <file>",
+		Short: "Scaffold full CRUD stacks from OpenAPI or JSON Schema specification",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			specPath := args[0]
+			ctx := cmd.Context()
+			targetDir, _, err := resolveProjectTarget(ctx, fs, runner, opts.target)
+			if err != nil {
+				return err
+			}
+
+			fullPath := specPath
+			if !filepath.IsAbs(fullPath) {
+				fullPath = filepath.Join(targetDir, specPath)
+			}
+
+			data, err := fs.ReadFile(fullPath)
+			if err != nil {
+				var osErr error
+				data, osErr = os.ReadFile(specPath)
+				if osErr != nil {
+					return &CommandError{
+						Code: 2,
+						Diagnostics: []*diagnostics.Diagnostic{{
+							Severity: diagnostics.SeverityError,
+							Code:     diagnostics.CodeFSNotFound,
+							Message:  fmt.Sprintf("reading spec file %s: %v", specPath, err),
+						}},
+					}
+				}
+			}
+
+			entities, err := ingest.IngestSpec(data)
+			if err != nil {
+				return &CommandError{
+					Code: 1,
+					Diagnostics: []*diagnostics.Diagnostic{{
+						Severity: diagnostics.SeverityError,
+						Code:     diagnostics.CodeGenExecutionError,
+						Message:  fmt.Sprintf("ingesting spec: %v", err),
+					}},
+				}
+			}
+
+			for _, e := range entities {
+				if err := runGenerator(cmd, fs, runner, opts, func(mod string) generator.Generator {
+					return builtin.NewCRUDGenerator(mod)
+				}, e.Name, e.FieldsString(), true); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		},
+	}
+	return cmd
+}
+
+func newFromDBCmd(fs filesystem.FileSystem, runner process.Runner, opts *makeOptions) *cobra.Command {
+	var tables []string
+	cmd := &cobra.Command{
+		Use:   "from-db <dsn-or-file>",
+		Short: "Reverse-engineer and scaffold CRUD stacks from database tables or SQL DDL",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			source := args[0]
+			ctx := cmd.Context()
+			var entities []ingest.ParsedEntity
+			var err error
+
+			if strings.HasPrefix(source, "postgres://") || strings.HasPrefix(source, "postgresql://") {
+				entities, err = ingest.IngestPostgres(ctx, source, tables)
+			} else {
+				var data []byte
+				if data, err = fs.ReadFile(source); err != nil {
+					data, err = os.ReadFile(source)
+				}
+				if err == nil {
+					entities, err = ingest.IngestDDL(string(data))
+				}
+			}
+
+			if err != nil {
+				return &CommandError{
+					Code: 1,
+					Diagnostics: []*diagnostics.Diagnostic{{
+						Severity: diagnostics.SeverityError,
+						Code:     diagnostics.CodeGenExecutionError,
+						Message:  fmt.Sprintf("ingesting database: %v", err),
+					}},
+				}
+			}
+
+			for _, e := range entities {
+				if err := runGenerator(cmd, fs, runner, opts, func(mod string) generator.Generator {
+					return builtin.NewCRUDGenerator(mod)
+				}, e.Name, e.FieldsString(), true); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		},
+	}
+	cmd.Flags().StringSliceVar(&tables, "tables", nil, "Comma-separated table filter list")
+	return cmd
 }

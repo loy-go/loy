@@ -28,7 +28,7 @@ func (g *ServiceGenerator) Generate(ctx context.Context, input generator.Input) 
 	}
 
 	data := NewBaseData(input.Name, g.modulePath, nil)
-	tmpl, err := ReadTemplate("service.go.tmpl")
+	tmpl, err := ReadTemplateContext(ctx, "service.go.tmpl")
 	if err != nil {
 		return nil, err
 	}

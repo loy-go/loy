@@ -1,7 +1,15 @@
 -- +goose Up
 -- SQL in this section is executed after the migration is applied.
+SET lock_timeout = '2s';
+SET statement_timeout = '5s';
+
 CREATE TABLE IF NOT EXISTS {{.PluralLower}} (
+{{- if .DualID}}
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    public_id UUID NOT NULL DEFAULT gen_random_uuid(),
+{{- else}}
     id BIGSERIAL PRIMARY KEY,
+{{- end}}
 {{- if .MultiTenancy}}
     org_id UUID NOT NULL,
 {{- end}}
@@ -10,6 +18,9 @@ CREATE TABLE IF NOT EXISTS {{.PluralLower}} (
 {{- end}}
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+{{- if .DualID}},
+    CONSTRAINT uq_{{.PluralLower}}_public_id UNIQUE (public_id)
+{{- end}}
 );
 
 {{- if .MultiTenancy}}

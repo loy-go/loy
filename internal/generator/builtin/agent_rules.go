@@ -69,7 +69,7 @@ func (g *AgentRulesGenerator) Generate(ctx context.Context, input generator.Inpu
 
 	renderer := GetRenderer()
 
-	agentsMdTmpl, err := ReadTemplate("agent_rules_agents_md.tmpl")
+	agentsMdTmpl, err := ReadTemplateContext(ctx, "agent_rules_agents_md.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading agent_rules_agents_md.tmpl: %w", err)
 	}
@@ -78,7 +78,7 @@ func (g *AgentRulesGenerator) Generate(ctx context.Context, input generator.Inpu
 		return nil, fmt.Errorf("rendering AGENTS.md: %w", err)
 	}
 
-	cursorMdcTmpl, err := ReadTemplate("agent_rules_cursor_mdc.tmpl")
+	cursorMdcTmpl, err := ReadTemplateContext(ctx, "agent_rules_cursor_mdc.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading agent_rules_cursor_mdc.tmpl: %w", err)
 	}
@@ -87,7 +87,7 @@ func (g *AgentRulesGenerator) Generate(ctx context.Context, input generator.Inpu
 		return nil, fmt.Errorf("rendering cursor rules: %w", err)
 	}
 
-	copilotTmpl, err := ReadTemplate("agent_rules_copilot.tmpl")
+	copilotTmpl, err := ReadTemplateContext(ctx, "agent_rules_copilot.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading agent_rules_copilot.tmpl: %w", err)
 	}
@@ -96,7 +96,7 @@ func (g *AgentRulesGenerator) Generate(ctx context.Context, input generator.Inpu
 		return nil, fmt.Errorf("rendering copilot instructions: %w", err)
 	}
 
-	windsurfTmpl, err := ReadTemplate("agent_rules_windsurf.tmpl")
+	windsurfTmpl, err := ReadTemplateContext(ctx, "agent_rules_windsurf.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading agent_rules_windsurf.tmpl: %w", err)
 	}

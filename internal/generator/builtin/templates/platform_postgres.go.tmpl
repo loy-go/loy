@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -15,15 +16,98 @@ type PostgresConfig struct {
 	MinConns        int32
 	MaxConnLifetime time.Duration
 	MaxConnIdleTime time.Duration
+	PgBouncer       bool // Enable simple query protocol for PgBouncer transaction pooling
 }
 
-// NewPostgresPool initializes a pgxpool.Pool and performs a health ping.
-func NewPostgresPool(ctx context.Context, cfg PostgresConfig) (*pgxpool.Pool, error) {
-	poolCfg, err := pgxpool.ParseConfig(cfg.DSN)
+// PostgresClient coordinates tri-route PostgreSQL connection topologies:
+// - Data: Transaction-pooled queries and operations (safe for PgBouncer transaction mode)
+// - Session: Session-pooled connections for DDL, migrations, and session-scoped settings
+// - Direct: Non-pooled direct connections for LISTEN/NOTIFY and advisory locks
+type PostgresClient struct {
+	Data    *pgxpool.Pool
+	Session *pgxpool.Pool
+	dsn     string
+}
+
+// NewPostgresClient initializes the tri-route PostgreSQL client topology.
+func NewPostgresClient(ctx context.Context, cfg PostgresConfig) (*PostgresClient, error) {
+	dataCfg, err := pgxpool.ParseConfig(cfg.DSN)
 	if err != nil {
 		return nil, fmt.Errorf("parsing postgres connection string: %w", err)
 	}
 
+	if cfg.PgBouncer {
+		dataCfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+	}
+	if cfg.MaxConns > 0 {
+		dataCfg.MaxConns = cfg.MaxConns
+	}
+	if cfg.MinConns > 0 {
+		dataCfg.MinConns = cfg.MinConns
+	}
+	if cfg.MaxConnLifetime > 0 {
+		dataCfg.MaxConnLifetime = cfg.MaxConnLifetime
+	}
+	if cfg.MaxConnIdleTime > 0 {
+		dataCfg.MaxConnIdleTime = cfg.MaxConnIdleTime
+	}
+
+	dataPool, err := pgxpool.NewWithConfig(ctx, dataCfg)
+	if err != nil {
+		return nil, fmt.Errorf("creating postgres data pool: %w", err)
+	}
+
+	sessionCfg, err := pgxpool.ParseConfig(cfg.DSN)
+	if err != nil {
+		dataPool.Close()
+		return nil, fmt.Errorf("parsing postgres session config: %w", err)
+	}
+	sessionCfg.MaxConns = 5
+	sessionPool, err := pgxpool.NewWithConfig(ctx, sessionCfg)
+	if err != nil {
+		dataPool.Close()
+		return nil, fmt.Errorf("creating postgres session pool: %w", err)
+	}
+
+	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := dataPool.Ping(pingCtx); err != nil {
+		dataPool.Close()
+		sessionPool.Close()
+		return nil, fmt.Errorf("pinging postgres database: %w", err)
+	}
+
+	return &PostgresClient{
+		Data:    dataPool,
+		Session: sessionPool,
+		dsn:     cfg.DSN,
+	}, nil
+}
+
+// DirectConn opens an unpooled direct connection for LISTEN/NOTIFY or session-scoped advisory locks.
+func (c *PostgresClient) DirectConn(ctx context.Context) (*pgx.Conn, error) {
+	return pgx.Connect(ctx, c.dsn)
+}
+
+// Close gracefully terminates all connection pools.
+func (c *PostgresClient) Close() {
+	if c.Data != nil {
+		c.Data.Close()
+	}
+	if c.Session != nil {
+		c.Session.Close()
+	}
+}
+
+// NewPostgresPool initializes a single pgxpool.Pool configured for data operations and performs a health ping.
+func NewPostgresPool(ctx context.Context, cfg PostgresConfig) (*pgxpool.Pool, error) {
+	poolCfg, err := pgxpool.ParseConfig(cfg.DSN)
+	if err != nil {
+		return nil, fmt.Errorf("parsing postgres dsn: %w", err)
+	}
+
+	poolCfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 	if cfg.MaxConns > 0 {
 		poolCfg.MaxConns = cfg.MaxConns
 	}
@@ -39,15 +123,14 @@ func NewPostgresPool(ctx context.Context, cfg PostgresConfig) (*pgxpool.Pool, er
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
-		return nil, fmt.Errorf("creating postgres connection pool: %w", err)
+		return nil, fmt.Errorf("creating postgres pool: %w", err)
 	}
 
-	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	pingCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
-
 	if err := pool.Ping(pingCtx); err != nil {
 		pool.Close()
-		return nil, fmt.Errorf("pinging postgres database: %w", err)
+		return nil, fmt.Errorf("pinging postgres: %w", err)
 	}
 
 	return pool, nil

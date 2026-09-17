@@ -1,0 +1,30 @@
+-- +goose Up
+-- Phase 1 & 2: Set safe lock timeouts and add shadow column
+SET lock_timeout = '2s';
+SET statement_timeout = '5s';
+
+ALTER TABLE {{.Table}} ADD COLUMN IF NOT EXISTS {{.Column}}_shadow {{if .ColumnType}}{{.ColumnType}}{{else}}TEXT{{end}};
+
+-- Dual-write trigger function to keep old and new columns in sync
+CREATE OR REPLACE FUNCTION sync_{{.Table}}_{{.Column}}_shadow()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.{{.Column}}_shadow := NEW.{{.Column}};
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_sync_{{.Table}}_{{.Column}} ON {{.Table}};
+CREATE TRIGGER trg_sync_{{.Table}}_{{.Column}}
+BEFORE INSERT OR UPDATE ON {{.Table}}
+FOR EACH ROW EXECUTE FUNCTION sync_{{.Table}}_{{.Column}}_shadow();
+
+-- Phase 3: Backfill instructions:
+-- To prevent lock starvation on production tables, do NOT perform a monolithic UPDATE here.
+-- Instead, backfill in small batches via a background job after this migration is committed:
+-- UPDATE {{.Table}} SET {{.Column}}_shadow = {{.Column}} WHERE {{.Column}}_shadow IS NULL AND id BETWEEN $start AND $end;
+
+-- +goose Down
+DROP TRIGGER IF EXISTS trg_sync_{{.Table}}_{{.Column}} ON {{.Table}};
+DROP FUNCTION IF EXISTS sync_{{.Table}}_{{.Column}}_shadow();
+ALTER TABLE {{.Table}} DROP COLUMN IF EXISTS {{.Column}}_shadow;

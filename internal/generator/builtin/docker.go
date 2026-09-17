@@ -111,7 +111,7 @@ func (g *DockerGenerator) Generate(ctx context.Context, input generator.Input) (
 	renderer := GetRenderer()
 
 	// 1. Dockerfile
-	dfTmpl, err := ReadTemplate("deploy_dockerfile.tmpl")
+	dfTmpl, err := ReadTemplateContext(ctx, "deploy_dockerfile.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading deploy_dockerfile template: %w", err)
 	}
@@ -121,7 +121,7 @@ func (g *DockerGenerator) Generate(ctx context.Context, input generator.Input) (
 	}
 
 	// 2. docker-compose.yml
-	dcTmpl, err := ReadTemplate("deploy_compose.yml.tmpl")
+	dcTmpl, err := ReadTemplateContext(ctx, "deploy_compose.yml.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading deploy_compose template: %w", err)
 	}

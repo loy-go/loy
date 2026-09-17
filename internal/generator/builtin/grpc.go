@@ -42,7 +42,7 @@ func (g *GRPCGenerator) Generate(ctx context.Context, input generator.Input) ([]
 	renderer := GetRenderer()
 
 	// 1. Proto contract
-	protoTmpl, err := ReadTemplate("grpc_proto.proto.tmpl")
+	protoTmpl, err := ReadTemplateContext(ctx, "grpc_proto.proto.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (g *GRPCGenerator) Generate(ctx context.Context, input generator.Input) ([]
 	}
 
 	// 2. Server Adapter
-	serverTmpl, err := ReadTemplate("grpc_server.go.tmpl")
+	serverTmpl, err := ReadTemplateContext(ctx, "grpc_server.go.tmpl")
 	if err != nil {
 		return nil, err
 	}

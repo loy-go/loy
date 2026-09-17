@@ -1,0 +1,9 @@
+-- +goose NO TRANSACTION
+-- +goose Up
+-- Safe online concurrent index creation without table write locks
+SET lock_timeout = '2s';
+SET statement_timeout = '0s';
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_{{.Table}}_{{if .Column}}{{.Column}}{{else}}{{.Snake}}{{end}} ON {{.Table}} ({{if .Column}}{{.Column}}{{else}}{{.Snake}}{{end}});
+
+-- +goose Down
+DROP INDEX CONCURRENTLY IF EXISTS idx_{{.Table}}_{{if .Column}}{{.Column}}{{else}}{{.Snake}}{{end}};

@@ -95,7 +95,7 @@ func (g *HelmGenerator) Generate(ctx context.Context, input generator.Input) ([]
 
 	var artifacts []model.Artifact
 	for _, t := range templates {
-		tmplContent, err := ReadTemplate(t.tmplName)
+		tmplContent, err := ReadTemplateContext(ctx, t.tmplName)
 		if err != nil {
 			return nil, fmt.Errorf("reading %s: %w", t.tmplName, err)
 		}

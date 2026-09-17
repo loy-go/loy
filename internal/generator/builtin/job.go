@@ -28,7 +28,7 @@ func (g *JobGenerator) Generate(ctx context.Context, input generator.Input) ([]m
 	}
 
 	data := NewBaseData(input.Name, g.modulePath, nil)
-	tmpl, err := ReadTemplate("job.go.tmpl")
+	tmpl, err := ReadTemplateContext(ctx, "job.go.tmpl")
 	if err != nil {
 		return nil, err
 	}

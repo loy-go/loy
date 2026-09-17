@@ -28,7 +28,7 @@ func (g *EventGenerator) Generate(ctx context.Context, input generator.Input) ([
 	}
 
 	data := NewBaseData(input.Name, g.modulePath, nil)
-	tmpl, err := ReadTemplate("event.go.tmpl")
+	tmpl, err := ReadTemplateContext(ctx, "event.go.tmpl")
 	if err != nil {
 		return nil, err
 	}

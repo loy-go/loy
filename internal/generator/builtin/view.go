@@ -101,7 +101,7 @@ func (g *ViewGenerator) Generate(ctx context.Context, input generator.Input) ([]
 		tmplName = "view_component.templ.tmpl"
 	}
 
-	tmplContent, err := ReadTemplate(tmplName)
+	tmplContent, err := ReadTemplateContext(ctx, tmplName)
 	if err != nil {
 		return nil, fmt.Errorf("reading view template %s: %w", tmplName, err)
 	}

@@ -28,7 +28,7 @@ func (g *OutboxGenerator) Generate(ctx context.Context, input generator.Input) (
 	renderer := GetRenderer()
 
 	// 1. Migration
-	migTmpl, err := ReadTemplate("outbox_migration.sql.tmpl")
+	migTmpl, err := ReadTemplateContext(ctx, "outbox_migration.sql.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading outbox_migration template: %w", err)
 	}
@@ -40,7 +40,7 @@ func (g *OutboxGenerator) Generate(ctx context.Context, input generator.Input) (
 	migPath := fmt.Sprintf("migrations/%s_create_outbox_events_table.sql", timestamp)
 
 	// 2. Store
-	storeTmpl, err := ReadTemplate("outbox_repository.go.tmpl")
+	storeTmpl, err := ReadTemplateContext(ctx, "outbox_repository.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading outbox_repository template: %w", err)
 	}
@@ -50,7 +50,7 @@ func (g *OutboxGenerator) Generate(ctx context.Context, input generator.Input) (
 	}
 
 	// 3. Dispatcher
-	dispTmpl, err := ReadTemplate("outbox_dispatcher.go.tmpl")
+	dispTmpl, err := ReadTemplateContext(ctx, "outbox_dispatcher.go.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("reading outbox_dispatcher template: %w", err)
 	}

@@ -10,7 +10,13 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/loy-go/loy/internal/cli"
+	"github.com/loy-go/loy/internal/filesystem"
+	"github.com/loy-go/loy/internal/process"
 )
+
+func newMakeTestRootCmd() *cobra.Command {
+	return cli.NewRootCmdWithFS(filesystem.NewOSFileSystem(), process.NewNoopRunner())
+}
 
 func executeMakeCommand(root *cobra.Command, args ...string) (string, error) {
 	buf := new(bytes.Buffer)
@@ -39,7 +45,7 @@ func TestMakeCommand(t *testing.T) {
 		t.Fatalf("writing go.mod error: %v", err)
 	}
 
-	root := cli.NewRootCmd()
+	root := newMakeTestRootCmd()
 
 	t.Run("make model", func(t *testing.T) {
 		out, err := executeMakeCommand(root, "make", "model", "article", "title:string", "views:int")
@@ -169,7 +175,7 @@ func TestMakeCommand(t *testing.T) {
 	})
 
 	t.Run("make view full page", func(t *testing.T) {
-		r := cli.NewRootCmd()
+		r := newMakeTestRootCmd()
 		out, err := executeMakeCommand(r, "make", "view", "dashboard")
 		if err != nil {
 			t.Fatalf("make view failed: %v, out: %s", err, out)
@@ -188,7 +194,7 @@ func TestMakeCommand(t *testing.T) {
 	})
 
 	t.Run("make view partial component", func(t *testing.T) {
-		r := cli.NewRootCmd()
+		r := newMakeTestRootCmd()
 		out, err := executeMakeCommand(r, "make", "view", "user_row", "--partial")
 		if err != nil {
 			t.Fatalf("make view --partial failed: %v, out: %s", err, out)
@@ -210,7 +216,7 @@ func TestMakeCommand(t *testing.T) {
 	})
 
 	t.Run("make docker", func(t *testing.T) {
-		r := cli.NewRootCmd()
+		r := newMakeTestRootCmd()
 		out, err := executeMakeCommand(r, "make", "docker")
 		if err != nil {
 			t.Fatalf("make docker failed: %v, out: %s", err, out)
@@ -224,7 +230,7 @@ func TestMakeCommand(t *testing.T) {
 	})
 
 	t.Run("make k8s", func(t *testing.T) {
-		r := cli.NewRootCmd()
+		r := newMakeTestRootCmd()
 		out, err := executeMakeCommand(r, "make", "k8s")
 		if err != nil {
 			t.Fatalf("make k8s failed: %v, out: %s", err, out)
@@ -238,7 +244,7 @@ func TestMakeCommand(t *testing.T) {
 	})
 
 	t.Run("make helm", func(t *testing.T) {
-		r := cli.NewRootCmd()
+		r := newMakeTestRootCmd()
 		out, err := executeMakeCommand(r, "make", "helm", "testapp")
 		if err != nil {
 			t.Fatalf("make helm failed: %v, out: %s", err, out)
@@ -249,7 +255,7 @@ func TestMakeCommand(t *testing.T) {
 	})
 
 	t.Run("make ci", func(t *testing.T) {
-		r := cli.NewRootCmd()
+		r := newMakeTestRootCmd()
 		out, err := executeMakeCommand(r, "make", "ci")
 		if err != nil {
 			t.Fatalf("make ci failed: %v, out: %s", err, out)
@@ -260,7 +266,7 @@ func TestMakeCommand(t *testing.T) {
 	})
 
 	t.Run("make deploy all", func(t *testing.T) {
-		r := cli.NewRootCmd()
+		r := newMakeTestRootCmd()
 		out, err := executeMakeCommand(r, "make", "deploy", "--force")
 		if err != nil {
 			t.Fatalf("make deploy failed: %v, out: %s", err, out)
@@ -278,24 +284,115 @@ func TestMakeCommand(t *testing.T) {
 		}
 	})
 
-	t.Run("make agent-rules all", func(t *testing.T) {
-		r := cli.NewRootCmd()
-		out, err := executeMakeCommand(r, "make", "agent-rules", "--force")
+	t.Run("make template list and eject", func(t *testing.T) {
+		r := newMakeTestRootCmd()
+		out, err := executeMakeCommand(r, "make", "template", "list")
 		if err != nil {
-			t.Fatalf("make agent-rules failed: %v, out: %s", err, out)
+			t.Fatalf("make template list failed: %v, out: %s", err, out)
 		}
-		expected := []string{
-			"AGENTS.md",
-			"CLAUDE.md",
-			".cursor/rules/loy.mdc",
-			".cursorrules",
-			".github/copilot-instructions.md",
-			".windsurfrules",
+		if !strings.Contains(out, "model.go.tmpl") {
+			t.Fatalf("expected model.go.tmpl in list output: %s", out)
 		}
-		for _, f := range expected {
-			if _, err := os.Stat(filepath.Join(tempDir, f)); os.IsNotExist(err) {
-				t.Errorf("expected %s to exist after make agent-rules", f)
-			}
+
+		r2 := newMakeTestRootCmd()
+		out2, err := executeMakeCommand(r2, "make", "template", "eject", "model.go.tmpl")
+		if err != nil {
+			t.Fatalf("make template eject failed: %v, out: %s", err, out2)
+		}
+		ejectedPath := filepath.Join(tempDir, ".loy/templates/model.go.tmpl")
+		if _, err := os.Stat(ejectedPath); os.IsNotExist(err) {
+			t.Fatalf("expected ejected template to exist at %s", ejectedPath)
+		}
+	})
+
+	t.Run("make migration safe recipe", func(t *testing.T) {
+		r := newMakeTestRootCmd()
+		out, err := executeMakeCommand(r, "make", "migration", "add_user_idx", "--recipe=index-concurrent", "--table=users")
+		if err != nil {
+			t.Fatalf("make migration failed: %v, out: %s", err, out)
+		}
+		entries, err := os.ReadDir(filepath.Join(tempDir, "migrations"))
+		if err != nil || len(entries) == 0 {
+			t.Fatalf("expected migrations directory to contain generated migration")
+		}
+	})
+
+	t.Run("make command and query", func(t *testing.T) {
+		r := newMakeTestRootCmd()
+		out, err := executeMakeCommand(r, "make", "command", "checkout_cart", "total:float")
+		if err != nil {
+			t.Fatalf("make command failed: %v, out: %s", err, out)
+		}
+		cmdFile := filepath.Join(tempDir, "internal/checkoutcart/command/checkout_cart_cmd.go")
+		if _, err := os.Stat(cmdFile); os.IsNotExist(err) {
+			t.Fatalf("expected command file to exist at %s", cmdFile)
+		}
+
+		r2 := newMakeTestRootCmd()
+		out2, err := executeMakeCommand(r2, "make", "query", "order_summary", "total:float")
+		if err != nil {
+			t.Fatalf("make query failed: %v, out: %s", err, out2)
+		}
+		queryFile := filepath.Join(tempDir, "internal/ordersummary/query/order_summary_query.go")
+		if _, err := os.Stat(queryFile); os.IsNotExist(err) {
+			t.Fatalf("expected query file to exist at %s", queryFile)
+		}
+
+		r3 := newMakeTestRootCmd()
+		out3, err := executeMakeCommand(r3, "make", "idempotency")
+		if err != nil {
+			t.Fatalf("make idempotency failed with 0 args: %v, out: %s", err, out3)
+		}
+	})
+
+	t.Run("make from-spec and from-db", func(t *testing.T) {
+		specPath := filepath.Join(tempDir, "petstore.yaml")
+		specContent := `
+openapi: 3.0.0
+components:
+  schemas:
+    Widget:
+      type: object
+      properties:
+        sku:
+          type: string
+        price:
+          type: number
+`
+		if err := os.WriteFile(specPath, []byte(specContent), 0644); err != nil {
+			t.Fatalf("writing spec file: %v", err)
+		}
+
+		r := newMakeTestRootCmd()
+		out, err := executeMakeCommand(r, "make", "from-spec", specPath, "--force")
+		if err != nil {
+			t.Fatalf("make from-spec failed: %v, out: %s", err, out)
+		}
+		modelFile := filepath.Join(tempDir, "internal/widget/domain/widget.go")
+		if _, err := os.Stat(modelFile); os.IsNotExist(err) {
+			t.Fatalf("expected generated widget model at %s", modelFile)
+		}
+
+		ddlPath := filepath.Join(tempDir, "schema.sql")
+		ddlContent := `
+CREATE TABLE products (
+    id BIGINT PRIMARY KEY,
+    name TEXT NOT NULL,
+    stock INT NOT NULL
+);
+`
+		if err := os.WriteFile(ddlPath, []byte(ddlContent), 0644); err != nil {
+			t.Fatalf("writing ddl file: %v", err)
+		}
+
+		r2 := newMakeTestRootCmd()
+		out2, err := executeMakeCommand(r2, "make", "from-db", ddlPath, "--force")
+		if err != nil {
+			t.Fatalf("make from-db failed: %v, out: %s", err, out2)
+		}
+		prodFile := filepath.Join(tempDir, "internal/product/domain/product.go")
+		if _, err := os.Stat(prodFile); os.IsNotExist(err) {
+			t.Fatalf("expected generated product model at %s", prodFile)
 		}
 	})
 }

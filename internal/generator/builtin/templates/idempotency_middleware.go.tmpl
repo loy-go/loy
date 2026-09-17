@@ -1,0 +1,50 @@
+package middleware
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+// IdempotencyStore defines database operations for idempotency records.
+type IdempotencyStore interface {
+	LockKey(ctx context.Context, key string, ttl time.Duration) (isNew bool, code int, body []byte, err error)
+	SaveResponse(ctx context.Context, key string, code int, body []byte) error
+}
+
+// Idempotency returns HTTP middleware enforcing request idempotency via the Idempotency-Key header.
+func Idempotency(store IdempotencyStore, ttl time.Duration) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		if c.Method() != fiber.MethodPost && c.Method() != fiber.MethodPut && c.Method() != fiber.MethodPatch {
+			return c.Next()
+		}
+
+		key := c.Get("Idempotency-Key")
+		if key == "" {
+			return c.Next()
+		}
+
+		isNew, code, body, err := store.LockKey(c.Context(), key, ttl)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": fmt.Sprintf("idempotency lock error: %v", err),
+			})
+		}
+
+		if !isNew {
+			c.Set("X-Cache-Lookup", "HIT")
+			return c.Status(code).Send(body)
+		}
+
+		c.Set("X-Cache-Lookup", "MISS")
+		if err := c.Next(); err != nil {
+			return err
+		}
+
+		resBody := c.Response().Body()
+		_ = store.SaveResponse(c.Context(), key, c.Response().StatusCode(), resBody)
+		return nil
+	}
+}

@@ -57,7 +57,7 @@ func (g *HandlerGenerator) Generate(ctx context.Context, input generator.Input) 
 		tmplName = "handler.go.tmpl"
 	}
 
-	tmpl, err := ReadTemplate(tmplName)
+	tmpl, err := ReadTemplateContext(ctx, tmplName)
 	if err != nil {
 		return nil, err
 	}

@@ -28,7 +28,7 @@ func (g *PolicyGenerator) Generate(ctx context.Context, input generator.Input) (
 	}
 
 	data := NewBaseData(input.Name, g.modulePath, nil)
-	tmpl, err := ReadTemplate("policy.go.tmpl")
+	tmpl, err := ReadTemplateContext(ctx, "policy.go.tmpl")
 	if err != nil {
 		return nil, err
 	}
